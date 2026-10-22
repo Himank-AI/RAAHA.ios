@@ -1,0 +1,16 @@
+# Xcode
+## User settings
+xcuserdata/
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+
+## Build generated
+build/
+DerivedData/
+*.moved-aside
+*.xccheckout
+*.hmap
+*.ipa
+
+## macOS
+.DS_Store
