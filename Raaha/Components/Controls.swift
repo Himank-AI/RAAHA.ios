@@ -102,6 +102,7 @@ struct SectionHeader: View {
     let title: String
     var action: String? = "See all"
     var showsChevron = false
+    var onAction: (() -> Void)? = nil
 
     var body: some View {
         HStack {
@@ -110,12 +111,18 @@ struct SectionHeader: View {
                 .foregroundStyle(Color.deepSpace)
             Spacer()
             if let action {
-                HStack(spacing: 2) {
-                    Text(action)
-                    if showsChevron { Image(systemName: "chevron.right").font(.raahaCaption2) }
+                Button {
+                    onAction?()
+                } label: {
+                    HStack(spacing: 2) {
+                        Text(action)
+                        if showsChevron { Image(systemName: "chevron.right").font(.raahaCaption2) }
+                    }
+                    .font(.raahaSubheadline)
+                    .foregroundStyle(Color.steelBlue)
                 }
-                .font(.raahaSubheadline)
-                .foregroundStyle(Color.steelBlue)
+                .buttonStyle(.plain)
+                .disabled(onAction == nil)
             }
         }
         .accessibilityElement(children: .combine)

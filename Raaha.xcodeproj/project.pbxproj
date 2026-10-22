@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXFileReference section */
@@ -11,11 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A10000000000000000000002 /* Raaha */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Raaha;
-			sourceTree = "<group>";
-		};
+		A10000000000000000000002 /* Raaha */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Raaha; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -180,6 +176,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = RAAHA;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "RAAHA uses your location to show nearby places and estimate travel times.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -207,6 +204,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = RAAHA;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "RAAHA uses your location to show nearby places and estimate travel times.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -227,20 +225,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A1000000000000000000000B /* Build configuration list for PBXProject "Raaha" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A1000000000000000000000C /* Debug */,
-				A1000000000000000000000D /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A10000000000000000000007 /* Build configuration list for PBXNativeTarget "Raaha" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A1000000000000000000000E /* Debug */,
 				A1000000000000000000000F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000000000000000000000B /* Build configuration list for PBXProject "Raaha" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000000000000000000000C /* Debug */,
+				A1000000000000000000000D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
