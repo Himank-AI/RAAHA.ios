@@ -40,21 +40,26 @@ struct RouteDetailView: View {
             .padding(.horizontal, 16)
             .padding(.top, 4)
         }
-        .contentMargins(.bottom, 24, for: .scrollContent)
+        .contentMargins(.bottom, 28, for: .scrollContent)
         .safeAreaInset(edge: .bottom) {
-            Button {
+            SlideToStartJourneyButton(title: "Start Live Journey") {
                 router.push(.live(kind, 0))
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "figure.walk.motion")
-                    Text("Start Live Journey")
-                }
             }
-            .buttonStyle(.pillLight)
             .padding(.horizontal, 16)
-            .padding(.bottom, 8)
             .padding(.top, 8)
-            .sensoryFeedback(.impact(weight: .medium), trigger: kind)
+            .padding(.bottom, 8)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color.honeydew.opacity(0.0),
+                        Color.honeydew.opacity(0.85),
+                        Color.honeydew
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea(edges: .bottom)
+            )
         }
         .raahaScreenBackground()
         .pushedChrome()
