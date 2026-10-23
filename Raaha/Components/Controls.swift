@@ -263,32 +263,32 @@ struct SlideToStartJourneyButton: View {
             let textOpacity = max(0.0, 1.0 - Double(progress) * 1.6)
 
             ZStack(alignment: .leading) {
-                // 1. Dark capsule track (Deep Space Blue with subtle gradient)
+                // 1. Light capsule track (Honeydew with subtle gradient & defined stroke)
                 Capsule()
                     .fill(
                         LinearGradient(
                             stops: [
-                                .init(color: Color.deepSpace, location: 0.0),
-                                .init(color: Color(hex: 0x142B46), location: 0.50),
-                                .init(color: Color.deepSpace, location: 1.0)
+                                .init(color: Color(hex: 0xFCFEFA), location: 0.0),
+                                .init(color: Color.honeydew, location: 0.50),
+                                .init(color: Color(hex: 0xE5F3E7), location: 1.0)
                             ],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
                     )
                     .overlay(
                         Capsule()
-                            .stroke(Color.frostedBlue.opacity(0.22), lineWidth: 1)
+                            .stroke(Color.steelBlue.opacity(0.22), lineWidth: 1.2)
                     )
-                    .shadow(color: Color.deepSpace.opacity(0.25), radius: 10, x: 0, y: 5)
+                    .shadow(color: Color.deepSpace.opacity(0.16), radius: 12, x: 0, y: 6)
 
                 // 2. Active fill highlight behind the knob as it slides
                 Capsule()
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color(hex: 0x2A9D8F).opacity(0.35),
-                                Color(hex: 0x4FB8A6).opacity(0.12)
+                                Color.frostedBlue.opacity(0.70),
+                                Color.frostedBlue.opacity(0.20)
                             ],
                             startPoint: .leading,
                             endPoint: .trailing
@@ -296,52 +296,52 @@ struct SlideToStartJourneyButton: View {
                     )
                     .frame(width: max(knobSize + padding * 2, dragOffset + knobSize + padding * 2))
 
-                // 3. Center Label & Trailing Chevrons
+                // 3. Center Label & Trailing Chevrons (Dark text for high contrast on light track)
                 HStack {
                     Spacer(minLength: knobSize + padding + 8)
 
                     Text(title)
-                        .font(.system(size: 16.5, weight: .semibold))
-                        .foregroundStyle(Color.honeydew)
+                        .font(.system(size: 16.5, weight: .bold))
+                        .foregroundStyle(Color.deepSpace)
                         .opacity(textOpacity)
 
                     Spacer(minLength: 8)
 
-                    // Three progressive trailing chevrons (>>>) like inspiration image
-                    HStack(spacing: 3) {
+                    // Three progressive trailing chevrons (>>>) in dark / steel tones
+                    HStack(spacing: 4) {
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Color.frostedBlue.opacity(0.30))
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.steelBlue.opacity(0.30))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Color.frostedBlue.opacity(0.60))
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.steelBlue.opacity(0.65))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Color.frostedBlue.opacity(0.95))
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.deepSpace.opacity(0.95))
                     }
                     .padding(.trailing, 22)
                     .opacity(textOpacity)
                 }
 
-                // 4. Draggable Circular Knob with Chevron
+                // 4. Draggable Circular Knob with Chevron (Dark circle with light chevron)
                 ZStack {
                     Circle()
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color.honeydew,
-                                    Color(hex: 0xDDF0E4)
+                                    Color.deepSpace,
+                                    Color(hex: 0x142B46)
                                 ],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
                         )
                         .frame(width: knobSize, height: knobSize)
-                        .shadow(color: Color.black.opacity(0.25), radius: 6, x: 2, y: 0)
+                        .shadow(color: Color.deepSpace.opacity(0.35), radius: 6, x: 2, y: 2)
 
                     Image(systemName: progress > 0.85 ? "checkmark" : "chevron.right")
                         .font(.system(size: 19, weight: .bold))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.honeydew)
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .offset(x: padding + dragOffset)
