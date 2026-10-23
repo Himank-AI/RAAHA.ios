@@ -13,9 +13,6 @@ struct HomeView: View {
     @State private var editingFrom = false
     @State private var editingTo   = false
 
-    // Quick mode filter selection
-    @State private var selectedMode: TransportMode? = nil
-
     // Swap rotation state
     @State private var swapRotation: Double = 0
 
@@ -24,11 +21,8 @@ struct HomeView: View {
             header
 
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: 18) {
                     plannerCard
-                    modeShortcuts
-                    quickDestinations
-                    commuteStatusCard
                     smartRouteCard
                 }
                 .padding(.horizontal, 16)
@@ -96,7 +90,8 @@ struct HomeView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
 
-                    Text("Seamless multimodal routes across Metro, Bus, Auto & Suburban Rail.")
+                    Text("Plan your journey across Chennai
+with all modes, in one place.")
                         .font(.raahaFootnote)
                         .foregroundStyle(Color.frostedBlue.opacity(0.9))
                         .frame(maxWidth: 195, alignment: .leading)
@@ -236,164 +231,6 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
-    }
-
-    // MARK: - Mode Shortcuts
-
-    private var modeShortcuts: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Modes in Chennai")
-                    .font(.raahaCaption)
-                    .foregroundStyle(Color.steelBlue)
-                Spacer()
-                if selectedMode != nil {
-                    Button("Clear filter") {
-                        withAnimation(.spring(response: 0.25)) { selectedMode = nil }
-                    }
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.strawberry)
-                }
-            }
-            .padding(.horizontal, 4)
-
-            HStack(spacing: 10) {
-                modeItem(.metro, label: "Metro", icon: "tram.fill", customAsset: "icon_metro")
-                modeItem(.bus, label: "Bus", icon: "bus.fill", customAsset: nil)
-                modeItem(.auto, label: "Auto", icon: "car.fill", customAsset: "icon_auto")
-                modeItem(.train, label: "Rail", icon: "train.side.front.car", customAsset: "icon_train")
-                modeItem(.bike, label: "Bike", icon: "bicycle", customAsset: "icon_bike")
-            }
-        }
-    }
-
-    private func modeItem(_ mode: TransportMode, label: String, icon: String, customAsset: String?) -> some View {
-        let isSelected = selectedMode == mode
-        return Button {
-            withAnimation(.spring(response: 0.28, dampingFraction: 0.7)) {
-                selectedMode = isSelected ? nil : mode
-            }
-        } label: {
-            VStack(spacing: 6) {
-                ZStack {
-                    Circle()
-                        .fill(isSelected ? Color.strawberry : Color.honeydew)
-                        .frame(width: 44, height: 44)
-                        .shadow(color: Color.deepSpace.opacity(0.08), radius: 6, x: 0, y: 3)
-
-                    if let customAsset {
-                        Image(customAsset)
-                            .renderingMode(.template)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(isSelected ? Color.honeydew : Color.deepSpace)
-                    } else {
-                        Image(systemName: icon)
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundStyle(isSelected ? Color.honeydew : Color.deepSpace)
-                    }
-                }
-
-                Text(label)
-                    .font(.raahaCaption2)
-                    .foregroundStyle(isSelected ? Color.strawberry : Color.deepSpace)
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.plain)
-        .sensoryFeedback(.selection, trigger: selectedMode)
-        .accessibilityLabel("\(label) mode filter")
-    }
-
-    // MARK: - Quick Destinations
-
-    private var quickDestinations: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "Popular Destinations", action: nil)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(LocationSuggestions.destinations, id: \.self) { dest in
-                        Button {
-                            to = dest
-                            router.planJourney(from: from, to: dest)
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image("icon_pin")
-                                    .renderingMode(.template)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 12, height: 12)
-                                    .foregroundStyle(Color.honeydew)
-                                Text(dest)
-                                    .font(.raahaFootnoteSemibold)
-                                    .foregroundStyle(Color.honeydew)
-                                    .lineLimit(1)
-                            }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
-                            .background(Capsule().fill(Color.deepSpace))
-                            .shadow(color: Color.deepSpace.opacity(0.12), radius: 6, x: 0, y: 3)
-                        }
-                        .buttonStyle(TactileButtonStyle())
-                    }
-                }
-                .padding(.horizontal, 2)
-                .padding(.vertical, 2)
-            }
-        }
-        .padding(16)
-        .lightCard(radius: 20)
-    }
-
-    // MARK: - Daily Commute Live Card
-
-    private var commuteStatusCard: some View {
-        Button {
-            router.planJourney(from: "Alandur Metro", to: "T. Nagar")
-        } label: {
-            HStack(spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.deepSpace)
-                        .frame(width: 48, height: 48)
-                    Image("icon_metro")
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(Color.honeydew)
-                }
-
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Circle().fill(Color.statusGreen).frame(width: 6, height: 6)
-                        Text("METRO ON TIME · BLUE LINE")
-                            .font(.raahaCaption2)
-                            .foregroundStyle(Color.statusGreen)
-                    }
-
-                    Text("Alandur → T. Nagar")
-                        .font(.raahaHeadline)
-                        .foregroundStyle(Color.deepSpace)
-
-                    Text("Next train in 4 min · Est. 18 min travel")
-                        .font(.raahaCaption)
-                        .foregroundStyle(Color.steelBlue)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.raahaSubheadlineMedium)
-                    .foregroundStyle(Color.steelBlue)
-            }
-            .padding(14)
-            .lightCard(radius: 20)
-        }
-        .buttonStyle(TactileButtonStyle())
-        .accessibilityLabel("Daily commute: Alandur to T Nagar. Next train in 4 minutes.")
     }
 
     // MARK: - Smart Planner Banner

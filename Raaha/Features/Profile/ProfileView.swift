@@ -2,14 +2,18 @@ import SwiftUI
 
 struct ProfileView: View {
     // MARK: - State
-    @State private var preferMetroAndRail: Bool = true
-    @State private var wellLitRoutes: Bool = true
-    @State private var ecoFriendlyRouting: Bool = true
-    @State private var hapticsEnabled: Bool = true
-
+    @State private var selectedCommuteModes: Set<String> = ["Metro", "Bus", "Local Train"]
     @State private var selectedInterests: Set<String> = ["Beaches", "Heritage", "Food"]
-    @State private var showResetCacheDialog: Bool = false
-    @State private var cacheClearedNotification: Bool = false
+    @State private var showLogoutDialog: Bool = false
+    @State private var logoutSuccessBanner: Bool = false
+
+    private let commuteModes: [(name: String, symbol: String, customAsset: String?)] = [
+        ("Bike", "bicycle", "icon_bike"),
+        ("Auto", "car.fill", "icon_auto"),
+        ("Bus", "bus.fill", nil),
+        ("Local Train", "train.side.front.car", "icon_train"),
+        ("Metro", "tram.fill", "icon_metro")
+    ]
 
     private let interests: [(name: String, symbol: String)] = [
         ("Beaches", "beach.umbrella"),
@@ -29,20 +33,17 @@ struct ProfileView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
-                    // 1. Commute Impact Stats Card
-                    commuteImpactCard
-
-                    // 2. Commute Preferences Group
+                    // 1. Commute Preferences Group (Same chip layout as Discovery Interests)
                     commutePreferencesSection
 
-                    // 3. Saved Chennai Places Group
+                    // 2. Saved Chennai Places Group
                     savedPlacesSection
 
-                    // 4. Travel Interests Group
+                    // 3. Discovery Interests Group
                     travelInterestsSection
 
-                    // 5. Transit App Info & Settings Group
-                    appSettingsSection
+                    // 4. Transit & Support Group (Only FAQs and Help + Logout)
+                    transitSupportSection
 
                     // Version Footer
                     footerNote
@@ -56,25 +57,23 @@ struct ProfileView: View {
         .background(LinearGradient.raahaScreen.ignoresSafeArea())
         .navyHeaderChrome()
         .confirmationDialog(
-            "Clear Transit Cache?",
-            isPresented: $showResetCacheDialog,
+            "Log out of RAAHA?",
+            isPresented: $showLogoutDialog,
             titleVisibility: .visible
         ) {
-            Button("Clear Cache", role: .destructive) {
-                withAnimation {
-                    cacheClearedNotification = true
-                }
+            Button("Log Out", role: .destructive) {
+                withAnimation { logoutSuccessBanner = true }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                    withAnimation { cacheClearedNotification = false }
+                    withAnimation { logoutSuccessBanner = false }
                 }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This will refresh local Chennai timetable and station indices.")
+            Text("You will need to sign in again to sync your journeys.")
         }
         .overlay(alignment: .top) {
-            if cacheClearedNotification {
-                Text("✓ Transit cache cleared successfully")
+            if logoutSuccessBanner {
+                Text("Logged out of session")
                     .font(.raahaFootnoteSemibold)
                     .foregroundStyle(Color.honeydew)
                     .padding(.horizontal, 16)
@@ -86,11 +85,11 @@ struct ProfileView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Header (Includes 28 Trips Taken)
     private var header: some View {
         NavyHeader {
             HStack(spacing: 16) {
-                // Profile Avatar with Edit badge
+                // Profile Avatar with verified badge
                 ZStack(alignment: .bottomTrailing) {
                     Image(systemName: "person.crop.circle.fill")
                         .resizable()
@@ -121,16 +120,20 @@ struct ProfileView: View {
                         .font(.raahaCaption)
                         .foregroundStyle(Color.frostedBlue.opacity(0.85))
 
+                    // Trips taken with numbers only arranged neatly
                     HStack(spacing: 6) {
-                        Image(systemName: "shield.lefthalf.filled")
-                            .font(.system(size: 10))
-                        Text("Chennai Verified Commuter")
+                        Image(systemName: "tram.fill")
+                            .font(.system(size: 11))
+                        Text("28")
+                            .font(.system(size: 12, weight: .bold))
+                        Text("Trips Taken")
                             .font(.system(size: 11, weight: .medium))
                     }
                     .foregroundStyle(Color.honeydew)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.steelBlue.opacity(0.5)))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Color.steelBlue.opacity(0.6)))
+                    .padding(.top, 2)
                 }
 
                 Spacer()
@@ -140,116 +143,69 @@ struct ProfileView: View {
         }
     }
 
-    // MARK: - Commute Impact Stats Card
-    private var commuteImpactCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label("Chennai Commute Impact", systemImage: "chart.bar.xaxis")
-                    .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.honeydew)
-                Spacer()
-                Text("This Month")
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.frostedBlue)
-            }
-
-            HStack(spacing: 8) {
-                statBox(title: "Trips Taken", value: "28", icon: "tram.fill", color: Color.frostedBlue)
-                statBox(title: "Fare Saved", value: "₹920", icon: "indianrupeesign", color: Color.honeydew)
-                statBox(title: "CO₂ Reduced", value: "5.4 kg", icon: "leaf.fill", color: Color(red: 0.5, green: 0.85, blue: 0.6))
-            }
-        }
-        .padding(14)
-        .navyCard(radius: 20, gradient: .raahaNavyGlow)
-    }
-
-    private func statBox(title: String, value: String, icon: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(color)
-            Text(value)
-                .font(.raahaHeadline)
-                .foregroundStyle(Color.honeydew)
-            Text(title)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Color.frostedBlue.opacity(0.8))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .padding(.horizontal, 4)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.deepSpace.opacity(0.5))
-        )
-    }
-
-    // MARK: - Commute Preferences Section
+    // MARK: - Commute Preferences (Same chip layout as Discovery Interests)
     private var commutePreferencesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle(title: "Commute Preferences", icon: "slider.horizontal.3")
 
-            VStack(spacing: 0) {
-                preferenceToggleRow(
-                    symbol: "tram.fill",
-                    title: "Prefer Metro & Suburban Rail",
-                    subtitle: "Fastest non-congested transit corridors",
-                    isOn: $preferMetroAndRail
-                )
-                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
-                preferenceToggleRow(
-                    symbol: "lightbulb.fill",
-                    title: "Well-Lit Walk Pathways",
-                    subtitle: "Prioritize safer night connections",
-                    isOn: $wellLitRoutes
-                )
-                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
-                preferenceToggleRow(
-                    symbol: "leaf.fill",
-                    title: "Eco-Friendly Routing",
-                    subtitle: "Minimize carbon footprint per journey",
-                    isOn: $ecoFriendlyRouting
-                )
-                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
-                preferenceToggleRow(
-                    symbol: "iphone.radiowaves.left.and.right",
-                    title: "Tactile Haptic Feedback",
-                    subtitle: "Physical clicks on tabs, chips & cards",
-                    isOn: $hapticsEnabled
-                )
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Select your preferred Chennai transit options:")
+                    .font(.raahaCaption)
+                    .foregroundStyle(Color.frostedBlue.opacity(0.85))
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
+                    spacing: 8
+                ) {
+                    ForEach(commuteModes, id: \.name) { item in
+                        modeChip(item.name, symbol: item.symbol, customAsset: item.customAsset)
+                    }
+                }
             }
-            .padding(.horizontal, 14)
+            .padding(14)
             .navyCard(radius: 20)
         }
     }
 
-    private func preferenceToggleRow(symbol: String, title: String, subtitle: String, isOn: Binding<Bool>) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: symbol)
-                .font(.raahaSubheadlineMedium)
-                .foregroundStyle(Color.honeydew)
-                .frame(width: 32, height: 32)
-                .background(Circle().fill(Color.steelBlue.opacity(0.6)))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.raahaSubheadlineMedium)
-                    .foregroundStyle(Color.honeydew)
-                Text(subtitle)
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.frostedBlue.opacity(0.8))
+    private func modeChip(_ name: String, symbol: String, customAsset: String?) -> some View {
+        let isSelected = selectedCommuteModes.contains(name)
+        return Button {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                if isSelected {
+                    selectedCommuteModes.remove(name)
+                } else {
+                    selectedCommuteModes.insert(name)
+                }
             }
-
-            Spacer()
-
-            Toggle("", isOn: isOn)
-                .labelsHidden()
-                .tint(Color.strawberry)
-                .sensoryFeedback(.selection, trigger: isOn.wrappedValue)
+        } label: {
+            HStack(spacing: 5) {
+                if let customAsset {
+                    Image(customAsset)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 14, height: 14)
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: 11))
+                }
+                Text(name)
+                    .font(.raahaCaption)
+                    .lineLimit(1)
+            }
+            .foregroundStyle(isSelected ? Color.deepSpace : Color.honeydew)
+            .frame(maxWidth: .infinity, minHeight: 38)
+            .background(
+                Capsule()
+                    .fill(isSelected ? Color.honeydew : Color.deepSpace.opacity(0.6))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.clear : Color.frostedBlue.opacity(0.4), lineWidth: 1)
+            )
         }
-        .padding(.vertical, 11)
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: isSelected)
     }
 
     // MARK: - Saved Places Section
@@ -317,7 +273,7 @@ struct ProfileView: View {
         .padding(.vertical, 10)
     }
 
-    // MARK: - Travel Interests Section
+    // MARK: - Discovery Interests Section
     private var travelInterestsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle(title: "Discovery Interests", icon: "sparkles")
@@ -374,42 +330,35 @@ struct ProfileView: View {
         .sensoryFeedback(.selection, trigger: isSelected)
     }
 
-    // MARK: - App & Support Section
-    private var appSettingsSection: some View {
+    // MARK: - Transit & Support Section (Only FAQs and Help + Logout)
+    private var transitSupportSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle(title: "Transit & Support", icon: "gearshape.fill")
 
             VStack(spacing: 0) {
-                actionRow(
-                    symbol: "map.fill",
-                    title: "Chennai Metropolitan Boundary",
-                    trailing: "1,189 km²"
-                )
-                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+                // Chennai Transit FAQs and Help
                 actionRow(
                     symbol: "questionmark.circle.fill",
-                    title: "Chennai Transit FAQs & Help",
+                    title: "Chennai Transit FAQs and Help",
                     trailing: "Guide"
                 )
+
                 HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+
+                // Logout button
                 Button {
-                    showResetCacheDialog = true
+                    showLogoutDialog = true
                 } label: {
                     HStack(spacing: 12) {
-                        Image(systemName: "arrow.counterclockwise.circle.fill")
+                        Image(systemName: "rectangle.portrait.and.arrow.right.fill")
                             .font(.raahaSubheadlineMedium)
                             .foregroundStyle(Color.strawberry)
                             .frame(width: 32, height: 32)
                             .background(Circle().fill(Color.strawberry.opacity(0.2)))
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Reset Transit Cache")
-                                .font(.raahaSubheadlineMedium)
-                                .foregroundStyle(Color.strawberry)
-                            Text("Clears temporary route indices")
-                                .font(.raahaCaption2)
-                                .foregroundStyle(Color.frostedBlue.opacity(0.7))
-                        }
+                        Text("Logout")
+                            .font(.raahaSubheadlineMedium)
+                            .foregroundStyle(Color.strawberry)
 
                         Spacer()
 
