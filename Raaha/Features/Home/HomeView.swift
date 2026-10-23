@@ -90,8 +90,7 @@ struct HomeView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
 
-                    Text("Plan your journey across Chennai
-with all modes, in one place.")
+                    Text("Plan your journey across Chennai\nwith all modes, in one place.")
                         .font(.raahaFootnote)
                         .foregroundStyle(Color.frostedBlue.opacity(0.9))
                         .frame(maxWidth: 195, alignment: .leading)
