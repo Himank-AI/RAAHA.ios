@@ -14,8 +14,7 @@ struct ExploreView: View {
     @State private var showAllNearby = false
 
     init() {
-        let loc = LocationManager()
-        _vm = StateObject(wrappedValue: ExploreViewModel(locationManager: loc))
+        _vm = StateObject(wrappedValue: ExploreViewModel())
     }
 
     var body: some View {
@@ -28,7 +27,6 @@ struct ExploreView: View {
                     case .places:
                         PlacesContent(
                             vm: vm,
-                            locationManager: vm.locationManager,
                             selectedPlace: $selectedPlace,
                             showAllNearby: $showAllNearby
                         )
@@ -164,31 +162,18 @@ struct ExploreView: View {
 
 private struct PlacesContent: View {
     @ObservedObject var vm: ExploreViewModel
-    @ObservedObject var locationManager: LocationManager
     @Binding var selectedPlace: ExplorePlace?
     @Binding var showAllNearby: Bool
     @EnvironmentObject private var router: AppRouter
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // ── 1. Outside Chennai notice ──
-            if vm.isUserOutsideChennai {
-                OutsideChennaiBanner {
-                    vm.exploreChennaiAnyway()
-                }
-            }
-
-            // ── 2. Location permission banner ──
-            if locationManager.permission == .denied || locationManager.permission == .restricted {
-                LocationDeniedBanner()
-            }
-
-            // ── 3. Chennai Locality Manual Selector ──
+            // ── 1. Chennai Locality Selector ──
             ChennaiLocalitySelector(selected: vm.selectedLocality) { loc in
                 vm.selectLocality(loc)
             }
 
-            // ── 4. Search results (active search) ──
+            // ── 2. Search results (active search) ──
             if vm.isSearchActive {
                 searchResults
             } else {
@@ -344,7 +329,7 @@ private struct PlacesContent: View {
                     .font(.raahaCaption)
                     .foregroundStyle(Color.steelBlue)
 
-                ForEach(vm.autocompleteSuggestions.prefix(3), id: \.self) { suggestion in
+                ForEach(vm.autocompleteSuggestions.prefix(4), id: \.self) { suggestion in
                     Button {
                         vm.selectSuggestion(suggestion) { place in
                             selectedPlace = place
@@ -353,16 +338,9 @@ private struct PlacesContent: View {
                         HStack(spacing: 10) {
                             Image(systemName: "mappin.circle.fill")
                                 .foregroundStyle(Color.steelBlue)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(suggestion.title)
-                                    .font(.raahaSubheadlineMedium)
-                                    .foregroundStyle(Color.deepSpace)
-                                if !suggestion.subtitle.isEmpty {
-                                    Text(suggestion.subtitle)
-                                        .font(.raahaCaption)
-                                        .foregroundStyle(Color.steelBlue)
-                                }
-                            }
+                            Text(suggestion)
+                                .font(.raahaSubheadlineMedium)
+                                .foregroundStyle(Color.deepSpace)
                             Spacer()
                             Image(systemName: "arrow.up.left")
                                 .font(.raahaCaption2)
@@ -507,13 +485,9 @@ private struct RealNearbySpotRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 14) {
-                // Category icon circle
-                Image(systemName: place.symbolName)
-                    .font(.raahaHeadline)
-                    .foregroundStyle(Color.honeydew)
-                    .frame(width: 48, height: 48)
-                    .background(Circle().fill(Color.steelBlue))
-                    .shadow(color: Color.deepSpace.opacity(0.15), radius: 4, x: 0, y: 2)
+                // Real Place Image Thumbnail with fallback
+                PlaceImageView(place: place, style: .thumbnail(size: 54))
+                    .shadow(color: Color.deepSpace.opacity(0.18), radius: 4, x: 0, y: 2)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(place.name)
@@ -525,6 +499,14 @@ private struct RealNearbySpotRow: View {
                         Text(place.category.title)
                             .font(.raahaCaption)
                             .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                        if let rating = place.ratingText {
+                            Text("·")
+                                .foregroundStyle(Color.frostedBlue.opacity(0.5))
+                                .font(.raahaCaption)
+                            Text("★ \(rating)")
+                                .font(.raahaCaption)
+                                .foregroundStyle(Color.frostedBlue)
+                        }
                         if let dist = place.distanceText {
                             Text("·")
                                 .foregroundStyle(Color.frostedBlue.opacity(0.5))
@@ -580,14 +562,9 @@ private struct RealFeaturedPlaceCard: View {
     var body: some View {
         Button(action: action) {
             ZStack(alignment: .bottom) {
-                // Hero: gradient background + large icon
-                ZStack {
-                    LinearGradient.raahaHero
-                    Image(systemName: place.symbolName)
-                        .font(.system(size: 60, weight: .thin))
-                        .foregroundStyle(Color.honeydew.opacity(0.25))
-                }
-                .frame(height: 160)
+                // Hero: Place image with loading shimmer & graceful fallback
+                PlaceImageView(place: place, style: .hero(height: 160))
+                    .frame(height: 160)
 
                 // Text overlay
                 LinearGradient(
@@ -606,6 +583,11 @@ private struct RealFeaturedPlaceCard: View {
                         Text(place.category.title)
                             .font(.raahaFootnote)
                             .foregroundStyle(Color.frostedBlue)
+                        if let rating = place.ratingText {
+                            Text("· ★ \(rating)")
+                                .font(.raahaFootnote)
+                                .foregroundStyle(Color.frostedBlue)
+                        }
                         if let dist = place.distanceText {
                             Text("· \(dist)")
                                 .font(.raahaFootnote)
@@ -1033,6 +1015,8 @@ private struct ErrorBannerView: View {
 // MARK: - Location Denied Banner
 
 private struct LocationDeniedBanner: View {
+    @Environment(\.openURL) private var openURL
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "location.slash.fill")
@@ -1047,8 +1031,8 @@ private struct LocationDeniedBanner: View {
             }
             Spacer()
             Button {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
+                if let url = URL(string: "app-settings:") {
+                    openURL(url)
                 }
             } label: {
                 Text("Settings")
@@ -1063,7 +1047,7 @@ private struct LocationDeniedBanner: View {
 
 // MARK: - Shimmer modifier
 
-private struct ShimmerModifier: ViewModifier {
+struct ShimmerModifier: ViewModifier {
     @State private var phase: CGFloat = 0
 
     func body(content: Content) -> some View {
@@ -1085,7 +1069,7 @@ private struct ShimmerModifier: ViewModifier {
     }
 }
 
-private extension View {
+extension View {
     func shimmer() -> some View { modifier(ShimmerModifier()) }
 }
 

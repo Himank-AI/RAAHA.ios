@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		492D6A1B308B0F39000F87E8 /* Chennai.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = Chennai.gpx; path = "../../Desktop/iOS fundamentals/navigation/navigation/Chennai.gpx"; sourceTree = "<group>"; };
 		A10000000000000000000001 /* Raaha.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Raaha.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -28,6 +29,7 @@
 		A10000000000000000000004 = {
 			isa = PBXGroup;
 			children = (
+				492D6A1B308B0F39000F87E8 /* Chennai.gpx */,
 				A10000000000000000000002 /* Raaha */,
 				A10000000000000000000005 /* Products */,
 			);

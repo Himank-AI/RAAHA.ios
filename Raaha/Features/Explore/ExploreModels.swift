@@ -1,23 +1,84 @@
 import Foundation
+import CoreLocation
 import MapKit
 
 // MARK: - Domain Model
 
-/// Unified place model wrapping an MKMapItem with derived helpers.
-struct ExplorePlace: Identifiable {
-    let id: String                       // stable: MKMapItem.identifier or UUID
-    let mapItem: MKMapItem
+/// Unified place model representing a Chennai destination, restaurant, or landmark.
+/// Designed for fast, offline frontend rendering with rich static mock data.
+struct ExplorePlace: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let category: PlaceCategory
+    let address: String
+    let locality: String
+    let phoneNumber: String?
+    let website: URL?
+    let distance: CLLocationDistance?
+    let rating: Double?
+    let reviewCount: Int?
+    let openingStatus: String?
+    let coordinate: CLLocationCoordinate2D
+    let localAssetImageName: String?
+    let tags: [String]
 
-    var name: String          { mapItem.name ?? "Unknown" }
-    var category: PlaceCategory
-    var address: String       { mapItem.placemark.thoroughfare ?? mapItem.placemark.locality ?? "" }
-    var locality: String      { mapItem.placemark.locality ?? mapItem.placemark.administrativeArea ?? "Chennai" }
-    var phoneNumber: String?  { mapItem.phoneNumber }
-    var website: URL?         { mapItem.url }
-    var distance: CLLocationDistance?   // metres, set by search service when user location available
+    init(
+        id: String = UUID().uuidString,
+        name: String,
+        category: PlaceCategory,
+        address: String,
+        locality: String,
+        phoneNumber: String? = nil,
+        website: URL? = nil,
+        distance: CLLocationDistance? = nil,
+        rating: Double? = nil,
+        reviewCount: Int? = nil,
+        openingStatus: String? = "Open now",
+        coordinate: CLLocationCoordinate2D,
+        localAssetImageName: String? = nil,
+        tags: [String] = []
+    ) {
+        self.id = id
+        self.name = name
+        self.category = category
+        self.address = address
+        self.locality = locality
+        self.phoneNumber = phoneNumber
+        self.website = website
+        self.distance = distance
+        self.rating = rating
+        self.reviewCount = reviewCount
+        self.openingStatus = openingStatus
+        self.coordinate = coordinate
+        self.localAssetImageName = localAssetImageName
+        self.tags = tags
+    }
 
-    // Opening status — only set if the MapKit item provides it
-    var isOpenNow: Bool?      { nil } // MapKit MKMapItem does not reliably expose this; we do not fabricate it
+    /// Convenience initializer from an MKMapItem for backwards compatibility and MapItem testing.
+    init(mapItem: MKMapItem, userLocation: CLLocation? = nil) {
+        if #available(iOS 18.0, *) {
+            self.id = mapItem.identifier?.rawValue ?? UUID().uuidString
+        } else {
+            self.id = UUID().uuidString
+        }
+        self.name = mapItem.name ?? "Unknown"
+        self.category = .landmark
+        self.address = mapItem.placemark.thoroughfare ?? mapItem.placemark.locality ?? ""
+        self.locality = mapItem.placemark.locality ?? mapItem.placemark.administrativeArea ?? "Chennai"
+        self.phoneNumber = mapItem.phoneNumber
+        self.website = mapItem.url
+        if let userLocation, let coord = mapItem.placemark.location {
+            self.distance = userLocation.distance(from: coord)
+        } else {
+            self.distance = nil
+        }
+        self.rating = nil
+        self.reviewCount = nil
+        self.openingStatus = "Open now"
+        self.coordinate = mapItem.placemark.coordinate
+        self.localAssetImageName = nil
+        self.tags = []
+    }
 
     var distanceText: String? {
         guard let d = distance else { return nil }
@@ -26,44 +87,47 @@ struct ExplorePlace: Identifiable {
         return String(format: "%.1f km away", km)
     }
 
+    var ratingText: String? {
+        guard let r = rating else { return nil }
+        return String(format: "%.1f", r)
+    }
+
+    var isOpenNow: Bool? {
+        guard let status = openingStatus?.lowercased() else { return nil }
+        return status.contains("open")
+    }
+
     /// SF Symbol name that best matches the category.
     var symbolName: String { category.symbol }
 
-    var coordinate: CLLocationCoordinate2D { mapItem.placemark.coordinate }
-    var isValidChennaiLocation: Bool { ChennaiServiceArea.shared.validate(coordinate: coordinate) }
+    /// Verified Chennai location.
+    var isValidChennaiLocation: Bool {
+        ChennaiServiceArea.shared.validate(coordinate: coordinate)
+    }
 
-    init(mapItem: MKMapItem, userLocation: CLLocation? = nil) {
-        self.mapItem = mapItem
-        if #available(iOS 18.0, *) {
-            self.id = mapItem.identifier?.rawValue ?? UUID().uuidString
-        } else {
-            self.id = UUID().uuidString
-        }
-        self.category = PlaceCategory.from(mapItem: mapItem)
-        if let userLocation, let coord = mapItem.placemark.location {
-            self.distance = userLocation.distance(from: coord)
-        }
+    // MARK: Hashable & Equatable
+
+    static func == (lhs: ExplorePlace, rhs: ExplorePlace) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    /// Opens location in native Apple Maps.
+    func openInMaps() {
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let item = MKMapItem(placemark: placemark)
+        item.name = name
+        item.openInMaps(launchOptions: nil)
     }
 }
 
 // MARK: - Place Categories
 
-enum PlaceCategory: String, CaseIterable {
+enum PlaceCategory: String, CaseIterable, Hashable {
     case restaurant, cafe, beach, park, landmark, shopping, attraction, other
-
-    static func from(mapItem: MKMapItem) -> PlaceCategory {
-        guard let types = mapItem.pointOfInterestCategory else { return .other }
-        switch types {
-        case .restaurant, .foodMarket, .bakery:    return .restaurant
-        case .cafe:                                 return .cafe
-        case .beach:                                return .beach
-        case .park, .nationalPark:                  return .park
-        case .museum, .theater, .amusementPark,
-             .aquarium, .zoo:                       return .attraction
-        case .store:                                return .shopping
-        default:                                    return .landmark
-        }
-    }
 
     var title: String {
         switch self {
@@ -118,7 +182,7 @@ enum PlacesLoadState: Equatable {
 
 // MARK: - Filter
 
-enum ExploreFilter: String, CaseIterable, Identifiable {
+enum ExploreFilter: String, CaseIterable, Identifiable, Hashable {
     case all, restaurants, beaches, parks, landmarks, shopping
 
     var id: String { rawValue }
@@ -145,26 +209,20 @@ enum ExploreFilter: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Maps to MKPointOfInterestCategory for MapKit queries
-    var mkCategory: String {
+    func matches(_ place: ExplorePlace) -> Bool {
         switch self {
-        case .all:         return ""
-        case .restaurants: return "restaurant"
-        case .beaches:     return "beach"
-        case .parks:       return "park"
-        case .landmarks:   return "landmark"
-        case .shopping:    return "store"
-        }
-    }
-
-    var naturalLanguageQuery: String {
-        switch self {
-        case .all:         return "places"
-        case .restaurants: return "restaurants cafes"
-        case .beaches:     return "beach"
-        case .parks:       return "park"
-        case .landmarks:   return "landmarks monuments tourist"
-        case .shopping:    return "shopping mall market"
+        case .all:
+            return true
+        case .restaurants:
+            return place.category == .restaurant || place.category == .cafe
+        case .beaches:
+            return place.category == .beach
+        case .parks:
+            return place.category == .park
+        case .landmarks:
+            return place.category == .landmark || place.category == .attraction
+        case .shopping:
+            return place.category == .shopping
         }
     }
 }
