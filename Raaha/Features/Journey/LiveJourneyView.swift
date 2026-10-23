@@ -18,6 +18,9 @@ struct LiveJourneyView: View {
 
             BottomPanel {
                 VStack(spacing: 12) {
+                    // Step Progress Tracker
+                    liveProgressTracker
+
                     CurrentlyOnCard(content: content)
                     timeline
                     if content.showsMissedAlert {
@@ -30,7 +33,47 @@ struct LiveJourneyView: View {
                 .padding(.horizontal, 4)
             }
         }
-        .pushedChrome(title: "Live Journey")
+        .pushedChrome(title: "Live Chennai Journey")
+    }
+
+    private var liveProgressTracker: some View {
+        VStack(spacing: 6) {
+            HStack {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color.statusGreen)
+                        .frame(width: 8, height: 8)
+                    Text("LIVE TRANSIT")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color.statusGreen)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.statusGreen.opacity(0.15)))
+
+                Spacer()
+
+                Text("Step \(step + 1) of \(screens.count)")
+                    .font(.raahaCaption.weight(.semibold))
+                    .foregroundStyle(Color.deepSpace)
+            }
+
+            // Progress segments
+            HStack(spacing: 5) {
+                ForEach(0..<screens.count, id: \.self) { idx in
+                    Capsule()
+                        .fill(
+                            idx < step
+                                ? Color.statusGreen
+                                : (idx == step ? Color.strawberry : Color.steelBlue.opacity(0.3))
+                        )
+                        .frame(height: 5)
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .lightCard(radius: 16)
     }
 
     @ViewBuilder
@@ -50,17 +93,25 @@ struct LiveJourneyView: View {
 
 private struct CurrentlyOnCard: View {
     let content: LiveContent
+    @State private var isPulsing = false
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
             ModeBadge(mode: content.mode, size: 54, fill: Color.honeydew)
 
             VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 5) {
-                    Circle().fill(Color.strawberry).frame(width: 6, height: 6)
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color.strawberry)
+                        .frame(width: 8, height: 8)
+                        .scaleEffect(isPulsing ? 1.25 : 0.8)
+                        .opacity(isPulsing ? 1.0 : 0.55)
+                        .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: isPulsing)
+                        .onAppear { isPulsing = true }
+
                     Text("CURRENTLY ON")
                         .font(.raahaCaption2)
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.frostedBlue.opacity(0.85))
                 }
                 Text(content.title)
                     .font(.raahaHeadline)
@@ -393,6 +444,7 @@ private struct NextTransferCard: View {
             .navyCard(radius: 24, gradient: .raahaNavyGlow)
         }
         .buttonStyle(.plain)
+        .sensoryFeedback(.impact(weight: .medium), trigger: next.headline)
         .accessibilityElement(children: .combine)
         .accessibilityHint("Continues to the next leg of the journey")
     }

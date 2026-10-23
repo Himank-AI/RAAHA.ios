@@ -2,15 +2,22 @@ import SwiftUI
 
 // MARK: - HomeView
 
+/// Creative, premium, interactive Home screen for RAAHA Chennai multimodal journey planner.
 struct HomeView: View {
     @EnvironmentObject private var router: AppRouter
 
     @State private var from: String = "Current Location"
     @State private var to: String   = "Phoenix Mall, Velachery"
 
-    // Sheet state
+    // Sheet states
     @State private var editingFrom = false
     @State private var editingTo   = false
+
+    // Quick mode filter selection
+    @State private var selectedMode: TransportMode? = nil
+
+    // Swap rotation state
+    @State private var swapRotation: Double = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -19,32 +26,35 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     plannerCard
+                    modeShortcuts
                     quickDestinations
+                    commuteStatusCard
                     smartRouteCard
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 24)
+                .padding(.top, 20)
             }
             .contentMargins(.bottom, 110, for: .scrollContent)
+            .scrollDismissesKeyboard(.interactively)
         }
         .background(LinearGradient.raahaScreen.ignoresSafeArea())
         .navyHeaderChrome()
-        // FROM sheet
+        // Origin picker sheet
         .sheet(isPresented: $editingFrom) {
             LocationPickerSheet(
-                title: "From",
-                prompt: "Search origin…",
+                title: "Choose Origin",
+                prompt: "Search locality or station…",
                 current: from,
                 suggestions: LocationSuggestions.origins
             ) { chosen in
                 from = chosen
             }
         }
-        // TO sheet
+        // Destination picker sheet
         .sheet(isPresented: $editingTo) {
             LocationPickerSheet(
-                title: "To",
-                prompt: "Search destination…",
+                title: "Choose Destination",
+                prompt: "Search Chennai destination…",
                 current: to,
                 suggestions: LocationSuggestions.destinations
             ) { chosen in
@@ -53,7 +63,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: Header
+    // MARK: - Dynamic Greeting Header
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -67,146 +77,240 @@ struct HomeView: View {
     private var header: some View {
         NavyHeader {
             ZStack(alignment: .trailing) {
+                // Background artistic vehicle graphic
                 Image("home_vehicles")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 196)
-                    .padding(.trailing, -20)
+                    .frame(width: 195)
+                    .padding(.trailing, -16)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("\(greeting) Akshay")
-                        .font(.raahaBody)
+                    Text("\(greeting), Akshay")
+                        .font(.raahaSubheadlineMedium)
                         .foregroundStyle(Color.frostedBlue)
-                    Text("What's the move?")
+
+                    Text("Where to in Chennai?")
                         .font(.raahaTitle)
                         .foregroundStyle(Color.honeydew)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                    Text("Plan your journey across Chennai with all modes, in one place.")
+                        .minimumScaleFactor(0.85)
+
+                    Text("Seamless multimodal routes across Metro, Bus, Auto & Suburban Rail.")
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.frostedBlue)
-                        .frame(maxWidth: 190, alignment: .leading)
-                        .padding(.top, 6)
+                        .foregroundStyle(Color.frostedBlue.opacity(0.9))
+                        .frame(maxWidth: 195, alignment: .leading)
+                        .padding(.top, 2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(minHeight: 134)
+            .frame(minHeight: 136)
         }
     }
 
-    // MARK: Planner
+    // MARK: - Journey Planner Card
 
     private var plannerCard: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 16) {
             VStack(spacing: 0) {
                 // FROM row
                 HStack(spacing: 14) {
-                    iconCircle("location.fill")
-                    Button { editingFrom = true } label: {
-                        field(label: "FROM", value: from)
+                    ZStack {
+                        Circle()
+                            .fill(Color.frostedBlue)
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Color.deepSpace)
+                    }
+
+                    Button {
+                        editingFrom = true
+                    } label: {
+                        fieldRow(label: "FROM", value: from)
                     }
                     .buttonStyle(.plain)
-                    .frame(maxWidth: .infinity)
-                    .accessibilityLabel("From: \(from). Tap to change.")
+                    .accessibilityLabel("From: \(from). Tap to change origin.")
                 }
 
-                // Middle divider & swap button
+                // Middle connector & swap button
                 HStack(spacing: 14) {
-                    Rectangle()
-                        .fill(Color.deepSpace)
-                        .frame(width: 1.5)
-                        .frame(width: 40)
-
-                    HStack(spacing: 14) {
-                        Rectangle()
-                            .fill(Color.deepSpace.opacity(0.8))
-                            .frame(height: 1.5)
-
-                        Button {
-                            withAnimation(.snappy) {
-                                let tmp = from; from = to; to = tmp
-                            }
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
-                                .font(.raahaHeadline)
-                                .foregroundStyle(Color.deepSpace)
-                                .frame(width: 46, height: 46)
-                                .background(Circle().fill(Color.honeydew))
+                    VStack(spacing: 3) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            Circle()
+                                .fill(Color.frostedBlue.opacity(0.5))
+                                .frame(width: 3, height: 3)
                         }
-                        .accessibilityLabel("Swap origin and destination")
                     }
+                    .frame(width: 36)
+
+                    Rectangle()
+                        .fill(Color.frostedBlue.opacity(0.2))
+                        .frame(height: 1)
+
+                    Button {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.65)) {
+                            swapRotation += 180
+                            let temp = from
+                            from = to
+                            to = temp
+                        }
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.deepSpace.opacity(0.85))
+                                .frame(width: 40, height: 40)
+                                .overlay(Circle().stroke(Color.frostedBlue.opacity(0.35), lineWidth: 1))
+                            Image(systemName: "arrow.up.arrow.down")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(Color.honeydew)
+                                .rotationEffect(.degrees(swapRotation))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .sensoryFeedback(.impact(weight: .light), trigger: swapRotation)
+                    .accessibilityLabel("Swap origin and destination")
                 }
-                .frame(height: 46)
-                .padding(.vertical, 4)
+                .frame(height: 38)
+                .padding(.vertical, 2)
 
                 // TO row
                 HStack(spacing: 14) {
-                    iconCircle(asset: "icon_pin")
-                    Button { editingTo = true } label: {
-                        field(label: "TO", value: to)
+                    ZStack {
+                        Circle()
+                            .fill(Color.strawberry)
+                            .frame(width: 36, height: 36)
+                        Image("icon_pin")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 15, height: 15)
+                            .foregroundStyle(Color.honeydew)
+                    }
+
+                    Button {
+                        editingTo = true
+                    } label: {
+                        fieldRow(label: "TO", value: to)
                     }
                     .buttonStyle(.plain)
-                    .frame(maxWidth: .infinity)
-                    .accessibilityLabel("To: \(to). Tap to change.")
+                    .accessibilityLabel("To: \(to). Tap to change destination.")
                 }
             }
 
-            Button("Plan Journey") {
+            // Start Journey Call-To-Action Button
+            Button {
                 router.planJourney(from: from, to: to)
+            } label: {
+                HStack(spacing: 8) {
+                    Text("Find Best Routes")
+                        .font(.raahaHeadline)
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 15, weight: .bold))
+                }
             }
             .buttonStyle(.pillLight)
+            .sensoryFeedback(.impact(weight: .medium), trigger: from)
         }
         .padding(18)
-        .navyCard(radius: 30, gradient: .raahaHero)
+        .navyCard(radius: 24, gradient: .raahaHero)
     }
 
-    private func iconCircle(_ symbol: String? = nil, asset: String? = nil) -> some View {
-        Group {
-            if let asset {
-                Image(asset)
-                    .renderingMode(.template)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 18, height: 18)
-            } else if let symbol {
-                Image(systemName: symbol)
-                    .font(.raahaBody)
-            }
-        }
-        .foregroundStyle(Color.deepSpace)
-        .frame(width: 40, height: 40)
-        .background(Circle().fill(Color.honeydew))
-        .accessibilityHidden(true)
-    }
-
-    private func field(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+    private func fieldRow(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.raahaCaption2)
-                .foregroundStyle(Color.frostedBlue)
+                .foregroundStyle(Color.frostedBlue.opacity(0.85))
+
             HStack {
                 Text(value)
-                    .font(.raahaHeadline)
+                    .font(.raahaSubheadlineMedium)
                     .foregroundStyle(Color.honeydew)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
                 Spacer(minLength: 4)
-                Image(systemName: "pencil")
-                    .font(.raahaCaption)
-                    .foregroundStyle(Color.frostedBlue.opacity(0.7))
+                Image(systemName: "chevron.right")
+                    .font(.raahaCaption2)
+                    .foregroundStyle(Color.frostedBlue.opacity(0.6))
             }
         }
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
-    // MARK: Quick destinations
+    // MARK: - Mode Shortcuts
+
+    private var modeShortcuts: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Modes in Chennai")
+                    .font(.raahaCaption)
+                    .foregroundStyle(Color.steelBlue)
+                Spacer()
+                if selectedMode != nil {
+                    Button("Clear filter") {
+                        withAnimation(.spring(response: 0.25)) { selectedMode = nil }
+                    }
+                    .font(.raahaCaption2)
+                    .foregroundStyle(Color.strawberry)
+                }
+            }
+            .padding(.horizontal, 4)
+
+            HStack(spacing: 10) {
+                modeItem(.metro, label: "Metro", icon: "tram.fill", customAsset: "icon_metro")
+                modeItem(.bus, label: "Bus", icon: "bus.fill", customAsset: nil)
+                modeItem(.auto, label: "Auto", icon: "car.fill", customAsset: "icon_auto")
+                modeItem(.train, label: "Rail", icon: "train.side.front.car", customAsset: "icon_train")
+                modeItem(.bike, label: "Bike", icon: "bicycle", customAsset: "icon_bike")
+            }
+        }
+    }
+
+    private func modeItem(_ mode: TransportMode, label: String, icon: String, customAsset: String?) -> some View {
+        let isSelected = selectedMode == mode
+        return Button {
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.7)) {
+                selectedMode = isSelected ? nil : mode
+            }
+        } label: {
+            VStack(spacing: 6) {
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? Color.strawberry : Color.honeydew)
+                        .frame(width: 44, height: 44)
+                        .shadow(color: Color.deepSpace.opacity(0.08), radius: 6, x: 0, y: 3)
+
+                    if let customAsset {
+                        Image(customAsset)
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                            .foregroundStyle(isSelected ? Color.honeydew : Color.deepSpace)
+                    } else {
+                        Image(systemName: icon)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(isSelected ? Color.honeydew : Color.deepSpace)
+                    }
+                }
+
+                Text(label)
+                    .font(.raahaCaption2)
+                    .foregroundStyle(isSelected ? Color.strawberry : Color.deepSpace)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: selectedMode)
+        .accessibilityLabel("\(label) mode filter")
+    }
+
+    // MARK: - Quick Destinations
 
     private var quickDestinations: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Quick destinations")
-                .font(.raahaSubheadlineMedium)
-                .foregroundStyle(Color.deepSpace)
+            SectionHeader(title: "Popular Destinations", action: nil)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
@@ -220,7 +324,7 @@ struct HomeView: View {
                                     .renderingMode(.template)
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 13, height: 13)
+                                    .frame(width: 12, height: 12)
                                     .foregroundStyle(Color.honeydew)
                                 Text(dest)
                                     .font(.raahaFootnoteSemibold)
@@ -230,18 +334,69 @@ struct HomeView: View {
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
                             .background(Capsule().fill(Color.deepSpace))
+                            .shadow(color: Color.deepSpace.opacity(0.12), radius: 6, x: 0, y: 3)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(TactileButtonStyle())
                     }
                 }
-                .padding(.horizontal, 1)
+                .padding(.horizontal, 2)
+                .padding(.vertical, 2)
             }
         }
         .padding(16)
-        .lightCard(radius: 22)
+        .lightCard(radius: 20)
     }
 
-    // MARK: Smart planner banner
+    // MARK: - Daily Commute Live Card
+
+    private var commuteStatusCard: some View {
+        Button {
+            router.planJourney(from: "Alandur Metro", to: "T. Nagar")
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.deepSpace)
+                        .frame(width: 48, height: 48)
+                    Image("icon_metro")
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(Color.honeydew)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Circle().fill(Color.statusGreen).frame(width: 6, height: 6)
+                        Text("METRO ON TIME · BLUE LINE")
+                            .font(.raahaCaption2)
+                            .foregroundStyle(Color.statusGreen)
+                    }
+
+                    Text("Alandur → T. Nagar")
+                        .font(.raahaHeadline)
+                        .foregroundStyle(Color.deepSpace)
+
+                    Text("Next train in 4 min · Est. 18 min travel")
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color.steelBlue)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.raahaSubheadlineMedium)
+                    .foregroundStyle(Color.steelBlue)
+            }
+            .padding(14)
+            .lightCard(radius: 20)
+        }
+        .buttonStyle(TactileButtonStyle())
+        .accessibilityLabel("Daily commute: Alandur to T Nagar. Next train in 4 minutes.")
+    }
+
+    // MARK: - Smart Planner Banner
 
     private var smartRouteCard: some View {
         SmartRouteBanner {
@@ -270,10 +425,11 @@ struct LocationPickerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Search field
+                // Search bar
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(Color.steelBlue)
+
                     TextField("", text: $query,
                               prompt: Text(prompt).foregroundStyle(Color.steelBlue))
                         .font(.raahaBody)
@@ -284,84 +440,74 @@ struct LocationPickerSheet: View {
                                 commit(query)
                             }
                         }
+
                     if !query.isEmpty {
-                        Button { query = "" } label: {
+                        Button {
+                            query = ""
+                        } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(Color.steelBlue)
                         }
                     }
                 }
                 .padding(.horizontal, 16)
-                .frame(minHeight: 52)
-                .background(Color.frostedBlue.opacity(0.18), in: Capsule())
+                .frame(minHeight: 50)
+                .background(Color.frostedBlue.opacity(0.25), in: Capsule())
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
 
-                // Use current location shortcut
+                // Current location shortcut
                 Button {
                     commit("Current Location")
                 } label: {
                     HStack(spacing: 12) {
                         Image(systemName: "location.fill")
-                            .font(.raahaBody)
-                            .foregroundStyle(Color.honeydew)
-                            .frame(width: 36, height: 36)
-                            .background(Circle().fill(Color.steelBlue))
+                            .font(.raahaHeadline)
+                            .foregroundStyle(Color.steelBlue)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Current Location")
-                                .font(.raahaSubheadline)
+                            Text("Use Current Location")
+                                .font(.raahaHeadline)
                                 .foregroundStyle(Color.deepSpace)
-                            Text("Use your GPS location")
+                            Text("Chennai Metropolitan Area")
                                 .font(.raahaCaption)
                                 .foregroundStyle(Color.steelBlue)
                         }
                         Spacer()
-                        if current == "Current Location" {
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(Color.steelBlue)
-                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                 }
                 .buttonStyle(.plain)
 
-                Divider().padding(.horizontal, 16)
+                HairlineDivider()
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 4)
 
-                // Suggestions list
-                List {
-                    Section(header: Text("Suggestions")
-                        .font(.raahaFootnoteSemibold)
-                        .foregroundStyle(Color.steelBlue)) {
-                        ForEach(filtered, id: \.self) { place in
-                            Button {
-                                commit(place)
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Image("icon_pin")
-                                        .renderingMode(.template)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 18, height: 18)
-                                        .foregroundStyle(Color.strawberry)
-                                        .frame(width: 32)
-                                    Text(place)
-                                        .font(.raahaSubheadline)
-                                        .foregroundStyle(Color.deepSpace)
-                                    Spacer()
-                                    if place == current {
-                                        Image(systemName: "checkmark")
-                                            .foregroundStyle(Color.steelBlue)
-                                    }
-                                }
+                // Suggestions List
+                List(filtered, id: \.self) { place in
+                    Button {
+                        commit(place)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "mappin.circle.fill")
+                                .foregroundStyle(Color.steelBlue)
+                            Text(place)
+                                .font(.raahaSubheadlineMedium)
+                                .foregroundStyle(Color.deepSpace)
+                            Spacer()
+                            if place == current {
+                                Image(systemName: "checkmark")
+                                    .font(.raahaCaption)
+                                    .foregroundStyle(Color.statusGreen)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .padding(.vertical, 4)
                     }
+                    .buttonStyle(.plain)
                 }
                 .listStyle(.plain)
             }
-            .background(LinearGradient.raahaScreen.ignoresSafeArea())
+            .background(Color.honeydew.ignoresSafeArea())
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -371,8 +517,6 @@ struct LocationPickerSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
     }
 
     private func commit(_ value: String) {
@@ -381,39 +525,40 @@ struct LocationPickerSheet: View {
     }
 }
 
-// MARK: - Suggestion data
+// MARK: - Location Suggestions (Strict Chennai Only)
 
 enum LocationSuggestions {
     static let origins: [String] = [
         "Current Location",
         "Chennai Central",
+        "Egmore Railway Station",
         "Chennai Airport",
         "T. Nagar",
-        "Anna Nagar",
+        "Alandur Metro Station",
         "Adyar",
-        "Velachery",
-        "Tambaram",
         "Guindy",
-        "Egmore"
+        "Anna Nagar",
+        "Tambaram",
+        "Koyambedu CMBT",
+        "Velachery"
     ]
 
     static let destinations: [String] = [
         "Phoenix Mall, Velachery",
         "Marina Beach",
         "Besant Nagar Beach",
+        "Kapaleeshwarar Temple, Mylapore",
         "Chennai Airport",
         "T. Nagar",
         "Anna Nagar",
-        "Mahabalipuram",
-        "Egmore",
-        "Tambaram",
-        "Guindy"
+        "San Thome Basilica",
+        "Egmore Museum",
+        "Guindy National Park"
     ]
 }
 
-// MARK: - SmartRouteBanner (shared by Home and Trips)
+// MARK: - SmartRouteBanner (Shared by Home and Trips)
 
-/// "Not sure where to go?" banner, shared by Home and Trips.
 struct SmartRouteBanner: View {
     let action: () -> Void
 
@@ -424,7 +569,7 @@ struct SmartRouteBanner: View {
                     Text("Not sure where to go?")
                         .font(.raahaHeadline)
                         .foregroundStyle(Color.honeydew)
-                    Text("Try our Smart Route Planner")
+                    Text("Explore curated Chennai destinations")
                         .font(.raahaSubheadline)
                         .foregroundStyle(Color.frostedBlue)
                 }
@@ -435,11 +580,11 @@ struct SmartRouteBanner: View {
                     .frame(width: 44, height: 44)
                     .background(Circle().fill(Color.frostedBlue))
             }
-            .padding(20)
-            .navyCard(radius: 24, gradient: .raahaBanner)
+            .padding(18)
+            .navyCard(radius: 20, gradient: .raahaBanner)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TactileButtonStyle())
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Opens route options")
+        .accessibilityHint("Opens curated destinations")
     }
 }

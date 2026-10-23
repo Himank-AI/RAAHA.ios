@@ -1,52 +1,64 @@
 import SwiftUI
 
+// MARK: - TripsView
+
+/// Premium, interactive Trips screen featuring a clear hierarchy for Upcoming, Saved, and Recent journeys.
 struct TripsView: View {
     @EnvironmentObject private var router: AppRouter
+
+    enum TripFilter: String, CaseIterable, Identifiable {
+        case all = "All"
+        case upcoming = "Upcoming"
+        case saved = "Saved"
+        case recent = "Recent"
+
+        var id: String { rawValue }
+    }
+
+    @State private var activeFilter: TripFilter = .all
+    @State private var savedJourneys: [SavedJourney] = MockData.savedJourneys
+    @State private var upcomingTrips: [PlannedTrip] = MockData.upcomingTrips
 
     var body: some View {
         VStack(spacing: 0) {
             header
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    SectionHeader(title: "Saved journeys", action: "See all", showsChevron: true)
+                VStack(alignment: .leading, spacing: 18) {
+                    // Filter Chips Bar
+                    filterBar
 
-                    HStack(spacing: 12) {
-                        ForEach(MockData.savedJourneys) { journey in
-                            SavedJourneyCard(journey: journey) {
-                                router.planJourney(from: "Current Location", to: journey.name)
-                            }
-                        }
+                    // 1. Upcoming & Planned Trips
+                    if activeFilter == .all || activeFilter == .upcoming {
+                        upcomingSection
                     }
 
-                    SectionHeader(title: "Recent trips", action: "See all", showsChevron: true)
-                        .padding(.top, 4)
-
-                    VStack(spacing: 8) {
-                        ForEach(MockData.recentTrips) { trip in
-                            RecentTripRow(trip: trip) {
-                                // parse "A → B" routes into from/to
-                                let parts = trip.route.components(separatedBy: " → ")
-                                let from = parts.first ?? "Current Location"
-                                let to   = parts.last  ?? trip.route
-                                router.planJourney(from: from, to: to)
-                            }
-                        }
+                    // 2. Saved Journeys
+                    if activeFilter == .all || activeFilter == .saved {
+                        savedSection
                     }
 
+                    // 3. Recent Trips
+                    if activeFilter == .all || activeFilter == .recent {
+                        recentSection
+                    }
+
+                    // Smart Planner Suggestion
                     SmartRouteBanner {
-                        router.planJourney(from: "Current Location", to: router.journeyTo)
+                        router.planJourney(from: "Current Location", to: "Marina Beach")
                     }
-                        .padding(.top, 10)
+                    .padding(.top, 6)
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 22)
+                .padding(.top, 18)
             }
             .contentMargins(.bottom, 110, for: .scrollContent)
         }
         .background(LinearGradient.raahaScreen.ignoresSafeArea())
         .navyHeaderChrome()
     }
+
+    // MARK: - Header
 
     private var header: some View {
         NavyHeader {
@@ -55,179 +67,382 @@ struct TripsView: View {
                     .font(.raahaTitle)
                     .foregroundStyle(Color.honeydew)
                     .accessibilityAddTraits(.isHeader)
-                Text("Your saved journeys, recent trips and quick access to get you moving.")
+
+                Text("Your upcoming journeys, bookmarked routes, and travel history across Chennai.")
                     .font(.raahaSubheadline)
                     .foregroundStyle(Color.frostedBlue)
 
-                quickAccess
+                quickCommuteCard
                     .padding(.top, 4)
             }
         }
     }
 
-    private var quickAccess: some View {
+    private var quickCommuteCard: some View {
         Button {
-            router.planJourney(from: "Chennai", to: "T. Nagar")
+            router.planJourney(from: "Chennai Central", to: "T. Nagar")
         } label: {
             HStack(spacing: 14) {
-                Image(systemName: "house.fill")
-                    .font(.raahaTitle2)
-                    .foregroundStyle(Color.deepSpace)
-                    .frame(width: 56, height: 56)
-                    .background(Circle().fill(Color.frostedBlue))
+                ZStack {
+                    Circle()
+                        .fill(Color.frostedBlue)
+                        .frame(width: 50, height: 50)
+                    Image(systemName: "house.fill")
+                        .font(.raahaTitle3)
+                        .foregroundStyle(Color.deepSpace)
+                }
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text("Home → Work")
                         .font(.raahaHeadline)
                         .foregroundStyle(Color.deepSpace)
-                    Text("Chennai → T. Nagar")
-                        .font(.raahaSubheadline)
+                    Text("Chennai Central → T. Nagar")
+                        .font(.raahaFootnote)
                         .foregroundStyle(Color.steelBlue)
-                    Text("via Metro + Walk")
-                        .font(.raahaCaption)
-                        .foregroundStyle(Color.steelBlue)
+                    Text("via Metro + Walk · 22 min")
+                        .font(.raahaCaption2)
+                        .foregroundStyle(Color.steelBlue.opacity(0.85))
                 }
 
                 Spacer(minLength: 4)
 
-                VStack(alignment: .trailing, spacing: 14) {
-                    HStack(spacing: 3) {
+                VStack(alignment: .trailing, spacing: 10) {
+                    HStack(spacing: 4) {
                         Image(systemName: "bolt.fill")
-                        Text("Quick access")
+                        Text("Quick")
                     }
                     .font(.raahaCaption2)
                     .foregroundStyle(Color.strawberry)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.strawberry.opacity(0.14)))
+                    .background(Capsule().fill(Color.strawberry.opacity(0.12)))
 
-                    Image(systemName: "chevron.right")
-                        .font(.raahaBody)
-                        .foregroundStyle(Color.steelBlue)
-                }
-            }
-            .padding(12)
-            .lightCard(radius: 24)
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-struct SavedJourneyCard: View {
-    let journey: SavedJourney
-    let action: () -> Void
-    @State private var bookmarked: Bool
-
-    init(journey: SavedJourney, action: @escaping () -> Void) {
-        self.journey = journey
-        self.action = action
-        _bookmarked = State(initialValue: journey.isBookmarked)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .top) {
-                    Image(journey.imageName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 50, height: 50)
-                        .clipShape(Circle())
-                        .accessibilityHidden(true)
-                    Spacer()
-                }
-                .overlay(alignment: .topTrailing) {
-                    Button {
-                        bookmarked.toggle()
-                    } label: {
-                        Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
-                            .font(.raahaTitle3)
-                            .foregroundStyle(Color.steelBlue)
-                            .frame(width: 44, height: 44)
-                    }
-                    .offset(x: 8, y: -8)
-                    .accessibilityLabel(bookmarked ? "Remove bookmark" : "Bookmark")
-                }
-
-                Spacer(minLength: 10)
-
-                Text(journey.name)
-                    .font(.raahaHeadline)
-                    .foregroundStyle(Color.deepSpace)
-                Text(journey.route)
-                    .font(.raahaCaption)
-                    .foregroundStyle(Color.steelBlue)
-                    .padding(.top, 2)
-
-                HStack {
-                    Spacer()
                     Image(systemName: "chevron.right")
                         .font(.raahaFootnoteSemibold)
                         .foregroundStyle(Color.steelBlue)
                 }
             }
+            .padding(12)
+            .lightCard(radius: 20)
+        }
+        .buttonStyle(TactileButtonStyle())
+        .accessibilityLabel("Quick route: Home to Work via Metro and Walk.")
+    }
+
+    // MARK: - Filter Bar
+
+    private var filterBar: some View {
+        HStack(spacing: 8) {
+            ForEach(TripFilter.allCases) { filter in
+                let isSelected = activeFilter == filter
+                Button {
+                    withAnimation(.spring(response: 0.28, dampingFraction: 0.75)) {
+                        activeFilter = filter
+                    }
+                } label: {
+                    Text(filter.rawValue)
+                        .font(.raahaFootnoteSemibold)
+                        .foregroundStyle(isSelected ? Color.honeydew : Color.deepSpace)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(isSelected ? Color.deepSpace : Color.honeydew)
+                                .shadow(color: Color.deepSpace.opacity(isSelected ? 0.15 : 0.05), radius: 6, x: 0, y: 2)
+                        )
+                }
+                .buttonStyle(.plain)
+                .sensoryFeedback(.selection, trigger: activeFilter)
+            }
+            Spacer()
+        }
+    }
+
+    // MARK: - 1. Upcoming & Planned Trips
+
+    private var upcomingSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Upcoming & Planned", action: nil)
+
+            if upcomingTrips.isEmpty {
+                emptyPlaceholder(text: "No upcoming journeys scheduled.")
+            } else {
+                ForEach(upcomingTrips) { trip in
+                    UpcomingTripCard(trip: trip) {
+                        router.planJourney(from: trip.origin, to: trip.destination)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - 2. Saved Journeys
+
+    private var savedSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Saved Journeys", action: nil)
+
+            let bookmarkedList = savedJourneys.filter { $0.isBookmarked }
+            if bookmarkedList.isEmpty {
+                emptyPlaceholder(text: "No saved journeys bookmarked.")
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(bookmarkedList) { journey in
+                            SavedJourneyCard(journey: journey) {
+                                router.planJourney(from: "Current Location", to: journey.name)
+                            } onToggleBookmark: {
+                                toggleBookmark(for: journey)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 2)
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+    }
+
+    private func toggleBookmark(for journey: SavedJourney) {
+        if let idx = savedJourneys.firstIndex(where: { $0.id == journey.id }) {
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.7)) {
+                let cur = savedJourneys[idx].isBookmarked
+                savedJourneys[idx] = SavedJourney(
+                    name: journey.name,
+                    route: journey.route,
+                    imageName: journey.imageName,
+                    isBookmarked: !cur
+                )
+            }
+        }
+    }
+
+    // MARK: - 3. Recent Trips
+
+    private var recentSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Recent Trips", action: nil)
+
+            VStack(spacing: 8) {
+                ForEach(MockData.recentTrips) { trip in
+                    RecentTripRow(trip: trip) {
+                        let parts = trip.route.components(separatedBy: " → ")
+                        let from = parts.first ?? "Current Location"
+                        let to   = parts.last  ?? trip.route
+                        router.planJourney(from: from, to: to)
+                    }
+                }
+            }
+        }
+    }
+
+    private func emptyPlaceholder(text: String) -> some View {
+        HStack {
+            Image(systemName: "tray")
+                .foregroundStyle(Color.steelBlue)
+            Text(text)
+                .font(.raahaFootnote)
+                .foregroundStyle(Color.steelBlue)
+        }
         .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 136, alignment: .topLeading)
-        .lightCard(radius: 24)
-        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .onTapGesture(perform: action)
-        .accessibilityElement(children: .contain)
-        .accessibilityAddTraits(.isButton)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .lightCard(radius: 16)
     }
 }
 
-struct RecentTripRow: View {
+// MARK: - Upcoming Trip Card
+
+private struct UpcomingTripCard: View {
+    let trip: PlannedTrip
+    let onPlan: () -> Void
+
+    var body: some View {
+        Button(action: onPlan) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text(trip.countdownText)
+                                .font(.raahaCaption2)
+                                .foregroundStyle(Color.honeydew)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Capsule().fill(Color.strawberry))
+
+                            Text(trip.scheduledDate)
+                                .font(.raahaCaption)
+                                .foregroundStyle(Color.frostedBlue)
+                        }
+
+                        Text(trip.title)
+                            .font(.raahaHeadline)
+                            .foregroundStyle(Color.honeydew)
+                    }
+
+                    Spacer()
+
+                    ModeBadge(mode: trip.primaryMode, size: 36, fill: Color.steelBlue, tint: Color.honeydew)
+                }
+
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
+                        .font(.raahaFootnote)
+                        .foregroundStyle(Color.frostedBlue)
+
+                    Text("\(trip.origin) → \(trip.destination)")
+                        .font(.raahaFootnote)
+                        .foregroundStyle(Color.honeydew.opacity(0.9))
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    Text("\(trip.estimatedDuration) · \(trip.estimatedFare)")
+                        .font(.raahaFootnoteSemibold)
+                        .foregroundStyle(Color.frostedBlue)
+                }
+
+                HStack {
+                    Spacer()
+                    Button("Start Live Trip", action: onPlan)
+                        .font(.raahaFootnoteSemibold)
+                        .foregroundStyle(Color.deepSpace)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(Color.honeydew))
+                }
+            }
+            .padding(16)
+            .navyCard(radius: 22, gradient: .raahaNavyGlow)
+        }
+        .buttonStyle(TactileButtonStyle())
+    }
+}
+
+// MARK: - Saved Journey Card
+
+private struct SavedJourneyCard: View {
+    let journey: SavedJourney
+    let action: () -> Void
+    let onToggleBookmark: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 0) {
+                ZStack(alignment: .topTrailing) {
+                    Image(journey.imageName)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 170, height: 100)
+                        .clipped()
+
+                    Button {
+                        onToggleBookmark()
+                    } label: {
+                        Image(systemName: journey.isBookmarked ? "bookmark.fill" : "bookmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(journey.isBookmarked ? Color.strawberry : Color.deepSpace)
+                            .frame(width: 32, height: 32)
+                            .background(Circle().fill(Color.honeydew))
+                            .shadow(radius: 3)
+                    }
+                    .padding(8)
+                    .sensoryFeedback(.impact(weight: .light), trigger: journey.isBookmarked)
+                    .accessibilityLabel(journey.isBookmarked ? "Remove bookmark" : "Add bookmark")
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(journey.name)
+                        .font(.raahaSubheadlineMedium)
+                        .foregroundStyle(Color.deepSpace)
+                        .lineLimit(1)
+
+                    Text(journey.route)
+                        .font(.raahaCaption2)
+                        .foregroundStyle(Color.steelBlue)
+                        .lineLimit(1)
+
+                    HStack {
+                        Label("Route", systemImage: "arrow.right.circle.fill")
+                            .font(.raahaCaption2)
+                            .foregroundStyle(Color.steelBlue)
+                        Spacer()
+                    }
+                    .padding(.top, 4)
+                }
+                .padding(12)
+            }
+            .frame(width: 170)
+            .lightCard(radius: 18)
+        }
+        .buttonStyle(TactileButtonStyle())
+    }
+}
+
+// MARK: - Recent Trip Row
+
+private struct RecentTripRow: View {
     let trip: RecentTrip
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                Group {
+                ZStack {
+                    Circle()
+                        .fill(Color.frostedBlue.opacity(0.45))
+                        .frame(width: 44, height: 44)
+
                     if let asset = trip.customAsset {
                         Image(asset)
                             .renderingMode(.template)
                             .resizable()
                             .scaledToFit()
                             .frame(width: 20, height: 20)
+                            .foregroundStyle(Color.deepSpace)
                     } else {
                         Image(systemName: trip.symbol)
-                            .font(.raahaBody)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(Color.deepSpace)
                     }
                 }
-                .foregroundStyle(Color.honeydew)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Color.steelBlue))
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(trip.route)
-                        .font(.raahaFootnoteSemibold)
+                        .font(.raahaSubheadlineMedium)
                         .foregroundStyle(Color.deepSpace)
-                    Text(trip.mode)
-                        .font(.raahaCaption)
-                        .foregroundStyle(Color.steelBlue)
+                        .lineLimit(1)
+
+                    HStack(spacing: 6) {
+                        Text(trip.mode)
+                            .font(.raahaCaption)
+                            .foregroundStyle(Color.steelBlue)
+                        Text("·")
+                            .foregroundStyle(Color.steelBlue.opacity(0.5))
+                        Text("\(trip.day), \(trip.time)")
+                            .font(.raahaCaption2)
+                            .foregroundStyle(Color.steelBlue.opacity(0.8))
+                    }
                 }
 
-                Spacer(minLength: 4)
+                Spacer()
 
-                VStack(alignment: .trailing, spacing: 3) {
-                    Text(trip.day)
+                HStack(spacing: 4) {
+                    Text("Repeat")
                         .font(.raahaCaption)
                         .foregroundStyle(Color.steelBlue)
-                    Text(trip.time)
-                        .font(.raahaFootnoteSemibold)
-                        .foregroundStyle(Color.deepSpace)
+                    Image(systemName: "arrow.clockwise")
+                        .font(.raahaCaption2)
+                        .foregroundStyle(Color.steelBlue)
                 }
-
-                Image(systemName: "chevron.right")
-                    .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.steelBlue)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(Color.frostedBlue.opacity(0.3)))
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .lightCard(radius: 18)
         }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
+        .buttonStyle(TactileButtonStyle())
+        .accessibilityLabel("Trip: \(trip.route) via \(trip.mode) on \(trip.day). Tap to repeat.")
     }
 }
