@@ -31,7 +31,7 @@ struct HomeView: View {
             .contentMargins(.bottom, 110, for: .scrollContent)
             .scrollDismissesKeyboard(.interactively)
         }
-        .background(LinearGradient.raahaScreen.ignoresSafeArea())
+        .raahaScreenBackground()
         .navyHeaderChrome()
         // Origin picker sheet
         .sheet(isPresented: $editingFrom) {

@@ -143,4 +143,143 @@ extension View {
             .shadow(color: Color.deepSpace.opacity(0.15), radius: 14, x: 0, y: 6)
         #endif
     }
+
+    /// RAAHA fluid calm motion background with subtle low-opacity organic waves.
+    func raahaScreenBackground() -> some View {
+        self.background(RaahaScreenBackground())
+    }
 }
+
+// MARK: - Fluid Calm Motion Screen Background
+
+struct RaahaScreenBackground: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let w = proxy.size.width
+            let h = proxy.size.height
+
+            ZStack {
+                // 1. Base Calm Motion screen gradient
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.frostedBlue.opacity(0.85), location: 0.0),
+                        .init(color: Color.honeydew.opacity(0.95), location: 0.55),
+                        .init(color: Color.honeydew, location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                // 2. Primary upper flowing wave (sweeping from top-right across center)
+                Path { p in
+                    p.move(to: CGPoint(x: w * 0.42, y: 0))
+                    p.addCurve(
+                        to: CGPoint(x: w, y: h * 0.38),
+                        control1: CGPoint(x: w * 0.62, y: h * 0.12),
+                        control2: CGPoint(x: w * 0.84, y: h * 0.22)
+                    )
+                    p.addLine(to: CGPoint(x: w, y: 0))
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: 0x2A9D8F).opacity(0.11), location: 0.0),
+                            .init(color: Color.steelBlue.opacity(0.07), location: 0.6),
+                            .init(color: Color.frostedBlue.opacity(0.01), location: 1.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+                // 3. Signature fluid ribbon wave (flowing down through mid-screen)
+                Path { p in
+                    p.move(to: CGPoint(x: w * 0.86, y: h * 0.08))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.16, y: h * 0.64),
+                        control1: CGPoint(x: w * 0.94, y: h * 0.32),
+                        control2: CGPoint(x: w * 0.34, y: h * 0.48)
+                    )
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.32, y: h),
+                        control1: CGPoint(x: w * 0.06, y: h * 0.76),
+                        control2: CGPoint(x: w * 0.18, y: h * 0.92)
+                    )
+                    p.addLine(to: CGPoint(x: w * 0.44, y: h))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.28, y: h * 0.66),
+                        control1: CGPoint(x: w * 0.30, y: h * 0.92),
+                        control2: CGPoint(x: w * 0.18, y: h * 0.78)
+                    )
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.96, y: h * 0.08),
+                        control1: CGPoint(x: w * 0.46, y: h * 0.50),
+                        control2: CGPoint(x: w * 1.02, y: h * 0.32)
+                    )
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: 0x4FB8A6).opacity(0.12), location: 0.0),
+                            .init(color: Color(hex: 0x2A8C8E).opacity(0.08), location: 0.45),
+                            .init(color: Color.steelBlue.opacity(0.05), location: 0.8),
+                            .init(color: Color.frostedBlue.opacity(0.0), location: 1.0)
+                        ],
+                        startPoint: .topTrailing,
+                        endPoint: .bottomLeading
+                    )
+                )
+
+                // 4. Secondary lower-screen ambient wave
+                Path { p in
+                    p.move(to: CGPoint(x: 0, y: h * 0.52))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.82, y: h),
+                        control1: CGPoint(x: w * 0.22, y: h * 0.64),
+                        control2: CGPoint(x: w * 0.52, y: h * 0.88)
+                    )
+                    p.addLine(to: CGPoint(x: 0, y: h))
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color.steelBlue.opacity(0.07), location: 0.0),
+                            .init(color: Color(hex: 0x2A9D8F).opacity(0.04), location: 0.5),
+                            .init(color: Color.clear, location: 1.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+                // 5. Delicate accent crest along the right edge
+                Path { p in
+                    p.move(to: CGPoint(x: w, y: h * 0.58))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.58, y: h),
+                        control1: CGPoint(x: w * 0.80, y: h * 0.74),
+                        control2: CGPoint(x: w * 0.68, y: h * 0.88)
+                    )
+                    p.addLine(to: CGPoint(x: w, y: h))
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: 0x45A399).opacity(0.07), location: 0.0),
+                            .init(color: Color.clear, location: 1.0)
+                        ],
+                        startPoint: .topTrailing,
+                        endPoint: .bottomLeading
+                    )
+                )
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+}
+

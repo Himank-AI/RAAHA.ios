@@ -56,7 +56,7 @@ struct RouteDetailView: View {
             .padding(.top, 8)
             .sensoryFeedback(.impact(weight: .medium), trigger: kind)
         }
-        .background(LinearGradient.raahaScreen.ignoresSafeArea())
+        .raahaScreenBackground()
         .pushedChrome()
         .onAppear {
             expandedLegIds.removeAll()
