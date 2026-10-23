@@ -156,47 +156,9 @@ struct RouteDetailView: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
-
-            HairlineDivider(color: Color.frostedBlue.opacity(0.3))
-                .padding(.top, 8)
-
-            summary
+            .padding(.bottom, 14)
         }
         .navyCard(radius: 24)
-    }
-
-    private var summary: some View {
-        HStack(spacing: 0) {
-            stat(content: AnyView(Image(systemName: "clock").font(.raahaBody)), label: "Total Time",
-                 value: "\(option.minutes) min")
-            Rectangle().fill(Color.frostedBlue.opacity(0.3)).frame(width: 1, height: 32)
-            stat(content: AnyView(Text("₹").font(.raahaHeadline)), label: "Total Cost",
-                 value: "₹ \(option.fare)")
-            Rectangle().fill(Color.frostedBlue.opacity(0.3)).frame(width: 1, height: 32)
-            stat(content: AnyView(Image(systemName: "arrow.triangle.branch").font(.raahaBody)), label: "Modes",
-                 value: "\(option.modeCount)")
-        }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 8)
-        .accessibilityElement(children: .combine)
-    }
-
-    private func stat(content: AnyView, label: String, value: String) -> some View {
-        HStack(spacing: 8) {
-            content
-                .foregroundStyle(Color.frostedBlue)
-                .frame(width: 30, height: 30)
-                .background(Circle().fill(Color.steelBlue.opacity(0.35)))
-            VStack(alignment: .leading, spacing: 1) {
-                Text(label)
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.frostedBlue)
-                Text(value)
-                    .font(.raahaSubheadlineMedium)
-                    .foregroundStyle(Color.honeydew)
-            }
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 
