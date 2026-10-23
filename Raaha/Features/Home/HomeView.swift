@@ -400,27 +400,173 @@ struct SmartRouteBanner: View {
 
     var body: some View {
         Button(action: action) {
-            HStack {
+            HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Not sure where to go?")
-                        .font(.raahaHeadline)
-                        .foregroundStyle(Color.honeydew)
-                    Text("Explore curated Chennai destinations")
-                        .font(.raahaSubheadline)
-                        .foregroundStyle(Color.frostedBlue)
+                        .font(.system(size: 18.5, weight: .bold))
+                        .foregroundStyle(Color.white)
+
+                    Text("Try our Smart Route Planner")
+                        .font(.system(size: 13.5, weight: .regular))
+                        .foregroundStyle(Color(hex: 0xA4C8D8).opacity(0.85))
                 }
-                Spacer()
-                Image(systemName: "arrow.right")
-                    .font(.raahaBody)
-                    .foregroundStyle(Color.deepSpace)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.frostedBlue))
+
+                Spacer(minLength: 8)
+
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: 0x5DA1AB))
+                        .frame(width: 48, height: 48)
+                        .shadow(color: Color.deepSpace.opacity(0.15), radius: 6, x: 0, y: 3)
+
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(Color.white)
+                }
             }
-            .padding(18)
-            .navyCard(radius: 20, gradient: .raahaBanner)
+            .padding(.leading, 22)
+            .padding(.trailing, 18)
+            .padding(.vertical, 18)
+            .frame(maxWidth: .infinity, minHeight: 84)
+            .background(SmartRouteBackground())
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .shadow(color: Color.deepSpace.opacity(0.16), radius: 12, x: 0, y: 6)
         }
         .buttonStyle(TactileButtonStyle())
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Opens curated destinations")
+        .accessibilityLabel("Not sure where to go? Try our Smart Route Planner")
+        .accessibilityHint("Plans a smart route across Chennai")
     }
 }
+
+// MARK: - Smart Route Banner Fluid Waves Background
+
+private struct SmartRouteBackground: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let w = proxy.size.width
+            let h = proxy.size.height
+
+            ZStack {
+                // 1. Base deep oceanic blue background
+                LinearGradient(
+                    stops: [
+                        .init(color: Color(hex: 0x163D5C), location: 0.0),
+                        .init(color: Color(hex: 0x18476A), location: 0.50),
+                        .init(color: Color(hex: 0x123652), location: 0.85),
+                        .init(color: Color(hex: 0x0F2B42), location: 1.0)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+
+                // 2. Bottom-right dark rounded cove (organic depth under the button)
+                Path { p in
+                    p.move(to: CGPoint(x: w * 0.70, y: h))
+                    p.addCurve(
+                        to: CGPoint(x: w, y: h * 0.55),
+                        control1: CGPoint(x: w * 0.76, y: h * 0.60),
+                        control2: CGPoint(x: w * 0.88, y: h * 0.40)
+                    )
+                    p.addLine(to: CGPoint(x: w, y: h))
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(hex: 0x174961).opacity(0.85),
+                            Color(hex: 0x103147).opacity(0.95)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+                // 3. Top-right sweeping teal wave (entering from top edge toward right)
+                Path { p in
+                    p.move(to: CGPoint(x: w * 0.73, y: 0))
+                    p.addCurve(
+                        to: CGPoint(x: w, y: h * 0.65),
+                        control1: CGPoint(x: w * 0.76, y: h * 0.35),
+                        control2: CGPoint(x: w * 0.88, y: h * 0.52)
+                    )
+                    p.addLine(to: CGPoint(x: w, y: 0))
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: 0x4FB8A6).opacity(0.65), location: 0.0),
+                            .init(color: Color(hex: 0x2E8D94).opacity(0.35), location: 0.5),
+                            .init(color: Color(hex: 0x195262).opacity(0.1), location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+                // 4. Dark organic peninsula separating the two waves
+                Path { p in
+                    p.move(to: CGPoint(x: w * 0.74, y: 0))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.60, y: h),
+                        control1: CGPoint(x: w * 0.72, y: h * 0.38),
+                        control2: CGPoint(x: w * 0.65, y: h * 0.78)
+                    )
+                    p.addLine(to: CGPoint(x: w * 0.68, y: h))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.79, y: 0),
+                        control1: CGPoint(x: w * 0.73, y: h * 0.78),
+                        control2: CGPoint(x: w * 0.78, y: h * 0.38)
+                    )
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(hex: 0x11334E).opacity(0.85),
+                            Color(hex: 0x0E283E).opacity(0.6)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+                // 5. The primary vibrant seafoam/teal ribbon
+                Path { p in
+                    p.move(to: CGPoint(x: w * 0.67, y: 0))
+                    // Left outer curve swooping down-left
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.54, y: h),
+                        control1: CGPoint(x: w * 0.67, y: h * 0.36),
+                        control2: CGPoint(x: w * 0.60, y: h * 0.74)
+                    )
+                    // Bottom width
+                    p.addLine(to: CGPoint(x: w * 0.58, y: h))
+                    // Right inner curve back up
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.75, y: 0),
+                        control1: CGPoint(x: w * 0.64, y: h * 0.74),
+                        control2: CGPoint(x: w * 0.71, y: h * 0.36)
+                    )
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: 0x54C4AE), location: 0.0),
+                            .init(color: Color(hex: 0x45A699), location: 0.28),
+                            .init(color: Color(hex: 0x308C93), location: 0.58),
+                            .init(color: Color(hex: 0x226B7A).opacity(0.6), location: 0.85),
+                            .init(color: Color(hex: 0x184D5E).opacity(0.0), location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            }
+        }
+    }
+}
+
+
