@@ -143,4 +143,208 @@ extension View {
             .shadow(color: Color.deepSpace.opacity(0.15), radius: 14, x: 0, y: 6)
         #endif
     }
+
+    /// RAAHA fluid calm motion background with subtle low-opacity organic waves.
+    func raahaScreenBackground() -> some View {
+        self.background(RaahaScreenBackground())
+    }
 }
+
+// MARK: - Fluid Calm Motion Screen Background
+
+struct RaahaScreenBackground: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let w = proxy.size.width
+            let h = proxy.size.height
+
+            ZStack {
+                // 1. Base Calm Motion screen gradient (Frosted Blue to Honeydew)
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.frostedBlue.opacity(0.95), location: 0.0),
+                        .init(color: Color.honeydew, location: 0.45),
+                        .init(color: Color(hex: 0xE8F5EE), location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                // 2. Wave Layer 1 (Upper Ambient Rolling Tide)
+                Path { p in
+                    p.move(to: CGPoint(x: -20, y: h * 0.26))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.52, y: h * 0.20),
+                        control1: CGPoint(x: w * 0.15, y: h * 0.28),
+                        control2: CGPoint(x: w * 0.32, y: h * 0.18)
+                    )
+                    p.addCurve(
+                        to: CGPoint(x: w + 20, y: h * 0.25),
+                        control1: CGPoint(x: w * 0.70, y: h * 0.22),
+                        control2: CGPoint(x: w * 0.88, y: h * 0.29)
+                    )
+                    p.addLine(to: CGPoint(x: w + 20, y: h + 20))
+                    p.addLine(to: CGPoint(x: -20, y: h + 20))
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: 0x4FB8A6).opacity(0.24), location: 0.0),
+                            .init(color: Color(hex: 0x2A9D8F).opacity(0.18), location: 0.4),
+                            .init(color: Color.frostedBlue.opacity(0.04), location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+                // 3. Wave Layer 2 (Mid Rolling Wave - Counter Phase)
+                Path { p in
+                    p.move(to: CGPoint(x: -20, y: h * 0.44))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.48, y: h * 0.49),
+                        control1: CGPoint(x: w * 0.12, y: h * 0.40),
+                        control2: CGPoint(x: w * 0.30, y: h * 0.48)
+                    )
+                    p.addCurve(
+                        to: CGPoint(x: w + 20, y: h * 0.41),
+                        control1: CGPoint(x: w * 0.68, y: h * 0.50),
+                        control2: CGPoint(x: w * 0.85, y: h * 0.38)
+                    )
+                    p.addLine(to: CGPoint(x: w + 20, y: h + 20))
+                    p.addLine(to: CGPoint(x: -20, y: h + 20))
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: 0x2A9D8F).opacity(0.28), location: 0.0),
+                            .init(color: Color(hex: 0x457B9D).opacity(0.20), location: 0.5),
+                            .init(color: Color.clear, location: 1.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+                // 4. Wave Layer 3 (Deep Oceanic Swell)
+                Path { p in
+                    p.move(to: CGPoint(x: -20, y: h * 0.62))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.55, y: h * 0.58),
+                        control1: CGPoint(x: w * 0.18, y: h * 0.66),
+                        control2: CGPoint(x: w * 0.36, y: h * 0.56)
+                    )
+                    p.addCurve(
+                        to: CGPoint(x: w + 20, y: h * 0.65),
+                        control1: CGPoint(x: w * 0.72, y: h * 0.60),
+                        control2: CGPoint(x: w * 0.90, y: h * 0.70)
+                    )
+                    p.addLine(to: CGPoint(x: w + 20, y: h + 20))
+                    p.addLine(to: CGPoint(x: -20, y: h + 20))
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: 0x3AAFA9).opacity(0.26), location: 0.0),
+                            .init(color: Color(hex: 0x1D3557).opacity(0.16), location: 0.6),
+                            .init(color: Color.clear, location: 1.0)
+                        ],
+                        startPoint: .topTrailing,
+                        endPoint: .bottomLeading
+                    )
+                )
+
+                // 5. Wave Layer 4 (Lower Shoreline Crest)
+                Path { p in
+                    p.move(to: CGPoint(x: -20, y: h * 0.79))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.50, y: h * 0.83),
+                        control1: CGPoint(x: w * 0.15, y: h * 0.75),
+                        control2: CGPoint(x: w * 0.32, y: h * 0.82)
+                    )
+                    p.addCurve(
+                        to: CGPoint(x: w + 20, y: h * 0.77),
+                        control1: CGPoint(x: w * 0.68, y: h * 0.84),
+                        control2: CGPoint(x: w * 0.85, y: h * 0.74)
+                    )
+                    p.addLine(to: CGPoint(x: w + 20, y: h + 20))
+                    p.addLine(to: CGPoint(x: -20, y: h + 20))
+                    p.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color(hex: 0x58C8B4).opacity(0.25), location: 0.0),
+                            .init(color: Color(hex: 0x2A9D8F).opacity(0.14), location: 0.6),
+                            .init(color: Color.clear, location: 1.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+                // 6. Delicate Crest Highlights (Smooth luminous lines on wave crests)
+                Path { p in
+                    p.move(to: CGPoint(x: -20, y: h * 0.44))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.48, y: h * 0.49),
+                        control1: CGPoint(x: w * 0.12, y: h * 0.40),
+                        control2: CGPoint(x: w * 0.30, y: h * 0.48)
+                    )
+                    p.addCurve(
+                        to: CGPoint(x: w + 20, y: h * 0.41),
+                        control1: CGPoint(x: w * 0.68, y: h * 0.50),
+                        control2: CGPoint(x: w * 0.85, y: h * 0.38)
+                    )
+                }
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color(hex: 0x76E5D0).opacity(0.35),
+                            Color(hex: 0x4FB8A6).opacity(0.25),
+                            Color.clear
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    lineWidth: 2
+                )
+                .blur(radius: 1)
+
+                Path { p in
+                    p.move(to: CGPoint(x: -20, y: h * 0.62))
+                    p.addCurve(
+                        to: CGPoint(x: w * 0.55, y: h * 0.58),
+                        control1: CGPoint(x: w * 0.18, y: h * 0.66),
+                        control2: CGPoint(x: w * 0.36, y: h * 0.56)
+                    )
+                    p.addCurve(
+                        to: CGPoint(x: w + 20, y: h * 0.65),
+                        control1: CGPoint(x: w * 0.72, y: h * 0.60),
+                        control2: CGPoint(x: w * 0.90, y: h * 0.70)
+                    )
+                }
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color(hex: 0x4FB8A6).opacity(0.30),
+                            Color(hex: 0x58C8B4).opacity(0.38),
+                            Color.clear
+                        ],
+                        startPoint: .trailing,
+                        endPoint: .leading
+                    ),
+                    lineWidth: 2
+                )
+                .blur(radius: 1)
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+}
+
+

@@ -54,7 +54,7 @@ struct TripsView: View {
             }
             .contentMargins(.bottom, 110, for: .scrollContent)
         }
-        .background(LinearGradient.raahaScreen.ignoresSafeArea())
+        .raahaScreenBackground()
         .navyHeaderChrome()
     }
 

@@ -106,7 +106,7 @@ struct PlaceDetailView: View {
                 .padding(.bottom, 40)
             }
         }
-        .background(LinearGradient.raahaScreen.ignoresSafeArea())
+        .raahaScreenBackground()
         .pushedChrome(title: place.name)
         .ignoresSafeArea(edges: .top)
     }

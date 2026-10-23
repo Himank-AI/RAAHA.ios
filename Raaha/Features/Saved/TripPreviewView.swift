@@ -58,7 +58,7 @@ struct TripPreviewView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
         }
-        .background(LinearGradient.raahaScreen.ignoresSafeArea())
+        .raahaScreenBackground()
         .pushedChrome(leadingTitle: "Trip Preview")
     }
 

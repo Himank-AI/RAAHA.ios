@@ -41,7 +41,7 @@ struct ExploreView: View {
             .scrollDismissesKeyboard(.interactively)
             .refreshable { vm.refresh() }
         }
-        .background(LinearGradient.raahaScreen.ignoresSafeArea())
+        .raahaScreenBackground()
         .navyHeaderChrome()
         .onAppear { vm.onAppear() }
         .onChange(of: vm.query) { vm.onQueryChange(vm.query) }
@@ -760,12 +760,12 @@ private struct AllNearbySheet: View {
                         .listRowBackground(Color.clear)
                     }
                     .listStyle(.plain)
-                    .background(LinearGradient.raahaScreen.ignoresSafeArea())
+                    .raahaScreenBackground()
 
                 case .loading:
                     ProgressView("Loading nearby places…")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(LinearGradient.raahaScreen.ignoresSafeArea())
+                        .raahaScreenBackground()
 
                 default:
                     ChennaiEmptyResultsView(
