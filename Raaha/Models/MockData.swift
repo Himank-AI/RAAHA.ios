@@ -218,10 +218,37 @@ enum MockData {
 
     // MARK: Trips
 
+    // MARK: - Trips Hierarchy (Upcoming, Saved, Recent)
+
+    static let upcomingTrips: [PlannedTrip] = [
+        PlannedTrip(
+            title: "Weekend Sunrise Walk",
+            origin: "Chennai Central",
+            destination: "Marina Beach",
+            scheduledDate: "Tomorrow · 6:00 AM",
+            countdownText: "In 18 hrs",
+            primaryMode: .walk,
+            estimatedDuration: "25 min",
+            estimatedFare: "₹ 0"
+        ),
+        PlannedTrip(
+            title: "Evening Shopping at Phoenix",
+            origin: "Alandur Metro",
+            destination: "Phoenix Mall, Velachery",
+            scheduledDate: "Saturday · 5:30 PM",
+            countdownText: "In 3 days",
+            primaryMode: .metro,
+            estimatedDuration: "22 min",
+            estimatedFare: "₹ 40"
+        )
+    ]
+
     static let savedJourneys: [SavedJourney] = [
-        SavedJourney(name: "Marina Beach", route: "Chennai → Marina Beach",
+        SavedJourney(name: "Marina Beach", route: "Chennai Central → Marina Beach",
                      imageName: "trip_marina", isBookmarked: true),
-        SavedJourney(name: "Mahabalipuram", route: "Chennai → Mahabalipuram",
+        SavedJourney(name: "Besant Nagar Beach", route: "T. Nagar → Elliot's Beach",
+                     imageName: "thumb_besant", isBookmarked: true),
+        SavedJourney(name: "Phoenix Marketcity", route: "Guindy → Phoenix Mall",
                      imageName: "trip_mahabali", isBookmarked: false)
     ]
 

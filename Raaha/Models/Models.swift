@@ -204,6 +204,18 @@ struct MissedOption: Identifiable {
     let isBest: Bool
 }
 
+struct PlannedTrip: Identifiable {
+    let id = UUID()
+    let title: String
+    let origin: String
+    let destination: String
+    let scheduledDate: String
+    let countdownText: String
+    let primaryMode: TransportMode
+    let estimatedDuration: String
+    let estimatedFare: String
+}
+
 struct TripPlan {
     var destination: String = "Chennai Beach"
     var date: Date = TripPlan.nextSaturdayAtTen()

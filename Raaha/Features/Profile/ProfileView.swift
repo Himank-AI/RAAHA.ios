@@ -1,7 +1,20 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @State private var selectedInterests: Set<String> = ["Beaches"]
+    // MARK: - State
+    @State private var selectedCommuteModes: Set<String> = ["Metro", "Bus", "Local Train"]
+    @State private var selectedInterests: Set<String> = ["Beaches", "Heritage", "Food"]
+    @State private var showLogoutDialog: Bool = false
+    @State private var logoutSuccessBanner: Bool = false
+
+    private let commuteModes: [(name: String, symbol: String, customAsset: String?)] = [
+        ("Bike", "bicycle", "icon_bike"),
+        ("Auto", "car.fill", "icon_auto"),
+        ("Cab", "car.fill", nil),
+        ("Bus", "bus.fill", nil),
+        ("Local Train", "train.side.front.car", "icon_train"),
+        ("Metro", "tram.fill", "icon_metro")
+    ]
 
     private let interests: [(name: String, symbol: String)] = [
         ("Beaches", "beach.umbrella"),
@@ -9,7 +22,10 @@ struct ProfileView: View {
         ("Heritage", "building.columns"),
         ("Food", "fork.knife"),
         ("Adventure", "tent.fill"),
-        ("Nature", "leaf")
+        ("Nature", "leaf"),
+        ("Cafes", "cup.and.saucer.fill"),
+        ("Metro", "tram.fill"),
+        ("Photography", "camera.aperture")
     ]
 
     var body: some View {
@@ -17,214 +33,399 @@ struct ProfileView: View {
             header
 
             ScrollView {
-                VStack(spacing: 10) {
-                    infoRow(symbol: "person", label: "Name", value: "Akshaya Kumar")
-                    infoRow(symbol: "envelope", label: "Email", value: "akshaya.kumar@gmail.com")
-                    infoRow(symbol: "phone", label: "Phone", value: "+91 98765 43210")
+                VStack(spacing: 16) {
+                    // 1. Commute Preferences Group (Same chip layout as Discovery Interests)
+                    commutePreferencesSection
 
-                    interestsCard
-                    preferencesCard
+                    // 2. Saved Chennai Places Group
+                    savedPlacesSection
+
+                    // 3. Discovery Interests Group
+                    travelInterestsSection
+
+                    // 4. Transit & Support Group (Only FAQs and Help + Logout)
+                    transitSupportSection
+
+                    // Version Footer
+                    footerNote
                 }
-                .padding(16)
-                .navyCard(radius: 30, gradient: .raahaHero)
                 .padding(.horizontal, 16)
-                .padding(.top, 22)
+                .padding(.top, 18)
+                .padding(.bottom, 24)
             }
             .contentMargins(.bottom, 110, for: .scrollContent)
         }
         .background(LinearGradient.raahaScreen.ignoresSafeArea())
         .navyHeaderChrome()
+        .confirmationDialog(
+            "Log out of RAAHA?",
+            isPresented: $showLogoutDialog,
+            titleVisibility: .visible
+        ) {
+            Button("Log Out", role: .destructive) {
+                withAnimation { logoutSuccessBanner = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    withAnimation { logoutSuccessBanner = false }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You will need to sign in again to sync your journeys.")
+        }
+        .overlay(alignment: .top) {
+            if logoutSuccessBanner {
+                Text("Logged out of session")
+                    .font(.raahaFootnoteSemibold)
+                    .foregroundStyle(Color.honeydew)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(Color.deepSpace).shadow(radius: 8))
+                    .padding(.top, 60)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
     }
 
-    // MARK: Header
-
+    // MARK: - Header (Includes 28 Trips Taken)
     private var header: some View {
         NavyHeader {
-            VStack(spacing: 10) {
+            HStack(spacing: 16) {
+                // Profile Avatar with verified badge
                 ZStack(alignment: .bottomTrailing) {
-                    Image(systemName: "person.crop.circle")
+                    Image(systemName: "person.crop.circle.fill")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 88, height: 88)
-                        .foregroundStyle(Color.honeydew)
-                        .accessibilityLabel("Profile photo")
+                        .frame(width: 72, height: 72)
+                        .foregroundStyle(Color.frostedBlue)
+                        .background(Circle().fill(Color.steelBlue.opacity(0.4)))
+                        .overlay(Circle().stroke(Color.honeydew.opacity(0.4), lineWidth: 2))
 
-                    Button {
-                    } label: {
-                        Image(systemName: "camera.fill")
-                            .font(.raahaFootnoteSemibold)
-                            .foregroundStyle(Color.honeydew)
-                            .frame(width: 30, height: 30)
-                            .background(Circle().fill(Color.steelBlue))
-                            .overlay(Circle().stroke(Color.honeydew, lineWidth: 2))
-                    }
-                    .frame(minWidth: 44, minHeight: 44)
-                    .offset(x: 12, y: 12)
-                    .accessibilityLabel("Change photo")
+                    Circle()
+                        .fill(Color.strawberry)
+                        .frame(width: 24, height: 24)
+                        .overlay(
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color.honeydew)
+                        )
+                        .overlay(Circle().stroke(Color.deepSpace, lineWidth: 2))
+                        .offset(x: 2, y: 2)
                 }
-                .padding(.top, 2)
 
-                Text("Akshaya Kumar")
-                    .font(.raahaTitle2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Akshaya Kumar")
+                        .font(.raahaTitle2)
+                        .foregroundStyle(Color.honeydew)
+
+                    Text("akshaya.kumar@gmail.com")
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color.frostedBlue.opacity(0.85))
+
+                    // Trips taken with numbers only arranged neatly
+                    HStack(spacing: 6) {
+                        Image(systemName: "tram.fill")
+                            .font(.system(size: 11))
+                        Text("28")
+                            .font(.system(size: 12, weight: .bold))
+                        Text("Trips Taken")
+                            .font(.system(size: 11, weight: .medium))
+                    }
                     .foregroundStyle(Color.honeydew)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Color.steelBlue.opacity(0.6)))
+                    .padding(.top, 2)
+                }
+
+                Spacer()
             }
-            .frame(maxWidth: .infinity)
+            .padding(.top, 4)
+            .padding(.bottom, 6)
         }
     }
 
-    // MARK: Rows
+    // MARK: - Commute Preferences (Same chip layout as Discovery Interests)
+    private var commutePreferencesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle(title: "Commute Preferences", icon: "slider.horizontal.3")
 
-    private func infoRow(symbol: String, label: String, value: String) -> some View {
-        Button {
-        } label: {
-            HStack(spacing: 14) {
-                Image(systemName: symbol)
-                    .font(.raahaBody)
-                    .foregroundStyle(Color.deepSpace)
-                    .frame(width: 26)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(label)
-                        .font(.raahaCaption)
-                        .foregroundStyle(Color.steelBlue)
-                    Text(value)
-                        .font(.raahaHeadline)
-                        .foregroundStyle(Color.deepSpace)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Select your preferred Chennai transit options:")
+                    .font(.raahaCaption)
+                    .foregroundStyle(Color.frostedBlue.opacity(0.85))
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
+                    spacing: 8
+                ) {
+                    ForEach(commuteModes, id: \.name) { item in
+                        modeChip(item.name, symbol: item.symbol, customAsset: item.customAsset)
+                    }
                 }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.frostedBlue)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .frame(minHeight: 52)
-            .background(Capsule().fill(Color.honeydew))
+            .padding(14)
+            .navyCard(radius: 20)
+        }
+    }
+
+    private func modeChip(_ name: String, symbol: String, customAsset: String?) -> some View {
+        let isSelected = selectedCommuteModes.contains(name)
+        return Button {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                if isSelected {
+                    selectedCommuteModes.remove(name)
+                } else {
+                    selectedCommuteModes.insert(name)
+                }
+            }
+        } label: {
+            HStack(spacing: 5) {
+                if let customAsset {
+                    Image(customAsset)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 14, height: 14)
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: 11))
+                }
+                Text(name)
+                    .font(.raahaCaption)
+                    .lineLimit(1)
+            }
+            .foregroundStyle(isSelected ? Color.deepSpace : Color.honeydew)
+            .frame(maxWidth: .infinity, minHeight: 38)
+            .background(
+                Capsule()
+                    .fill(isSelected ? Color.honeydew : Color.deepSpace.opacity(0.6))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.clear : Color.frostedBlue.opacity(0.4), lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
+        .sensoryFeedback(.selection, trigger: isSelected)
     }
 
-    // MARK: Travel interests
+    // MARK: - Saved Places Section
+    private var savedPlacesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle(title: "Frequent Locations", icon: "mappin.and.ellipse")
 
-    private var interestsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                Image(systemName: "safari")
-                    .font(.raahaTitle3)
-                    .foregroundStyle(Color.honeydew)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(Color.deepSpace))
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Travel Interests")
-                        .font(.raahaHeadline)
-                        .foregroundStyle(Color.deepSpace)
-                    Text("Select what you love")
-                        .font(.raahaFootnote)
-                        .foregroundStyle(Color.steelBlue)
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.frostedBlue)
+            VStack(spacing: 0) {
+                placeRow(
+                    symbol: "house.fill",
+                    title: "Home",
+                    detail: "Chennai Central, Park Town",
+                    color: Color.steelBlue
+                )
+                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+                placeRow(
+                    symbol: "briefcase.fill",
+                    title: "Workplace",
+                    detail: "T. Nagar Smart City Complex",
+                    color: Color.frostedBlue
+                )
+                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+                placeRow(
+                    symbol: "figure.run",
+                    title: "Fitness",
+                    detail: "Besant Nagar Beach Promenade",
+                    color: Color.honeydew
+                )
             }
-
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
-                spacing: 8
-            ) {
-                ForEach(interests, id: \.name) { item in
-                    interestChip(item.name, symbol: item.symbol)
-                }
-            }
+            .padding(.horizontal, 14)
+            .navyCard(radius: 20)
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color.honeydew))
+    }
+
+    private func placeRow(symbol: String, title: String, detail: String, color: Color) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: symbol)
+                .font(.raahaSubheadlineMedium)
+                .foregroundStyle(Color.deepSpace)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(color))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.raahaSubheadlineMedium)
+                    .foregroundStyle(Color.honeydew)
+                Text(detail)
+                    .font(.raahaCaption2)
+                    .foregroundStyle(Color.frostedBlue.opacity(0.8))
+            }
+
+            Spacer()
+
+            Button {
+            } label: {
+                Text("Edit")
+                    .font(.raahaCaption)
+                    .foregroundStyle(Color.frostedBlue)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Capsule().stroke(Color.frostedBlue.opacity(0.4), lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 10)
+    }
+
+    // MARK: - Discovery Interests Section
+    private var travelInterestsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle(title: "Discovery Interests", icon: "sparkles")
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Customize your Chennai Explore recommendations:")
+                    .font(.raahaCaption)
+                    .foregroundStyle(Color.frostedBlue.opacity(0.85))
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
+                    spacing: 8
+                ) {
+                    ForEach(interests, id: \.name) { item in
+                        interestChip(item.name, symbol: item.symbol)
+                    }
+                }
+            }
+            .padding(14)
+            .navyCard(radius: 20)
+        }
     }
 
     private func interestChip(_ name: String, symbol: String) -> some View {
-        let selected = selectedInterests.contains(name)
+        let isSelected = selectedInterests.contains(name)
         return Button {
-            if selected { selectedInterests.remove(name) } else { selectedInterests.insert(name) }
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                if isSelected {
+                    selectedInterests.remove(name)
+                } else {
+                    selectedInterests.insert(name)
+                }
+            }
         } label: {
             HStack(spacing: 5) {
                 Image(systemName: symbol)
-                Text(name).lineLimit(1).minimumScaleFactor(0.8)
+                    .font(.system(size: 11))
+                Text(name)
+                    .font(.raahaCaption)
+                    .lineLimit(1)
             }
-            .font(.raahaCaption)
-            .foregroundStyle(selected ? Color.honeydew : Color.deepSpace)
-            .frame(maxWidth: .infinity, minHeight: 40)
-            .background(Capsule().fill(selected ? Color.deepSpace : Color.clear))
-            .overlay(Capsule().stroke(Color.frostedBlue, lineWidth: 1.2))
+            .foregroundStyle(isSelected ? Color.deepSpace : Color.honeydew)
+            .frame(maxWidth: .infinity, minHeight: 38)
+            .background(
+                Capsule()
+                    .fill(isSelected ? Color.honeydew : Color.deepSpace.opacity(0.6))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.clear : Color.frostedBlue.opacity(0.4), lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
+        .sensoryFeedback(.selection, trigger: isSelected)
     }
 
-    // MARK: Preferences
+    // MARK: - Transit & Support Section (Only FAQs and Help + Logout)
+    private var transitSupportSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle(title: "Transit & Support", icon: "gearshape.fill")
 
-    private var preferencesCard: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.raahaTitle3)
-                    .foregroundStyle(Color.honeydew)
-                    .frame(width: 40, height: 40)
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.deepSpace))
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Preferences")
-                        .font(.raahaHeadline)
-                        .foregroundStyle(Color.deepSpace)
-                    Text("Your favourite spots")
-                        .font(.raahaFootnote)
-                        .foregroundStyle(Color.steelBlue)
+            VStack(spacing: 0) {
+                // Chennai Transit FAQs and Help
+                actionRow(
+                    symbol: "questionmark.circle.fill",
+                    title: "Chennai Transit FAQs and Help",
+                    trailing: "Guide"
+                )
+
+                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+
+                // Logout button
+                Button {
+                    showLogoutDialog = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "rectangle.portrait.and.arrow.right.fill")
+                            .font(.raahaSubheadlineMedium)
+                            .foregroundStyle(Color.strawberry)
+                            .frame(width: 32, height: 32)
+                            .background(Circle().fill(Color.strawberry.opacity(0.2)))
+
+                        Text("Logout")
+                            .font(.raahaSubheadlineMedium)
+                            .foregroundStyle(Color.strawberry)
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.raahaCaption)
+                            .foregroundStyle(Color.frostedBlue.opacity(0.5))
+                    }
+                    .padding(.vertical, 10)
                 }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.frostedBlue)
+                .buttonStyle(.plain)
             }
-            .padding(.bottom, 10)
-
-            HairlineDivider(color: Color.frostedBlue.opacity(0.6))
-
-            preferenceRow(symbol: "slider.horizontal.below.rectangle", title: "Travel Preferences",
-                          subtitle: "Modes, notifications, language")
-            HairlineDivider(color: Color.frostedBlue.opacity(0.6))
-            preferenceRow(symbol: "questionmark.circle", title: "Help & Support",
-                          subtitle: "FAQs, contact us")
+            .padding(.horizontal, 14)
+            .navyCard(radius: 20)
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color.honeydew))
     }
 
-    private func preferenceRow(symbol: String, title: String, subtitle: String) -> some View {
-        Button {
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: symbol)
-                    .font(.raahaSubheadlineMedium)
-                    .foregroundStyle(Color.honeydew)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().fill(Color.deepSpace))
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(title)
-                        .font(.raahaSubheadlineMedium)
-                        .foregroundStyle(Color.deepSpace)
-                    Text(subtitle)
-                        .font(.raahaCaption)
-                        .foregroundStyle(Color.steelBlue)
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.frostedBlue)
-            }
-            .padding(.vertical, 8)
-            .frame(minHeight: 44)
+    private func actionRow(symbol: String, title: String, trailing: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: symbol)
+                .font(.raahaSubheadlineMedium)
+                .foregroundStyle(Color.honeydew)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(Color.steelBlue.opacity(0.6)))
+
+            Text(title)
+                .font(.raahaSubheadlineMedium)
+                .foregroundStyle(Color.honeydew)
+
+            Spacer()
+
+            Text(trailing)
+                .font(.raahaCaption)
+                .foregroundStyle(Color.frostedBlue)
+
+            Image(systemName: "chevron.right")
+                .font(.raahaCaption)
+                .foregroundStyle(Color.frostedBlue.opacity(0.5))
         }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
+        .padding(.vertical, 10)
+    }
+
+    // MARK: - Section Title Helper
+    private func sectionTitle(title: String, icon: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.steelBlue)
+            Text(title)
+                .font(.raahaFootnoteSemibold)
+                .foregroundStyle(Color.deepSpace)
+        }
+        .padding(.leading, 4)
+    }
+
+    // MARK: - Footer Note
+    private var footerNote: some View {
+        VStack(spacing: 4) {
+            Text("RAAHA Chennai • Multimodal Urban Transit")
+                .font(.raahaCaption)
+                .foregroundStyle(Color.steelBlue)
+            Text("Version 2.2.0 (Build 50) • Native SwiftUI")
+                .font(.raahaCaption2)
+                .foregroundStyle(Color.steelBlue.opacity(0.75))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 8)
+        .padding(.bottom, 12)
     }
 }

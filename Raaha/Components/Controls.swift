@@ -3,28 +3,43 @@ import SwiftUI
 // MARK: - Buttons
 
 struct PillButtonStyle: ButtonStyle {
-    enum Kind { case light, dark }
+    enum Kind { case light, dark, accent }
     var kind: Kind = .light
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.raahaHeadline)
-            .foregroundStyle(kind == .light ? Color.deepSpace : Color.honeydew)
+            .foregroundStyle(textColor)
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(surface)
             .clipShape(Capsule())
-            .shadow(color: Color.deepSpace.opacity(kind == .light ? 0.18 : 0.25), radius: 8, x: 0, y: 4)
-            .opacity(configuration.isPressed ? 0.85 : 1)
+            .shadow(color: shadowColor, radius: 8, x: 0, y: 4)
+            .opacity(configuration.isPressed ? 0.9 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+            .animation(.spring(response: 0.2, dampingFraction: 0.72), value: configuration.isPressed)
+    }
+
+    private var textColor: Color {
+        switch kind {
+        case .light: return Color.deepSpace
+        case .dark, .accent: return Color.honeydew
+        }
+    }
+
+    private var shadowColor: Color {
+        switch kind {
+        case .light: return Color.deepSpace.opacity(0.12)
+        case .dark: return Color.deepSpace.opacity(0.24)
+        case .accent: return Color.strawberry.opacity(0.32)
+        }
     }
 
     @ViewBuilder
     private var surface: some View {
-        if kind == .light {
-            LinearGradient.raahaPill
-        } else {
-            Color.deepSpace
+        switch kind {
+        case .light:  LinearGradient.raahaPill
+        case .dark:   Color.deepSpace
+        case .accent: Color.strawberry
         }
     }
 }
@@ -32,6 +47,18 @@ struct PillButtonStyle: ButtonStyle {
 extension ButtonStyle where Self == PillButtonStyle {
     static var pillLight: PillButtonStyle { PillButtonStyle(kind: .light) }
     static var pillDark: PillButtonStyle { PillButtonStyle(kind: .dark) }
+    static var pillAccent: PillButtonStyle { PillButtonStyle(kind: .accent) }
+}
+
+/// Tactile spring button style for cards and list items.
+struct TactileButtonStyle: ButtonStyle {
+    var scale: CGFloat = 0.98
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? scale : 1.0)
+            .opacity(configuration.isPressed ? 0.94 : 1.0)
+            .animation(.spring(response: 0.22, dampingFraction: 0.75), value: configuration.isPressed)
+    }
 }
 
 /// Label for dark pills that carry a trailing chevron ("Save Trip ›").

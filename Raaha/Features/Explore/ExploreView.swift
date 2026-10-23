@@ -546,7 +546,7 @@ private struct RealNearbySpotRow: View {
             .padding(.vertical, 10)
             .navyCard(radius: 18, gradient: .raahaNavyGlow)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TactileButtonStyle())
         .accessibilityElement(children: .combine)
     }
 }
@@ -605,15 +605,19 @@ private struct RealFeaturedPlaceCard: View {
                         .buttonStyle(CompactPillStyle())
 
                     Button {
-                        liked.toggle()
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
+                            liked.toggle()
+                        }
                     } label: {
                         Image(systemName: liked ? "heart.fill" : "heart")
                             .font(.raahaTitle3)
                             .foregroundStyle(liked ? Color.strawberry : Color.deepSpace)
+                            .scaleEffect(liked ? 1.18 : 1.0)
                             .frame(width: 44, height: 44)
                             .background(Circle().fill(Color.honeydew))
                     }
                     .buttonStyle(.plain)
+                    .sensoryFeedback(.impact(weight: .medium), trigger: liked)
                     .accessibilityLabel(liked ? "Remove from favourites" : "Add to favourites")
                 }
                 .padding(.horizontal, 14)
@@ -653,14 +657,18 @@ private struct FeaturedPlaceCard: View {
                 HStack(spacing: 10) {
                     Button("View route", action: action).buttonStyle(CompactPillStyle())
                     Button {
-                        liked.toggle()
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
+                            liked.toggle()
+                        }
                     } label: {
                         Image(systemName: liked ? "heart.fill" : "heart")
                             .font(.raahaTitle3)
                             .foregroundStyle(liked ? Color.strawberry : Color.deepSpace)
+                            .scaleEffect(liked ? 1.18 : 1.0)
                             .frame(width: 44, height: 44)
                             .background(Circle().fill(Color.honeydew))
                     }
+                    .sensoryFeedback(.impact(weight: .medium), trigger: liked)
                     .accessibilityLabel(liked ? "Remove from favourites" : "Add to favourites")
                 }
                 .padding(.horizontal, 14)
@@ -719,7 +727,7 @@ private struct ExploreOptionCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                 .shadow(color: Color.deepSpace.opacity(0.15), radius: 8, x: 0, y: 4)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TactileButtonStyle())
         .accessibilityElement(children: .combine)
     }
 }

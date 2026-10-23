@@ -8,13 +8,13 @@ struct RouteOptionsView: View {
             JourneyMapView()
 
             BottomPanel {
-                VStack(spacing: 0) {
+                VStack(spacing: 12) {
                     // Journey endpoints summary
                     endpointBanner
                         .padding(.horizontal, 4)
-                        .padding(.bottom, 10)
 
-                    VStack(spacing: 3) {
+                    // Route options cards (single tap navigates directly to route detail)
+                    VStack(spacing: 10) {
                         ForEach(MockData.routes) { option in
                             RouteOptionRow(option: option) {
                                 router.push(.routeDetail(option.kind))
@@ -25,16 +25,18 @@ struct RouteOptionsView: View {
                 }
             }
         }
-        .pushedChrome(title: "Route Options")
+        .pushedChrome(title: "Chennai Route Options")
     }
 
+    // MARK: - Endpoint Banner
     private var endpointBanner: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Label(router.journeyFrom, systemImage: "location.fill")
                     .font(.raahaCaption)
                     .foregroundStyle(Color.steelBlue)
                     .lineLimit(1)
+
                 HStack(spacing: 6) {
                     Image("icon_pin")
                         .renderingMode(.template)
@@ -47,7 +49,17 @@ struct RouteOptionsView: View {
                 .foregroundStyle(Color.deepSpace)
                 .lineLimit(1)
             }
+
             Spacer()
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(MockData.routes.count) Multimodal")
+                    .font(.raahaCaption2)
+                    .foregroundStyle(Color.steelBlue)
+                Text("Options Available")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color.deepSpace)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -55,6 +67,7 @@ struct RouteOptionsView: View {
     }
 }
 
+// MARK: - Route Option Row
 private struct RouteOptionRow: View {
     let option: RouteOption
     let action: () -> Void
@@ -62,14 +75,14 @@ private struct RouteOptionRow: View {
     var body: some View {
         Button(action: action) {
             HStack(alignment: .center, spacing: 0) {
-                // Coloured left accent bar keyed to route kind
+                // Colored left accent bar keyed to route kind
                 RoundedRectangle(cornerRadius: 3, style: .continuous)
                     .fill(option.kind.badgeFill)
                     .frame(width: 4)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, 12)
 
                 HStack(alignment: .center, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 8) {
                         RouteBadge(kind: option.kind)
 
                         HStack(alignment: .firstTextBaseline, spacing: 5) {
@@ -101,19 +114,29 @@ private struct RouteOptionRow: View {
                         Text(option.modesText)
                             .font(.raahaCaption2)
                             .foregroundStyle(Color.steelBlue)
+
+                        HStack(spacing: 3) {
+                            Text("Steps")
+                                .font(.system(size: 11, weight: .semibold))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 10))
+                        }
+                        .foregroundStyle(Color.frostedBlue)
+                        .padding(.top, 2)
                     }
                     .frame(width: 84, alignment: .leading)
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.vertical, 12)
             }
             .frame(maxWidth: .infinity, minHeight: 88)
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(LinearGradient.raahaNavy)
             )
+            .shadow(color: Color.deepSpace.opacity(0.12), radius: 6, x: 0, y: 3)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TactileButtonStyle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(option.kind.title), \(option.minutes) minutes, \(option.fareText), \(option.modesText)")
         .accessibilityHint("Shows the step-by-step route")
