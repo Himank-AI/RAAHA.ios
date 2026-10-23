@@ -172,7 +172,7 @@ struct HomeView: View {
                 HStack(spacing: 14) {
                     ZStack {
                         Circle()
-                            .fill(Color.strawberry)
+                            .fill(Color.deepSpace)
                             .frame(width: 36, height: 36)
                         Image("icon_pin")
                             .renderingMode(.template)

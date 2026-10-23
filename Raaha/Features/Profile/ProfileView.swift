@@ -10,6 +10,7 @@ struct ProfileView: View {
     private let commuteModes: [(name: String, symbol: String, customAsset: String?)] = [
         ("Bike", "bicycle", "icon_bike"),
         ("Auto", "car.fill", "icon_auto"),
+        ("Cab", "car.fill", nil),
         ("Bus", "bus.fill", nil),
         ("Local Train", "train.side.front.car", "icon_train"),
         ("Metro", "tram.fill", "icon_metro")
