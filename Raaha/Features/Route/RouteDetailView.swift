@@ -26,37 +26,12 @@ struct RouteDetailView: View {
                     }
 
                     Spacer()
-
-                    VStack(alignment: .trailing, spacing: 6) {
-                        HStack(spacing: 4) {
-                            Circle().fill(Color.statusGreen).frame(width: 8, height: 8)
-                            Text("On Schedule")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(Color.statusGreen)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(Color.honeydew))
-
-                        Text("Every 6–8 mins")
-                            .font(.raahaCaption2)
-                            .foregroundStyle(Color.steelBlue)
-                    }
                 }
                 .padding(.top, 4)
 
-                // Journey Endpoints Card
-                VStack(alignment: .leading, spacing: 12) {
-                    endpoint(symbol: "dot.circle.fill",
-                             label: "STARTING POINT",
-                             value: router.journeyFrom)
-                    endpoint(asset: "icon_pin",
-                             label: "DESTINATION",
-                             value: router.journeyTo)
-                }
-                .padding(14)
-                .navyCard(radius: 20)
-                .padding(.top, 16)
+                // Journey Endpoints (Styled cleanly like reference without card container)
+                endpointsSection
+                    .padding(.top, 16)
 
                 // Steps Card with expandable legs
                 stepsCard
@@ -84,39 +59,59 @@ struct RouteDetailView: View {
         .background(LinearGradient.raahaScreen.ignoresSafeArea())
         .pushedChrome()
         .onAppear {
-            // Default to expanding the first leg
-            if let first = option.legs.first {
-                expandedLegIds.insert(first.id)
-            }
+            expandedLegIds.removeAll()
         }
     }
 
-    private func endpoint(symbol: String? = nil, asset: String? = nil, label: String, value: String) -> some View {
+    // MARK: - Endpoints Section (Matches 2nd Attached Image)
+    private var endpointsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            endpointRow(
+                isDestination: false,
+                label: "FROM",
+                value: router.journeyFrom
+            )
+            endpointRow(
+                isDestination: true,
+                label: "TO",
+                value: router.journeyTo
+            )
+        }
+        .padding(.horizontal, 4)
+    }
+
+    private func endpointRow(isDestination: Bool, label: String, value: String) -> some View {
         HStack(spacing: 12) {
-            Group {
-                if let asset {
-                    Image(asset)
+            ZStack {
+                Circle()
+                    .fill(Color.honeydew)
+                    .frame(width: 34, height: 34)
+                    .shadow(color: Color.deepSpace.opacity(0.08), radius: 4, x: 0, y: 2)
+
+                if isDestination {
+                    Image("icon_pin")
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 16, height: 16)
-                } else if let symbol {
-                    Image(systemName: symbol)
-                        .font(.raahaBody)
+                        .frame(width: 14, height: 14)
+                        .foregroundStyle(Color.deepSpace)
+                } else {
+                    Circle()
+                        .fill(Color.deepSpace)
+                        .frame(width: 10, height: 10)
                 }
             }
-            .foregroundStyle(Color.deepSpace)
-            .frame(width: 32, height: 32)
-            .background(Circle().fill(Color.honeydew))
-            .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.frostedBlue.opacity(0.8))
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color.steelBlue)
+
                 Text(value)
-                    .font(.raahaHeadline)
-                    .foregroundStyle(Color.honeydew)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Color.deepSpace)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
         }
         .accessibilityElement(children: .combine)
@@ -161,47 +156,9 @@ struct RouteDetailView: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
-
-            HairlineDivider(color: Color.frostedBlue.opacity(0.3))
-                .padding(.top, 8)
-
-            summary
+            .padding(.bottom, 14)
         }
         .navyCard(radius: 24)
-    }
-
-    private var summary: some View {
-        HStack(spacing: 0) {
-            stat(content: AnyView(Image(systemName: "clock").font(.raahaBody)), label: "Total Time",
-                 value: "\(option.minutes) min")
-            Rectangle().fill(Color.frostedBlue.opacity(0.3)).frame(width: 1, height: 32)
-            stat(content: AnyView(Text("₹").font(.raahaHeadline)), label: "Total Cost",
-                 value: "₹ \(option.fare)")
-            Rectangle().fill(Color.frostedBlue.opacity(0.3)).frame(width: 1, height: 32)
-            stat(content: AnyView(Image(systemName: "arrow.triangle.branch").font(.raahaBody)), label: "Modes",
-                 value: "\(option.modeCount)")
-        }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 8)
-        .accessibilityElement(children: .combine)
-    }
-
-    private func stat(content: AnyView, label: String, value: String) -> some View {
-        HStack(spacing: 8) {
-            content
-                .foregroundStyle(Color.frostedBlue)
-                .frame(width: 30, height: 30)
-                .background(Circle().fill(Color.steelBlue.opacity(0.35)))
-            VStack(alignment: .leading, spacing: 1) {
-                Text(label)
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.frostedBlue)
-                Text(value)
-                    .font(.raahaSubheadlineMedium)
-                    .foregroundStyle(Color.honeydew)
-            }
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 
@@ -212,8 +169,17 @@ private struct InteractiveLegRow: View {
     let isExpanded: Bool
     let onToggleExpand: () -> Void
 
+    // Walk and Auto do not have dropdowns per user instructions
+    private var isExpandable: Bool {
+        leg.mode == .metro || leg.mode == .bus || leg.mode == .train
+    }
+
     var body: some View {
-        Button(action: onToggleExpand) {
+        Button {
+            if isExpandable {
+                onToggleExpand()
+            }
+        } label: {
             HStack(alignment: .top, spacing: 14) {
                 VStack(spacing: 4) {
                     ModeBadge(mode: leg.mode, size: 44, fill: Color.honeydew)
@@ -238,7 +204,8 @@ private struct InteractiveLegRow: View {
                                 .foregroundStyle(Color.frostedBlue)
                                 .fixedSize(horizontal: false, vertical: true)
 
-                            if let lighting = leg.lighting {
+                            // Walk does not show lighting per user instructions
+                            if let lighting = leg.lighting, leg.mode != .walk {
                                 LightingTag(lighting: lighting)
                                     .padding(.top, 4)
                             }
@@ -251,16 +218,19 @@ private struct InteractiveLegRow: View {
                                 FareChip(mode: leg.mode, text: fare)
                             }
 
-                            Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
-                                .font(.system(size: 16))
-                                .foregroundStyle(Color.frostedBlue)
+                            // Show chevron only for expandable modes (e.g. Metro, Bus, Train)
+                            if isExpandable {
+                                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(Color.frostedBlue)
+                            }
                         }
                     }
                     .padding(.top, 2)
-                    .padding(.bottom, isExpanded ? 8 : 14)
+                    .padding(.bottom, isExpanded && isExpandable ? 8 : 14)
 
                     // Expanded step details
-                    if isExpanded {
+                    if isExpanded && isExpandable {
                         expandedLegDetails(for: leg)
                             .transition(.opacity.combined(with: .move(edge: .top)))
                             .padding(.bottom, 12)
@@ -285,18 +255,13 @@ private struct InteractiveLegRow: View {
             switch leg.mode {
             case .metro:
                 guidancePill(icon: "tram.fill", text: "Platform 2 • Washermanpet to Airport Corridor")
-                guidancePill(icon: "snowflake", text: "Full Air Conditioned • High Frequency")
             case .bus:
                 guidancePill(icon: "bus.fill", text: "MTC Bus Bay 4 • Frequency every 5–10 mins")
                 guidancePill(icon: "ticket.fill", text: "Singara Chennai Card & Cash Accepted")
             case .train:
                 guidancePill(icon: "train.side.front.car", text: "Suburban Platform 1 • Beach–Tambaram Fast")
-            case .auto:
-                guidancePill(icon: "car.fill", text: "Metered Auto Stand at Metro Exit 1")
-            case .walk:
-                guidancePill(icon: "figure.walk", text: "Pedestrian footpath with street lighting")
             default:
-                guidancePill(icon: "info.circle", text: "Verified local Chennai transit connection")
+                EmptyView()
             }
         }
         .padding(10)
