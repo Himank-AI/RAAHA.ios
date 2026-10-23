@@ -30,11 +30,28 @@ struct PlaceDetailView: View {
                                 .padding(.vertical, 4)
                                 .background(Capsule().fill(Color.steelBlue))
 
+                            if place.isValidChennaiLocation {
+                                Label("Chennai Verified", systemImage: "checkmark.shield.fill")
+                                    .font(.raahaFootnote)
+                                    .foregroundStyle(Color.steelBlue)
+                            }
+
                             if let dist = place.distanceText {
                                 Label(dist, systemImage: "location.fill")
                                     .font(.raahaFootnote)
                                     .foregroundStyle(Color.steelBlue)
                             }
+                        }
+
+                        if !place.isValidChennaiLocation {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(Color.strawberry)
+                                Text("Outside RAAHA Chennai Service Boundary")
+                                    .font(.raahaCaption2)
+                                    .foregroundStyle(Color.strawberry)
+                            }
+                            .padding(.top, 2)
                         }
                     }
 

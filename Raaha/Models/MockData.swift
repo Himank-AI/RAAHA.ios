@@ -212,8 +212,8 @@ enum MockData {
     ]
 
     static let featuredPlaces: [Place] = [
-        Place(name: "Mahabalipuram", subtitle: "History, beaches & more", imageName: "featured_mahabalipuram"),
-        Place(name: "Mahabalipuram", subtitle: "History, beaches & more", imageName: "featured_mahabalipuram")
+        Place(name: "Marina Beach", subtitle: "World's 2nd longest beach · Mylapore coast", imageName: "thumb_marina"),
+        Place(name: "Besant Nagar Beach", subtitle: "Elliot's Beach promenade · Evening cafes", imageName: "thumb_besant")
     ]
 
     // MARK: Trips

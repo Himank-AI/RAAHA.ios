@@ -4,17 +4,12 @@ import CoreLocation
 
 // MARK: - Place Search Service
 
-/// Wraps MKLocalSearch to provide async/await place discovery.
-/// All searches are performed in Chennai, India as the fallback region.
+/// Wraps MKLocalSearch with strict Chennai geographic boundary validation.
+///
+/// CRITICAL PRODUCT RULE: RAAHA serves Chennai, Tamil Nadu, India exclusively.
+/// No results outside the configured Chennai service boundary are ever displayed,
+/// cached, or returned.
 actor PlaceSearchService {
-
-    // Chennai city centre — used when user location is unavailable
-    static let chennaiCenter = CLLocationCoordinate2D(latitude: 13.0827, longitude: 80.2785)
-    static let chennaiRegion = MKCoordinateRegion(
-        center: chennaiCenter,
-        latitudinalMeters: 25_000,
-        longitudinalMeters: 25_000
-    )
 
     private var currentSearch: MKLocalSearch?
     private let cache = NSCache<NSString, CacheEntry>()
@@ -24,27 +19,41 @@ actor PlaceSearchService {
         cache.totalCostLimit = 4 * 1024 * 1024 // 4 MB approx
     }
 
-    // MARK: - Public interface
+    // MARK: - Public Search Interface
 
+    /// Performs search restricted strictly to the Chennai service boundary.
+    /// Rejects any results outside the approved polygon even if the query mentions outside locations.
     func searchNearby(
         query: String,
-        in region: MKCoordinateRegion,
+        in region: MKCoordinateRegion? = nil,
         userLocation: CLLocation?,
         resultLimit: Int = 20
     ) async throws -> [ExplorePlace] {
 
-        let cacheKey = "\(query)|\(region.center.latitude.rounded())|\(region.center.longitude.rounded())" as NSString
-
-        if let cached = cache.object(forKey: cacheKey), !cached.isStale {
-            return cached.places
+        // Validate the region center: if region is outside Chennai, fall back strictly to Chennai default region
+        let searchRegion: MKCoordinateRegion
+        if let region = region, ChennaiServiceArea.shared.contains(coordinate: region.center) {
+            searchRegion = region
+        } else {
+            searchRegion = ChennaiServiceArea.shared.defaultRegion
         }
 
-        // Cancel any in-flight search before issuing a new one
+        let roundedLat = (searchRegion.center.latitude * 100).rounded() / 100
+        let roundedLon = (searchRegion.center.longitude * 100).rounded() / 100
+        let cacheKey = "\(query.lowercased().trimmingCharacters(in: .whitespaces))|\(roundedLat)|\(roundedLon)" as NSString
+
+        // Cache lookup with boundary re-validation
+        if let cached = cache.object(forKey: cacheKey), !cached.isStale {
+            let revalidated = ChennaiServiceArea.shared.revalidate(cachedPlaces: cached.places)
+            return revalidated
+        }
+
+        // Cancel any in-flight search
         currentSearch?.cancel()
 
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query.isEmpty ? "places" : query
-        request.region = region
+        request.region = searchRegion
         request.resultTypes = .pointOfInterest
         if #available(iOS 18.0, *) {
             request.regionPriority = .required
@@ -54,37 +63,79 @@ actor PlaceSearchService {
         currentSearch = search
 
         let response = try await search.start()
-        let places = response.mapItems
+
+        // CRITICAL PRODUCT RULE: Filter all items strictly through the Chennai service area boundary
+        let validatedItems = ChennaiServiceArea.shared.filterMapItems(response.mapItems)
+
+        let places = validatedItems
             .prefix(resultLimit)
             .map { ExplorePlace(mapItem: $0, userLocation: userLocation) }
             .sorted { ($0.distance ?? .infinity) < ($1.distance ?? .infinity) }
 
+        // Cache ONLY results that passed boundary validation
         let entry = CacheEntry(places: places)
         cache.setObject(entry, forKey: cacheKey, cost: places.count * 512)
 
         return places
     }
 
+    /// Fetches verified Chennai-only featured destinations inside the approved boundary.
+    /// Mahabalipuram is explicitly omitted because it lies outside the Chennai service boundary.
     func searchFeatured(userLocation: CLLocation?) async throws -> [ExplorePlace] {
-        // These are real landmarks curated for Chennai – names are resolved via MapKit
-        let queries = ["Marina Beach Chennai", "Besant Nagar Beach Chennai", "Mahabalipuram", "Kapaleeshwarar Temple"]
+        let queries = [
+            "Marina Beach, Chennai",
+            "Besant Nagar Beach, Chennai",
+            "Kapaleeshwarar Temple, Mylapore, Chennai",
+            "San Thome Cathedral Basilica, Chennai"
+        ]
         var featured: [ExplorePlace] = []
         for q in queries {
             if let result = try? await searchSingle(query: q, userLocation: userLocation) {
-                featured.append(result)
+                // Double-check boundary validation
+                if ChennaiServiceArea.shared.validate(place: result) {
+                    featured.append(result)
+                }
             }
         }
         return featured
     }
 
+    /// Searches for a single place query, verifying it is strictly inside Chennai.
     func searchSingle(query: String, userLocation: CLLocation?) async throws -> ExplorePlace? {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
-        request.region = PlaceSearchService.chennaiRegion
+        request.region = ChennaiServiceArea.shared.defaultRegion
         request.resultTypes = .pointOfInterest
+        if #available(iOS 18.0, *) {
+            request.regionPriority = .required
+        }
         let search = MKLocalSearch(request: request)
         let response = try await search.start()
-        return response.mapItems.first.map { ExplorePlace(mapItem: $0, userLocation: userLocation) }
+
+        // Return first item strictly inside Chennai
+        for item in response.mapItems {
+            if ChennaiServiceArea.shared.validate(mapItem: item) {
+                return ExplorePlace(mapItem: item, userLocation: userLocation)
+            }
+        }
+        return nil
+    }
+
+    /// Resolves an MKLocalSearchCompletion to an ExplorePlace, strictly validating its coordinates.
+    func resolveCompletion(
+        _ completion: MKLocalSearchCompletion,
+        userLocation: CLLocation?
+    ) async throws -> ExplorePlace? {
+        let request = MKLocalSearch.Request(completion: completion)
+        let search = MKLocalSearch(request: request)
+        let response = try await search.start()
+
+        for item in response.mapItems {
+            if ChennaiServiceArea.shared.validate(mapItem: item) {
+                return ExplorePlace(mapItem: item, userLocation: userLocation)
+            }
+        }
+        return nil
     }
 
     func cancelCurrent() {
@@ -92,7 +143,7 @@ actor PlaceSearchService {
         currentSearch = nil
     }
 
-    // MARK: - Cache entry
+    // MARK: - Cache Entry
 
     private final class CacheEntry {
         let places: [ExplorePlace]

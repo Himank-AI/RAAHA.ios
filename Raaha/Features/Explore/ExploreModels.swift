@@ -29,6 +29,9 @@ struct ExplorePlace: Identifiable {
     /// SF Symbol name that best matches the category.
     var symbolName: String { category.symbol }
 
+    var coordinate: CLLocationCoordinate2D { mapItem.placemark.coordinate }
+    var isValidChennaiLocation: Bool { ChennaiServiceArea.shared.validate(coordinate: coordinate) }
+
     init(mapItem: MKMapItem, userLocation: CLLocation? = nil) {
         self.mapItem = mapItem
         if #available(iOS 18.0, *) {

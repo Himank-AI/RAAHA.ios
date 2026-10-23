@@ -7,7 +7,6 @@ struct ExploreView: View {
     enum Segment { case places, planAhead }
 
     @EnvironmentObject private var router: AppRouter
-    @StateObject private var locationManager = LocationManager()
     @StateObject private var vm: ExploreViewModel
 
     @State private var segment: Segment = .places
@@ -15,8 +14,6 @@ struct ExploreView: View {
     @State private var showAllNearby = false
 
     init() {
-        // We can't access locationManager here yet, so build VM with a temp one;
-        // VM is rebuilt once the view appears via onAppear.
         let loc = LocationManager()
         _vm = StateObject(wrappedValue: ExploreViewModel(locationManager: loc))
     }
@@ -31,7 +28,7 @@ struct ExploreView: View {
                     case .places:
                         PlacesContent(
                             vm: vm,
-                            locationManager: locationManager,
+                            locationManager: vm.locationManager,
                             selectedPlace: $selectedPlace,
                             showAllNearby: $showAllNearby
                         )
@@ -60,6 +57,19 @@ struct ExploreView: View {
         }
         .sheet(isPresented: $showAllNearby) {
             AllNearbySheet(vm: vm, selectedPlace: $selectedPlace, showAllNearby: $showAllNearby)
+        }
+        .alert(
+            "Outside Service Area",
+            isPresented: Binding(
+                get: { vm.outsideBoundaryAlertMessage != nil },
+                set: { if !$0 { vm.outsideBoundaryAlertMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) { vm.outsideBoundaryAlertMessage = nil }
+        } message: {
+            if let msg = vm.outsideBoundaryAlertMessage {
+                Text(msg)
+            }
         }
     }
 
@@ -161,12 +171,24 @@ private struct PlacesContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // ── Location permission banner ──
+            // ── 1. Outside Chennai notice ──
+            if vm.isUserOutsideChennai {
+                OutsideChennaiBanner {
+                    vm.exploreChennaiAnyway()
+                }
+            }
+
+            // ── 2. Location permission banner ──
             if locationManager.permission == .denied || locationManager.permission == .restricted {
                 LocationDeniedBanner()
             }
 
-            // ── Search results (active search) ──
+            // ── 3. Chennai Locality Manual Selector ──
+            ChennaiLocalitySelector(selected: vm.selectedLocality) { loc in
+                vm.selectLocality(loc)
+            }
+
+            // ── 4. Search results (active search) ──
             if vm.isSearchActive {
                 searchResults
             } else {
@@ -244,7 +266,11 @@ private struct PlacesContent: View {
             VStack(spacing: 8) {
                 ForEach(places.prefix(5)) { place in
                     RealNearbySpotRow(place: place) {
-                        selectedPlace = place
+                        if place.isValidChennaiLocation {
+                            selectedPlace = place
+                        } else {
+                            vm.outsideBoundaryAlertMessage = "\(place.name) is outside the Chennai service area."
+                        }
                     } planAction: {
                         router.planJourney(from: "Current Location", to: place.name)
                     }
@@ -252,7 +278,13 @@ private struct PlacesContent: View {
             }
 
         case .empty:
-            EmptyResultsView(message: "No nearby spots found.\nTry changing the filter or search area.")
+            ChennaiEmptyResultsView(
+                query: vm.activeFilter.title,
+                suggestions: ChennaiServiceArea.shared.emptySearchSuggestions
+            ) { suggestion in
+                vm.query = suggestion
+                vm.submitSearch(suggestion)
+            }
 
         case .error(let msg):
             ErrorBannerView(message: msg) { vm.loadNearby() }
@@ -288,7 +320,11 @@ private struct PlacesContent: View {
             VStack(spacing: 14) {
                 ForEach(vm.featuredPlaces) { place in
                     RealFeaturedPlaceCard(place: place) {
-                        selectedPlace = place
+                        if place.isValidChennaiLocation {
+                            selectedPlace = place
+                        } else {
+                            vm.outsideBoundaryAlertMessage = "\(place.name) is outside the Chennai service area."
+                        }
                     } planAction: {
                         router.planJourney(from: "Current Location", to: place.name)
                     }
@@ -301,10 +337,51 @@ private struct PlacesContent: View {
 
     @ViewBuilder
     private var searchResults: some View {
+        // Autocomplete suggestions
+        if !vm.autocompleteSuggestions.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Chennai Suggestions")
+                    .font(.raahaCaption)
+                    .foregroundStyle(Color.steelBlue)
+
+                ForEach(vm.autocompleteSuggestions.prefix(3), id: \.self) { suggestion in
+                    Button {
+                        vm.selectSuggestion(suggestion) { place in
+                            selectedPlace = place
+                        }
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "mappin.circle.fill")
+                                .foregroundStyle(Color.steelBlue)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(suggestion.title)
+                                    .font(.raahaSubheadlineMedium)
+                                    .foregroundStyle(Color.deepSpace)
+                                if !suggestion.subtitle.isEmpty {
+                                    Text(suggestion.subtitle)
+                                        .font(.raahaCaption)
+                                        .foregroundStyle(Color.steelBlue)
+                                }
+                            }
+                            Spacer()
+                            Image(systemName: "arrow.up.left")
+                                .font(.raahaCaption2)
+                                .foregroundStyle(Color.steelBlue.opacity(0.6))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.honeydew))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.bottom, 6)
+        }
+
         switch vm.searchState {
         case .loading:
             VStack(alignment: .leading, spacing: 8) {
-                Text("Searching…")
+                Text("Searching Chennai…")
                     .font(.raahaCaption)
                     .foregroundStyle(Color.steelBlue)
                     .padding(.top, 4)
@@ -313,12 +390,22 @@ private struct PlacesContent: View {
 
         case .loaded(let places):
             VStack(alignment: .leading, spacing: 8) {
-                Text("\(places.count) results near Chennai")
-                    .font(.raahaCaption)
-                    .foregroundStyle(Color.steelBlue)
+                HStack {
+                    Text("\(places.count) results in Chennai")
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color.steelBlue)
+                    Spacer()
+                    Label("Chennai Only", systemImage: "checkmark.shield.fill")
+                        .font(.raahaCaption2)
+                        .foregroundStyle(Color.steelBlue)
+                }
                 ForEach(places) { place in
                     RealNearbySpotRow(place: place) {
-                        selectedPlace = place
+                        if place.isValidChennaiLocation {
+                            selectedPlace = place
+                        } else {
+                            vm.outsideBoundaryAlertMessage = "\(place.name) is outside the Chennai service area."
+                        }
                     } planAction: {
                         router.planJourney(from: "Current Location", to: place.name)
                     }
@@ -326,7 +413,13 @@ private struct PlacesContent: View {
             }
 
         case .empty:
-            EmptyResultsView(message: "No results. Try a different search.")
+            ChennaiEmptyResultsView(
+                query: vm.query,
+                suggestions: ChennaiServiceArea.shared.emptySearchSuggestions
+            ) { suggestion in
+                vm.query = suggestion
+                vm.submitSearch(suggestion)
+            }
 
         case .error(let msg):
             ErrorBannerView(message: msg) { vm.submitSearch(vm.query) }
@@ -685,7 +778,14 @@ private struct AllNearbySheet: View {
                         .background(LinearGradient.raahaScreen.ignoresSafeArea())
 
                 default:
-                    EmptyResultsView(message: "No nearby places found.")
+                    ChennaiEmptyResultsView(
+                        query: "Nearby",
+                        suggestions: ChennaiServiceArea.shared.emptySearchSuggestions
+                    ) { suggestion in
+                        dismiss()
+                        vm.query = suggestion
+                        vm.submitSearch(suggestion)
+                    }
                 }
             }
             .navigationTitle("Nearby Spots")
@@ -731,23 +831,177 @@ private struct PlacesSkeletonView: View {
     }
 }
 
-// MARK: - Empty State
+// MARK: - Outside Chennai Banner
 
-private struct EmptyResultsView: View {
-    let message: String
+private struct OutsideChennaiBanner: View {
+    let exploreAction: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 40, weight: .thin))
-                .foregroundStyle(Color.steelBlue.opacity(0.6))
-            Text(message)
-                .font(.raahaSubheadline)
-                .foregroundStyle(Color.steelBlue)
-                .multilineTextAlignment(.center)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "location.slash.fill")
+                    .font(.raahaTitle2)
+                    .foregroundStyle(Color.strawberry)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("RAAHA is currently available only in Chennai.")
+                        .font(.raahaHeadline)
+                        .foregroundStyle(Color.honeydew)
+
+                    Text("We detected you are outside our service area. Nearby results for your current location are not available.")
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color.frostedBlue)
+                }
+            }
+
+            Button {
+                exploreAction()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "safari.fill")
+                    Text("Explore Chennai Instead")
+                }
+                .font(.raahaSubheadlineMedium)
+                .foregroundStyle(Color.deepSpace)
+                .frame(maxWidth: .infinity, minHeight: 40)
+                .background(Capsule().fill(Color.honeydew))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
         }
+        .padding(16)
+        .navyCard(radius: 20, gradient: .raahaNavyGlow)
+    }
+}
+
+// MARK: - Chennai Locality Selector
+
+private struct ChennaiLocalitySelector: View {
+    let selected: ChennaiLocality?
+    let onSelect: (ChennaiLocality?) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Chennai Localities")
+                    .font(.raahaFootnoteSemibold)
+                    .foregroundStyle(Color.steelBlue)
+                Spacer()
+                if selected != nil {
+                    Button("All Chennai") {
+                        onSelect(nil)
+                    }
+                    .font(.raahaCaption)
+                    .foregroundStyle(Color.strawberry)
+                }
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    Button {
+                        onSelect(nil)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "mappin.and.ellipse")
+                                .font(.raahaCaption2)
+                            Text("All Chennai")
+                                .font(.raahaFootnoteSemibold)
+                        }
+                        .foregroundStyle(selected == nil ? Color.honeydew : Color.deepSpace)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(selected == nil ? Color.steelBlue : Color.honeydew))
+                    }
+                    .buttonStyle(.plain)
+
+                    ForEach(ChennaiServiceArea.shared.approvedLocalities) { locality in
+                        let isCurSelected = selected?.name == locality.name
+                        Button {
+                            onSelect(locality)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: locality.symbol)
+                                    .font(.raahaCaption2)
+                                Text(locality.name)
+                                    .font(.raahaFootnoteSemibold)
+                            }
+                            .foregroundStyle(isCurSelected ? Color.honeydew : Color.deepSpace)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(Capsule().fill(isCurSelected ? Color.steelBlue : Color.honeydew))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+    }
+}
+
+// MARK: - Chennai Empty Results View
+
+private struct ChennaiEmptyResultsView: View {
+    let query: String
+    let suggestions: [String]
+    let onSelectSuggestion: (String) -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            VStack(spacing: 8) {
+                Image(systemName: "mappin.slash.circle")
+                    .font(.system(size: 44, weight: .thin))
+                    .foregroundStyle(Color.strawberry)
+
+                Text("No places found in Chennai")
+                    .font(.raahaHeadline)
+                    .foregroundStyle(Color.deepSpace)
+
+                if !query.isEmpty {
+                    Text("No results for \"\(query)\" inside the approved Chennai service boundary.")
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color.steelBlue)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 16)
+                }
+
+                Text("RAAHA is currently available only in Chennai, Tamil Nadu.")
+                    .font(.raahaCaption2)
+                    .foregroundStyle(Color.steelBlue.opacity(0.85))
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Popular Chennai categories:")
+                    .font(.raahaFootnoteSemibold)
+                    .foregroundStyle(Color.steelBlue)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(suggestions, id: \.self) { suggestion in
+                            Button {
+                                onSelectSuggestion(suggestion)
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "sparkle")
+                                        .font(.raahaCaption2)
+                                    Text(suggestion)
+                                        .font(.raahaFootnoteSemibold)
+                                }
+                                .foregroundStyle(Color.deepSpace)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(Capsule().fill(Color.frostedBlue.opacity(0.35)))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+            .padding(.top, 4)
+        }
+        .padding(20)
         .frame(maxWidth: .infinity)
-        .padding(24)
+        .lightCard(radius: 20)
     }
 }
 

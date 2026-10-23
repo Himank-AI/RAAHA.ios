@@ -208,7 +208,7 @@ struct TripPlan {
     var destination: String = "Chennai Beach"
     var date: Date = TripPlan.nextSaturdayAtTen()
 
-    static let destinations = ["Chennai Beach", "Marina Beach", "Mahabalipuram", "Besant Nagar Beach"]
+    static let destinations = ["Chennai Beach", "Marina Beach", "Kapaleeshwarar Temple", "Besant Nagar Beach"]
 
     var dateText: String { Self.format(date, "EEE, d MMM yyyy") }
     var timeText: String { Self.format(date, "h:mm a") }

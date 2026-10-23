@@ -15,6 +15,12 @@ enum LocationPermission {
 final class LocationManager: NSObject, ObservableObject {
     @Published private(set) var permission: LocationPermission = .notDetermined
     @Published private(set) var userLocation: CLLocation?
+    @Published private(set) var isInsideChennai: Bool = false
+
+    /// True if user is authorized and location has been resolved to outside the Chennai boundary
+    var isOutsideChennai: Bool {
+        permission == .authorized && userLocation != nil && !isInsideChennai
+    }
 
     private let manager = CLLocationManager()
 
@@ -59,7 +65,10 @@ extension LocationManager: CLLocationManagerDelegate {
 
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
-        Task { @MainActor in self.userLocation = loc }
+        Task { @MainActor in
+            self.userLocation = loc
+            self.isInsideChennai = ChennaiServiceArea.shared.isUserInChennai(location: loc)
+        }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
