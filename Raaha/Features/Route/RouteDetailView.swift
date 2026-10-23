@@ -282,7 +282,6 @@ private struct InteractiveLegRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(!isExpandable)
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityElement(children: .combine)
         .sensoryFeedback(.selection, trigger: isExpanded)
