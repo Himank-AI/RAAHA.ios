@@ -10,24 +10,30 @@ struct RouteDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                // Header info
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        RouteBadge(kind: kind)
+                // Header region with atmospheric transit illustration overlay
+                ZStack(alignment: .topTrailing) {
+                    // Atmospheric transit illustration — top-right, behind all text
+                    transitIllustration
 
-                        Text("\(option.minutes) min")
-                            .font(.raahaLargeTitle)
-                            .foregroundStyle(Color.deepSpace)
-                            .padding(.top, 4)
+                    // Header info (sits above the illustration)
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            RouteBadge(kind: kind)
 
-                        Text("\(option.modeCount) modes  ·  \(option.fareText)")
-                            .font(.raahaTitle3)
-                            .foregroundStyle(Color.steelBlue)
+                            Text("\(option.minutes) min")
+                                .font(.raahaLargeTitle)
+                                .foregroundStyle(Color.deepSpace)
+                                .padding(.top, 4)
+
+                            Text("\(option.modeCount) modes  ·  \(option.fareText)")
+                                .font(.raahaTitle3)
+                                .foregroundStyle(Color.steelBlue)
+                        }
+
+                        Spacer()
                     }
-
-                    Spacer()
+                    .padding(.top, 4)
                 }
-                .padding(.top, 4)
 
                 // Journey Endpoints (Styled cleanly like reference without card container)
                 endpointsSection
@@ -66,6 +72,51 @@ struct RouteDetailView: View {
         .onAppear {
             expandedLegIds.removeAll()
         }
+    }
+
+    // MARK: - Transit Illustration Background
+    /// Atmospheric background illustration: low opacity, blurred, teal-blended, gradient-masked.
+    private var transitIllustration: some View {
+        GeometryReader { geo in
+            Image("transit_illustration")
+                .resizable()
+                .scaledToFill()
+                // Teal/cyan color blend to match app palette
+                .colorMultiply(Color(red: 0.66, green: 0.86, blue: 0.86))
+                // Soft atmospheric opacity
+                .opacity(0.38)
+                // Gentle Gaussian blur to dissolve into background
+                .blur(radius: 1.5)
+                .frame(width: geo.size.width * 0.72, height: geo.size.height)
+                .clipped()
+                // Gradient mask: visible top-right, fades to transparent left & bottom
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0.0),
+                            .init(color: .black.opacity(0.55), location: 0.38),
+                            .init(color: .black.opacity(0.80), location: 0.60),
+                            .init(color: .black.opacity(0.92), location: 1.0)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .mask(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .black.opacity(0.90), location: 0.0),
+                                .init(color: .black.opacity(0.65), location: 0.55),
+                                .init(color: .clear, location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                )
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .allowsHitTesting(false)
+        }
+        .frame(height: 130)
     }
 
     // MARK: - Endpoints Section (Matches 2nd Attached Image)
