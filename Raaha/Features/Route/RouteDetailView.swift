@@ -29,7 +29,7 @@ struct RouteDetailView: View {
                 }
                 .padding(.top, 4)
 
-                // Journey Endpoints (Styled cleanly like reference without card container)
+                // Journey Endpoints
                 endpointsSection
                     .padding(.top, 16)
 
@@ -40,27 +40,77 @@ struct RouteDetailView: View {
             .padding(.horizontal, 16)
             .padding(.top, 4)
         }
-        .contentMargins(.bottom, 24, for: .scrollContent)
+        .contentMargins(.bottom, 28, for: .scrollContent)
         .safeAreaInset(edge: .bottom) {
-            Button {
+            SlideToStartJourneyButton(title: "Start Live Journey") {
                 router.push(.live(kind, 0))
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "figure.walk.motion")
-                    Text("Start Live Journey")
-                }
             }
-            .buttonStyle(.pillLight)
             .padding(.horizontal, 16)
-            .padding(.bottom, 8)
             .padding(.top, 8)
-            .sensoryFeedback(.impact(weight: .medium), trigger: kind)
+            .padding(.bottom, 8)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color.honeydew.opacity(0.0),
+                        Color.honeydew.opacity(0.85),
+                        Color.honeydew
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea(edges: .bottom)
+            )
+        }
+        // Fixed background illustration — pinned to top-right, does NOT scroll
+        .background(alignment: .topTrailing) {
+            transitIllustration
+                .ignoresSafeArea(edges: .top)
         }
         .raahaScreenBackground()
         .pushedChrome()
         .onAppear {
             expandedLegIds.removeAll()
         }
+    }
+
+    // MARK: - Transit Illustration Background
+    /// Fixed non-scrolling background illustration pinned to top-right corner.
+    private var transitIllustration: some View {
+        Image("transit_illustration")
+            .resizable()
+            .scaledToFill()
+            .opacity(0.70)
+            .frame(
+                width: UIScreen.main.bounds.width * 0.65,
+                height: UIScreen.main.bounds.height * 0.42
+            )
+            .clipped()
+            // Left-edge fade + bottom-edge fade combined via nested mask
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.40), location: 0.14),
+                        .init(color: .black.opacity(0.80), location: 0.32),
+                        .init(color: .black, location: 0.52)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0.0),
+                            .init(color: .black, location: 0.62),
+                            .init(color: .black.opacity(0.60), location: 0.82),
+                            .init(color: .clear, location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            )
+            .allowsHitTesting(false)
     }
 
     // MARK: - Endpoints Section (Matches 2nd Attached Image)
@@ -190,54 +240,57 @@ private struct InteractiveLegRow: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 4) {
+                    // Top header line: Title (+ expand indicator) & Fare Chip uniformly right-aligned
+                    HStack(alignment: .center, spacing: 8) {
+                        HStack(spacing: 6) {
                             Text(leg.title)
                                 .font(.raahaHeadline)
                                 .foregroundStyle(Color.honeydew)
-                            Text(leg.detail)
-                                .font(.raahaSubheadline)
-                                .foregroundStyle(Color.honeydew.opacity(0.9))
-                            Text(leg.description)
-                                .font(.raahaFootnote)
-                                .foregroundStyle(Color.frostedBlue)
-                                .fixedSize(horizontal: false, vertical: true)
 
-                            // Walk does not show lighting per user instructions
-                            if let lighting = leg.lighting, leg.mode != .walk {
-                                LightingTag(lighting: lighting)
-                                    .padding(.top, 4)
+                            // Show chevron indicator directly beside expandable mode titles (e.g. Metro)
+                            if isExpandable {
+                                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(Color.frostedBlue.opacity(0.85))
                             }
                         }
 
                         Spacer(minLength: 8)
 
-                        VStack(alignment: .trailing, spacing: 8) {
-                            if let fare = leg.fare {
-                                FareChip(mode: leg.mode, text: fare)
-                            }
-
-                            // Show chevron only for expandable modes (e.g. Metro, Bus, Train)
-                            if isExpandable {
-                                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(Color.frostedBlue)
-                            }
+                        if let fare = leg.fare {
+                            FareChip(mode: leg.mode, text: fare)
                         }
                     }
                     .padding(.top, 2)
-                    .padding(.bottom, isExpanded && isExpandable ? 8 : 14)
+
+                    Text(leg.detail)
+                        .font(.raahaSubheadline)
+                        .foregroundStyle(Color.honeydew.opacity(0.9))
+
+                    Text(leg.description)
+                        .font(.raahaFootnote)
+                        .foregroundStyle(Color.frostedBlue)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    // Walk does not show lighting per user instructions
+                    if let lighting = leg.lighting, leg.mode != .walk {
+                        LightingTag(lighting: lighting)
+                            .padding(.top, 4)
+                    }
 
                     // Expanded step details
                     if isExpanded && isExpandable {
                         expandedLegDetails(for: leg)
                             .transition(.opacity.combined(with: .move(edge: .top)))
-                            .padding(.bottom, 12)
+                            .padding(.top, 4)
+                            .padding(.bottom, 6)
                     }
 
                     if !isLast {
                         HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+                            .padding(.top, 8)
+                            .padding(.bottom, 6)
                     }
                 }
             }
@@ -290,14 +343,22 @@ private struct FareChip: View {
     let text: String
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 5) {
             Image(systemName: "ticket")
+                .font(.system(size: 11, weight: .semibold))
             Text(text)
+                .font(.system(size: 12, weight: .semibold))
         }
-        .font(.raahaCaption)
         .foregroundStyle(Color.frostedBlue)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .overlay(Capsule().stroke(Color.frostedBlue.opacity(0.6), lineWidth: 1))
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4.5)
+        .background(
+            Capsule()
+                .fill(Color.steelBlue.opacity(0.20))
+        )
+        .overlay(
+            Capsule()
+                .stroke(Color.frostedBlue.opacity(0.40), lineWidth: 1)
+        )
     }
 }

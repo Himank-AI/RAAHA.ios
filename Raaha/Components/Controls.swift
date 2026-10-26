@@ -240,3 +240,160 @@ struct HairlineDivider: View {
         Rectangle().fill(color).frame(height: 1)
     }
 }
+
+// MARK: - Slide to Start Live Journey Slider Button
+
+struct SlideToStartJourneyButton: View {
+    var title: String = "Start Live Journey"
+    let action: () -> Void
+
+    @State private var dragOffset: CGFloat = 0
+    @State private var isDragging: Bool = false
+    @State private var hasTriggered: Bool = false
+
+    private let height: CGFloat = 62
+    private let knobSize: CGFloat = 52
+    private let padding: CGFloat = 5
+
+    var body: some View {
+        GeometryReader { proxy in
+            let trackWidth = proxy.size.width
+            let maxDrag = max(0, trackWidth - knobSize - (padding * 2))
+            let progress = maxDrag > 0 ? (dragOffset / maxDrag) : 0
+            let textOpacity = max(0.0, 1.0 - Double(progress) * 1.6)
+
+            ZStack(alignment: .leading) {
+                // 1. Light capsule track (Honeydew with subtle gradient & defined stroke)
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color(hex: 0xFCFEFA), location: 0.0),
+                                .init(color: Color.honeydew, location: 0.50),
+                                .init(color: Color(hex: 0xE5F3E7), location: 1.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.steelBlue.opacity(0.22), lineWidth: 1.2)
+                    )
+                    .shadow(color: Color.deepSpace.opacity(0.16), radius: 12, x: 0, y: 6)
+
+                // 2. Active fill highlight behind the knob as it slides
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.frostedBlue.opacity(0.70),
+                                Color.frostedBlue.opacity(0.20)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: max(knobSize + padding * 2, dragOffset + knobSize + padding * 2))
+
+                // 3. Center Label & Trailing Chevrons (Dark text for high contrast on light track)
+                HStack {
+                    Spacer(minLength: knobSize + padding + 8)
+
+                    Text(title)
+                        .font(.system(size: 16.5, weight: .bold))
+                        .foregroundStyle(Color.deepSpace)
+                        .opacity(textOpacity)
+
+                    Spacer(minLength: 8)
+
+                    // Three progressive trailing chevrons (>>>) in dark / steel tones
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.steelBlue.opacity(0.30))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.steelBlue.opacity(0.65))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.deepSpace.opacity(0.95))
+                    }
+                    .padding(.trailing, 22)
+                    .opacity(textOpacity)
+                }
+
+                // 4. Draggable Circular Knob with Chevron (Dark circle with light chevron)
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.deepSpace,
+                                    Color(hex: 0x142B46)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: knobSize, height: knobSize)
+                        .shadow(color: Color.deepSpace.opacity(0.35), radius: 6, x: 2, y: 2)
+
+                    Image(systemName: progress > 0.85 ? "checkmark" : "chevron.right")
+                        .font(.system(size: 19, weight: .bold))
+                        .foregroundStyle(Color.honeydew)
+                        .contentTransition(.symbolEffect(.replace))
+                }
+                .offset(x: padding + dragOffset)
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            guard !hasTriggered else { return }
+                            isDragging = true
+                            dragOffset = min(max(0, value.translation.width), maxDrag)
+                        }
+                        .onEnded { value in
+                            guard !hasTriggered else { return }
+                            isDragging = false
+                            if dragOffset >= maxDrag * 0.70 {
+                                // Successful slide to confirm
+                                hasTriggered = true
+                                withAnimation(.spring(response: 0.22, dampingFraction: 0.75)) {
+                                    dragOffset = maxDrag
+                                }
+                                triggerHapticSuccess()
+                                action()
+
+                                // Reset back after animation
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                                    hasTriggered = false
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                        dragOffset = 0
+                                    }
+                                }
+                            } else {
+                                // Snap back to start position
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.72)) {
+                                    dragOffset = 0
+                                }
+                            }
+                        }
+                )
+            }
+            .frame(height: height)
+        }
+        .frame(height: height)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityHint("Slide right or double-tap to start live journey")
+        .accessibilityAction {
+            action()
+        }
+    }
+
+    private func triggerHapticSuccess() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+    }
+}
+
