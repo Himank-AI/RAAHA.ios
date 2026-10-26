@@ -10,34 +10,37 @@ struct RouteDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                // Header region with atmospheric transit illustration overlay
+                // Header + endpoints region with transit illustration overlay
                 ZStack(alignment: .topTrailing) {
-                    // Atmospheric transit illustration — top-right, behind all text
+                    // Transit illustration — spans full header + endpoints height
                     transitIllustration
 
-                    // Header info (sits above the illustration)
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            RouteBadge(kind: kind)
+                    // Header info + endpoints (sits above the illustration)
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                RouteBadge(kind: kind)
 
-                            Text("\(option.minutes) min")
-                                .font(.raahaLargeTitle)
-                                .foregroundStyle(Color.deepSpace)
-                                .padding(.top, 4)
+                                Text("\(option.minutes) min")
+                                    .font(.raahaLargeTitle)
+                                    .foregroundStyle(Color.deepSpace)
+                                    .padding(.top, 4)
 
-                            Text("\(option.modeCount) modes  ·  \(option.fareText)")
-                                .font(.raahaTitle3)
-                                .foregroundStyle(Color.steelBlue)
+                                Text("\(option.modeCount) modes  ·  \(option.fareText)")
+                                    .font(.raahaTitle3)
+                                    .foregroundStyle(Color.steelBlue)
+                            }
+
+                            Spacer()
                         }
+                        .padding(.top, 4)
 
-                        Spacer()
+                        // Endpoints inside ZStack so illustration covers full section
+                        endpointsSection
+                            .padding(.top, 16)
+                            .padding(.bottom, 8)
                     }
-                    .padding(.top, 4)
                 }
-
-                // Journey Endpoints (Styled cleanly like reference without card container)
-                endpointsSection
-                    .padding(.top, 16)
 
                 // Steps Card with expandable legs
                 stepsCard
@@ -75,48 +78,30 @@ struct RouteDetailView: View {
     }
 
     // MARK: - Transit Illustration Background
-    /// Atmospheric background illustration: low opacity, blurred, teal-blended, gradient-masked.
+    /// Clearly visible transit illustration in top-right, fading only on the left edge.
     private var transitIllustration: some View {
-        GeometryReader { geo in
-            Image("transit_illustration")
-                .resizable()
-                .scaledToFill()
-                // Teal/cyan color blend to match app palette
-                .colorMultiply(Color(red: 0.66, green: 0.86, blue: 0.86))
-                // Soft atmospheric opacity
-                .opacity(0.38)
-                // Gentle Gaussian blur to dissolve into background
-                .blur(radius: 1.5)
-                .frame(width: geo.size.width * 0.72, height: geo.size.height)
-                .clipped()
-                // Gradient mask: visible top-right, fades to transparent left & bottom
-                .mask(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.0),
-                            .init(color: .black.opacity(0.55), location: 0.38),
-                            .init(color: .black.opacity(0.80), location: 0.60),
-                            .init(color: .black.opacity(0.92), location: 1.0)
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .mask(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .black.opacity(0.90), location: 0.0),
-                                .init(color: .black.opacity(0.65), location: 0.55),
-                                .init(color: .clear, location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+        Image("transit_illustration")
+            .resizable()
+            .scaledToFill()
+            // Match reference: crisp, clearly visible illustration
+            .opacity(0.72)
+            .frame(width: UIScreen.main.bounds.width * 0.70)
+            .clipped()
+            // Only left-edge fade — right/top stay fully visible like the reference
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.45), location: 0.18),
+                        .init(color: .black.opacity(0.82), location: 0.40),
+                        .init(color: .black, location: 0.62)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
                 )
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .allowsHitTesting(false)
-        }
-        .frame(height: 130)
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+            .allowsHitTesting(false)
     }
 
     // MARK: - Endpoints Section (Matches 2nd Attached Image)
