@@ -10,37 +10,28 @@ struct RouteDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                // Header + endpoints region with transit illustration overlay
-                ZStack(alignment: .topTrailing) {
-                    // Transit illustration — spans full header + endpoints height
-                    transitIllustration
+                // Header info
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        RouteBadge(kind: kind)
 
-                    // Header info + endpoints (sits above the illustration)
-                    VStack(alignment: .leading, spacing: 0) {
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                RouteBadge(kind: kind)
+                        Text("\(option.minutes) min")
+                            .font(.raahaLargeTitle)
+                            .foregroundStyle(Color.deepSpace)
+                            .padding(.top, 4)
 
-                                Text("\(option.minutes) min")
-                                    .font(.raahaLargeTitle)
-                                    .foregroundStyle(Color.deepSpace)
-                                    .padding(.top, 4)
-
-                                Text("\(option.modeCount) modes  ·  \(option.fareText)")
-                                    .font(.raahaTitle3)
-                                    .foregroundStyle(Color.steelBlue)
-                            }
-
-                            Spacer()
-                        }
-                        .padding(.top, 4)
-
-                        // Endpoints inside ZStack so illustration covers full section
-                        endpointsSection
-                            .padding(.top, 16)
-                            .padding(.bottom, 8)
+                        Text("\(option.modeCount) modes  ·  \(option.fareText)")
+                            .font(.raahaTitle3)
+                            .foregroundStyle(Color.steelBlue)
                     }
+
+                    Spacer()
                 }
+                .padding(.top, 4)
+
+                // Journey Endpoints
+                endpointsSection
+                    .padding(.top, 16)
 
                 // Steps Card with expandable legs
                 stepsCard
@@ -70,6 +61,11 @@ struct RouteDetailView: View {
                 .ignoresSafeArea(edges: .bottom)
             )
         }
+        // Fixed background illustration — pinned to top-right, does NOT scroll
+        .background(alignment: .topTrailing) {
+            transitIllustration
+                .ignoresSafeArea(edges: .top)
+        }
         .raahaScreenBackground()
         .pushedChrome()
         .onAppear {
@@ -78,29 +74,42 @@ struct RouteDetailView: View {
     }
 
     // MARK: - Transit Illustration Background
-    /// Clearly visible transit illustration in top-right, fading only on the left edge.
+    /// Fixed non-scrolling background illustration pinned to top-right corner.
     private var transitIllustration: some View {
         Image("transit_illustration")
             .resizable()
             .scaledToFill()
-            // Match reference: crisp, clearly visible illustration
-            .opacity(0.72)
-            .frame(width: UIScreen.main.bounds.width * 0.70)
+            .opacity(0.70)
+            .frame(
+                width: UIScreen.main.bounds.width * 0.82,
+                height: UIScreen.main.bounds.height * 0.50
+            )
             .clipped()
-            // Only left-edge fade — right/top stay fully visible like the reference
+            // Left-edge fade + bottom-edge fade combined via nested mask
             .mask(
                 LinearGradient(
                     stops: [
                         .init(color: .clear, location: 0.0),
-                        .init(color: .black.opacity(0.45), location: 0.18),
-                        .init(color: .black.opacity(0.82), location: 0.40),
-                        .init(color: .black, location: 0.62)
+                        .init(color: .black.opacity(0.40), location: 0.14),
+                        .init(color: .black.opacity(0.80), location: 0.32),
+                        .init(color: .black, location: 0.52)
                     ],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0.0),
+                            .init(color: .black, location: 0.62),
+                            .init(color: .black.opacity(0.60), location: 0.82),
+                            .init(color: .clear, location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
             )
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
             .allowsHitTesting(false)
     }
 
