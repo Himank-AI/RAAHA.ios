@@ -2,6 +2,12 @@ import SwiftUI
 
 @main
 struct RaahaApp: App {
+    init() {
+        // Hide scroll indicators globally across the entire app
+        UIScrollView.appearance().showsVerticalScrollIndicator = false
+        UIScrollView.appearance().showsHorizontalScrollIndicator = false
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
