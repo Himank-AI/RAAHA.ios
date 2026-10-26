@@ -195,54 +195,57 @@ private struct InteractiveLegRow: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 4) {
+                    // Top header line: Title (+ expand indicator) & Fare Chip uniformly right-aligned
+                    HStack(alignment: .center, spacing: 8) {
+                        HStack(spacing: 6) {
                             Text(leg.title)
                                 .font(.raahaHeadline)
                                 .foregroundStyle(Color.honeydew)
-                            Text(leg.detail)
-                                .font(.raahaSubheadline)
-                                .foregroundStyle(Color.honeydew.opacity(0.9))
-                            Text(leg.description)
-                                .font(.raahaFootnote)
-                                .foregroundStyle(Color.frostedBlue)
-                                .fixedSize(horizontal: false, vertical: true)
 
-                            // Walk does not show lighting per user instructions
-                            if let lighting = leg.lighting, leg.mode != .walk {
-                                LightingTag(lighting: lighting)
-                                    .padding(.top, 4)
+                            // Show chevron indicator directly beside expandable mode titles (e.g. Metro)
+                            if isExpandable {
+                                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(Color.frostedBlue.opacity(0.85))
                             }
                         }
 
                         Spacer(minLength: 8)
 
-                        VStack(alignment: .trailing, spacing: 8) {
-                            if let fare = leg.fare {
-                                FareChip(mode: leg.mode, text: fare)
-                            }
-
-                            // Show chevron only for expandable modes (e.g. Metro, Bus, Train)
-                            if isExpandable {
-                                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(Color.frostedBlue)
-                            }
+                        if let fare = leg.fare {
+                            FareChip(mode: leg.mode, text: fare)
                         }
                     }
                     .padding(.top, 2)
-                    .padding(.bottom, isExpanded && isExpandable ? 8 : 14)
+
+                    Text(leg.detail)
+                        .font(.raahaSubheadline)
+                        .foregroundStyle(Color.honeydew.opacity(0.9))
+
+                    Text(leg.description)
+                        .font(.raahaFootnote)
+                        .foregroundStyle(Color.frostedBlue)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    // Walk does not show lighting per user instructions
+                    if let lighting = leg.lighting, leg.mode != .walk {
+                        LightingTag(lighting: lighting)
+                            .padding(.top, 4)
+                    }
 
                     // Expanded step details
                     if isExpanded && isExpandable {
                         expandedLegDetails(for: leg)
                             .transition(.opacity.combined(with: .move(edge: .top)))
-                            .padding(.bottom, 12)
+                            .padding(.top, 4)
+                            .padding(.bottom, 6)
                     }
 
                     if !isLast {
                         HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+                            .padding(.top, 8)
+                            .padding(.bottom, 6)
                     }
                 }
             }
@@ -295,14 +298,22 @@ private struct FareChip: View {
     let text: String
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 5) {
             Image(systemName: "ticket")
+                .font(.system(size: 11, weight: .semibold))
             Text(text)
+                .font(.system(size: 12, weight: .semibold))
         }
-        .font(.raahaCaption)
         .foregroundStyle(Color.frostedBlue)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .overlay(Capsule().stroke(Color.frostedBlue.opacity(0.6), lineWidth: 1))
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4.5)
+        .background(
+            Capsule()
+                .fill(Color.steelBlue.opacity(0.20))
+        )
+        .overlay(
+            Capsule()
+                .stroke(Color.frostedBlue.opacity(0.40), lineWidth: 1)
+        )
     }
 }
