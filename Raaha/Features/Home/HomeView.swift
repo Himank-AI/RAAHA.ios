@@ -124,7 +124,8 @@ struct HomeView: View {
         Image("transit_illustration")
             .resizable()
             .scaledToFill()
-            .frame(width: UIScreen.main.bounds.width * 0.62)
+            .frame(width: UIScreen.main.bounds.width * 0.64)
+            .offset(y: -48)
             .frame(maxHeight: .infinity, alignment: .topTrailing)
             .clipped()
             .mask(
