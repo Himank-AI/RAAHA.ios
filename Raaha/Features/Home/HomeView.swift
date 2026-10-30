@@ -68,38 +68,88 @@ struct HomeView: View {
         }
     }
 
-    private var header: some View {
-        NavyHeader {
-            ZStack(alignment: .trailing) {
-                // Background artistic vehicle graphic
-                Image("home_vehicles")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 195)
-                    .padding(.trailing, -16)
-                    .accessibilityHidden(true)
+    private var greetingSymbol: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<17: return "sun.max"
+        default: return "moon.stars"
+        }
+    }
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("\(greeting), Akshay")
-                        .font(.raahaSubheadlineMedium)
+    private var header: some View {
+        ZStack(alignment: .bottomTrailing) {
+            // Background transit illustration matching reference
+            transitIllustration
+
+            // Header text content
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Text("\(greeting), Akshaya")
+                        .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(Color.frostedBlue)
 
-                    Text("Where to in Chennai?")
-                        .font(.raahaTitle)
-                        .foregroundStyle(Color.honeydew)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-
-                    Text("Plan your journey across Chennai\nwith all modes, in one place.")
-                        .font(.raahaFootnote)
-                        .foregroundStyle(Color.frostedBlue.opacity(0.9))
-                        .frame(maxWidth: 195, alignment: .leading)
-                        .padding(.top, 2)
+                    Image(systemName: greetingSymbol)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(Color.frostedBlue)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Text("Where to in\nChennai?")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundStyle(Color.honeydew)
+                    .lineSpacing(1)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Plan your journey\nacross Chennai with\nall modes, in one place.")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(Color.frostedBlue.opacity(0.88))
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 200, alignment: .leading)
+                    .padding(.top, 2)
             }
-            .frame(minHeight: 136)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 22)
+            .padding(.top, 8)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            UnevenRoundedRectangle(bottomLeadingRadius: 32, bottomTrailingRadius: 32, style: .continuous)
+                .fill(Color.deepSpace)
+                .ignoresSafeArea(edges: .top)
+        }
+    }
+
+    private var transitIllustration: some View {
+        Image("transit_illustration")
+            .resizable()
+            .scaledToFill()
+            .frame(width: UIScreen.main.bounds.width * 0.58)
+            .frame(maxHeight: .infinity, alignment: .center)
+            .clipped()
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.20), location: 0.16),
+                        .init(color: .black.opacity(0.75), location: 0.38),
+                        .init(color: .black, location: 0.58)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(
+                UnevenRoundedRectangle(
+                    topLeadingRadius: 0,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 32,
+                    topTrailingRadius: 0,
+                    style: .continuous
+                )
+            )
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     // MARK: - Journey Planner Card
