@@ -32,7 +32,7 @@ struct HomeView: View {
             .scrollDismissesKeyboard(.interactively)
         }
         .raahaScreenBackground()
-        .navyHeaderChrome()
+        .lightHeaderChrome()
         // Origin picker sheet
         .sheet(isPresented: $editingFrom) {
             LocationPickerSheet(
@@ -68,38 +68,84 @@ struct HomeView: View {
         }
     }
 
-    private var header: some View {
-        NavyHeader {
-            ZStack(alignment: .trailing) {
-                // Background artistic vehicle graphic
-                Image("home_vehicles")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 195)
-                    .padding(.trailing, -16)
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("\(greeting), Akshay")
-                        .font(.raahaSubheadlineMedium)
-                        .foregroundStyle(Color.frostedBlue)
-
-                    Text("Where to in Chennai?")
-                        .font(.raahaTitle)
-                        .foregroundStyle(Color.honeydew)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-
-                    Text("Plan your journey across Chennai\nwith all modes, in one place.")
-                        .font(.raahaFootnote)
-                        .foregroundStyle(Color.frostedBlue.opacity(0.9))
-                        .frame(maxWidth: 195, alignment: .leading)
-                        .padding(.top, 2)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .frame(minHeight: 136)
+    private var greetingSymbol: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<17: return "sun.max"
+        default: return "moon.stars"
         }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Text("\(greeting), Akshaya")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x235148))
+
+                Image(systemName: greetingSymbol)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x1EA5B6))
+            }
+
+            Text("Where to in\nChennai?")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundStyle(Color(hex: 0x062A26))
+                .lineSpacing(1)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Plan your journey\nacross Chennai with\nall modes, in one place.")
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(Color.steelBlue)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: 200, alignment: .leading)
+                .padding(.top, 2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
+        .padding(.top, 8)
+        .background(alignment: .topTrailing) {
+            transitIllustration
+                .ignoresSafeArea(edges: .top)
+        }
+    }
+
+    private var transitIllustration: some View {
+        Image("transit_illustration")
+            .resizable()
+            .scaledToFill()
+            .frame(width: UIScreen.main.bounds.width * 0.68)
+            .offset(y: -44)
+            .frame(height: 290, alignment: .topTrailing)
+            .mask {
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.15), location: 0.12),
+                        .init(color: .black.opacity(0.70), location: 0.32),
+                        .init(color: .black, location: 0.55)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            }
+            .mask {
+                LinearGradient(
+                    stops: [
+                        .init(color: .black, location: 0.0),
+                        .init(color: .black, location: 0.45),
+                        .init(color: .black.opacity(0.65), location: 0.65),
+                        .init(color: .black.opacity(0.20), location: 0.82),
+                        .init(color: .clear, location: 0.96)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     // MARK: - Journey Planner Card

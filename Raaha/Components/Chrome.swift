@@ -59,6 +59,14 @@ extension View {
             .toolbarColorScheme(.dark, for: .navigationBar)
     }
 
+    /// Tab-root screens with light header: dark status bar over light background.
+    func lightHeaderChrome() -> some View {
+        self
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+    }
+
     /// Pushed screens: transparent bar, custom circular back button, optional centred title.
     func pushedChrome(title: String? = nil) -> some View {
         self
