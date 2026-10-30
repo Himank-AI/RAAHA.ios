@@ -32,7 +32,7 @@ struct HomeView: View {
             .scrollDismissesKeyboard(.interactively)
         }
         .raahaScreenBackground()
-        .navyHeaderChrome()
+        .lightHeaderChrome()
         // Origin picker sheet
         .sheet(isPresented: $editingFrom) {
             LocationPickerSheet(
@@ -80,23 +80,23 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Text("\(greeting), Akshaya")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Color.frostedBlue)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x235148))
 
                 Image(systemName: greetingSymbol)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(Color.frostedBlue)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x1EA5B6))
             }
 
             Text("Where to in\nChennai?")
-                .font(.system(size: 32, weight: .bold))
-                .foregroundStyle(Color.honeydew)
+                .font(.system(size: 34, weight: .bold))
+                .foregroundStyle(Color(hex: 0x062A26))
                 .lineSpacing(1)
                 .fixedSize(horizontal: false, vertical: true)
 
             Text("Plan your journey\nacross Chennai with\nall modes, in one place.")
                 .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(Color.frostedBlue.opacity(0.88))
+                .foregroundStyle(Color.steelBlue)
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: 200, alignment: .leading)
@@ -104,19 +104,11 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
-        .padding(.bottom, 22)
+        .padding(.bottom, 12)
         .padding(.top, 8)
         .background(alignment: .topTrailing) {
-            ZStack(alignment: .topTrailing) {
-                UnevenRoundedRectangle(bottomLeadingRadius: 32, bottomTrailingRadius: 32, style: .continuous)
-                    .fill(Color.deepSpace)
-
-                transitIllustration
-            }
-            .clipShape(
-                UnevenRoundedRectangle(bottomLeadingRadius: 32, bottomTrailingRadius: 32, style: .continuous)
-            )
-            .ignoresSafeArea(edges: .top)
+            transitIllustration
+                .ignoresSafeArea(edges: .top)
         }
     }
 
@@ -124,20 +116,31 @@ struct HomeView: View {
         Image("transit_illustration")
             .resizable()
             .scaledToFill()
-            .frame(width: UIScreen.main.bounds.width * 0.64)
-            .offset(y: -48)
+            .frame(width: UIScreen.main.bounds.width * 0.65)
+            .offset(y: -42)
             .frame(maxHeight: .infinity, alignment: .topTrailing)
             .clipped()
             .mask(
                 LinearGradient(
                     stops: [
                         .init(color: .clear, location: 0.0),
-                        .init(color: .black.opacity(0.20), location: 0.16),
-                        .init(color: .black.opacity(0.75), location: 0.38),
-                        .init(color: .black, location: 0.58)
+                        .init(color: .black.opacity(0.20), location: 0.15),
+                        .init(color: .black.opacity(0.80), location: 0.38),
+                        .init(color: .black, location: 0.60)
                     ],
                     startPoint: .leading,
                     endPoint: .trailing
+                )
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0.0),
+                            .init(color: .black, location: 0.82),
+                            .init(color: .clear, location: 1.0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
                 )
             )
             .allowsHitTesting(false)
