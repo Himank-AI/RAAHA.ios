@@ -116,33 +116,34 @@ struct HomeView: View {
         Image("transit_illustration")
             .resizable()
             .scaledToFill()
-            .frame(width: UIScreen.main.bounds.width * 0.65)
-            .offset(y: -42)
-            .frame(maxHeight: .infinity, alignment: .topTrailing)
-            .clipped()
-            .mask(
+            .frame(width: UIScreen.main.bounds.width * 0.68)
+            .offset(y: -44)
+            .frame(height: 290, alignment: .topTrailing)
+            .mask {
                 LinearGradient(
                     stops: [
                         .init(color: .clear, location: 0.0),
-                        .init(color: .black.opacity(0.20), location: 0.15),
-                        .init(color: .black.opacity(0.80), location: 0.38),
-                        .init(color: .black, location: 0.60)
+                        .init(color: .black.opacity(0.15), location: 0.12),
+                        .init(color: .black.opacity(0.70), location: 0.32),
+                        .init(color: .black, location: 0.55)
                     ],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
-                .mask(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .black, location: 0.0),
-                            .init(color: .black, location: 0.82),
-                            .init(color: .clear, location: 1.0)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+            }
+            .mask {
+                LinearGradient(
+                    stops: [
+                        .init(color: .black, location: 0.0),
+                        .init(color: .black, location: 0.45),
+                        .init(color: .black.opacity(0.65), location: 0.65),
+                        .init(color: .black.opacity(0.20), location: 0.82),
+                        .init(color: .clear, location: 0.96)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
-            )
+            }
             .allowsHitTesting(false)
             .accessibilityHidden(true)
     }
