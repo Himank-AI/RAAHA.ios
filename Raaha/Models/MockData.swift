@@ -11,24 +11,25 @@ enum MockData {
             kind: .fastest,
             minutes: 58,
             fare: 112,
-            chain: [.walk, .metro, .auto, .walk],
+            chain: [.walk, .bus, .bus, .walk],
             legs: [
                 RouteLeg(id: "f1", mode: .walk, title: "Walk", detail: "2 min · 180 m",
                          description: "From your location to\nChennai Metro Station"),
-                RouteLeg(id: "f2", mode: .metro, title: "Metro (Green Line)", detail: "22 min · 5 stops",
+                RouteLeg(id: "f2", mode: .bus, title: "Bus (Green Line)", detail: "22 min · 5 stops",
                          description: "Chennai Metro Station →\nSt. Thomas Mount", fare: "₹ 40"),
-                RouteLeg(id: "f3", mode: .auto, title: "Auto", detail: "10 min · 3.2 km",
+                RouteLeg(id: "f3", mode: .bus, title: "Bus", detail: "10 min · 3.2 km",
                          description: "St. Thomas Mount →\nPhoenix Mall", fare: "₹ 72"),
                 RouteLeg(id: "f4", mode: .walk, title: "Walk", detail: "4 min · 350 m",
                          description: "From drop-off to your destination")
             ],
-            liveScreens: [.walk, .metro, .auto, .walkEnd]
+            liveScreens: [.walk, .metro, .auto, .walkEnd],
+            modeCountOverride: 3
         ),
         RouteOption(
             kind: .cheapest,
             minutes: 97,
             fare: 68,
-            chain: [.walk, .bus, .walk, .bike, .train],
+            chain: [.walk, .bus, .walk, .train],
             legs: [
                 RouteLeg(id: "c1", mode: .walk, title: "Walk", detail: "10 min · 180 m",
                          description: "From your location to\nChennai Bus Station"),
@@ -41,7 +42,8 @@ enum MockData {
                 RouteLeg(id: "c5", mode: .train, title: "Train", detail: "5 min · 350 m",
                          description: "From drop-off to your destination", fare: "₹ 13")
             ],
-            liveScreens: [.walk, .bus, .auto, .train]
+            liveScreens: [.walk, .bus, .auto, .train],
+            modeCountOverride: 4
         ),
         RouteOption(
             kind: .comfortable,
@@ -54,22 +56,24 @@ enum MockData {
                 RouteLeg(id: "m2", mode: .cab, title: "Cab", detail: "90 min · 35 km",
                          description: "From drop-off to your destination", fare: "₹ 598", lighting: .wellLit)
             ],
-            liveScreens: [.walk, .auto]
+            liveScreens: [.walk, .auto],
+            modeCountOverride: 2
         ),
         RouteOption(
             kind: .safest,
             minutes: 80,
             fare: 360,
-            chain: [.walk, .auto, .metro],
+            chain: [.walk, .bus, .bus, .car],
             legs: [
                 RouteLeg(id: "s1", mode: .walk, title: "Walk", detail: "10 min · 180 m",
                          description: "From your location to\nChennai Bus Station", lighting: .wellLit),
-                RouteLeg(id: "s2", mode: .auto, title: "Auto", detail: "55 min · 6 km",
+                RouteLeg(id: "s2", mode: .bus, title: "Bus", detail: "55 min · 6 km",
                          description: "St. Thomas Mount →\nPhoenix Mall", fare: "₹ 300", lighting: .wellLit),
-                RouteLeg(id: "s3", mode: .metro, title: "Metro", detail: "15 min · 8 km",
+                RouteLeg(id: "s3", mode: .car, title: "Cab", detail: "15 min · 8 km",
                          description: "From drop-off to your destination", fare: "₹ 60", lighting: .wellLit)
             ],
-            liveScreens: [.walk, .auto, .metro]
+            liveScreens: [.walk, .auto, .metro],
+            modeCountOverride: 3
         )
     ]
 

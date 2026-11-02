@@ -95,9 +95,10 @@ struct RouteOption: Identifiable {
     let chain: [TransportMode]
     let legs: [RouteLeg]
     let liveScreens: [LiveScreen]
+    var modeCountOverride: Int? = nil
 
     var id: RouteKind { kind }
-    var modeCount: Int { Set(chain).count }
+    var modeCount: Int { modeCountOverride ?? Set(chain).count }
     var fareText: String { "₹ \(fare)" }
     var modesText: String { "\(modeCount) modes" }
 }
