@@ -32,6 +32,7 @@ enum Route: Hashable {
     case arrived
     case tripPreview
     case tripSaved
+    case login
 }
 
 final class AppRouter: ObservableObject {
@@ -40,6 +41,9 @@ final class AppRouter: ObservableObject {
     @Published var tripsPath: [Route] = []
     @Published var explorePath: [Route] = []
     @Published var profilePath: [Route] = []
+
+    /// Presentation state for Login / Sign Up screen
+    @Published var showLogin: Bool = true
 
     /// Active journey origin & destination shared across the planning flow.
     @Published var journeyFrom: String = "Current Location"

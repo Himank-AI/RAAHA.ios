@@ -21,6 +21,20 @@ struct RootView: View {
     @StateObject private var router = AppRouter()
 
     var body: some View {
+        Group {
+            if router.showLogin {
+                LoginView()
+                    .transition(.opacity)
+            } else {
+                mainAppView
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: router.showLogin)
+        .environmentObject(router)
+    }
+
+    private var mainAppView: some View {
         ZStack(alignment: .bottom) {
             Color.honeydew.ignoresSafeArea()
 
@@ -57,7 +71,6 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: router.isTabBarVisible)
-        .environmentObject(router)
     }
 }
 
@@ -80,6 +93,8 @@ struct RouteDestination: View {
             TripPreviewView()
         case .tripSaved:
             TripSavedView()
+        case .login:
+            LoginView()
         }
     }
 }

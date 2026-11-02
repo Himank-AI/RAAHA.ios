@@ -28,7 +28,7 @@ struct JourneyMapView: View {
 struct BottomPanel<Content: View>: View {
     @ViewBuilder var content: Content
 
-    @State private var expanded = false
+    @State private var expanded = true
     @GestureState private var drag: CGFloat = 0
 
     var body: some View {
@@ -60,8 +60,8 @@ struct BottomPanel<Content: View>: View {
             .frame(width: proxy.size.width, height: fullHeight, alignment: .top)
             .background(
                 UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous)
-                    .fill(Color.honeydew)
-                    .shadow(color: Color.deepSpace.opacity(0.2), radius: 16, x: 0, y: -4)
+                    .fill(Color(hex: 0xEDF7F7))
+                    .shadow(color: Color(hex: 0x0A2B3D).opacity(0.16), radius: 16, x: 0, y: -4)
             )
             .offset(y: offset)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -71,10 +71,12 @@ struct BottomPanel<Content: View>: View {
 
     private var grabber: some View {
         Capsule()
-            .fill(Color.deepSpace.opacity(0.85))
-            .frame(width: 64, height: 5)
-            .frame(maxWidth: .infinity, minHeight: 28)
+            .fill(Color(hex: 0x245A75).opacity(0.85))
+            .frame(width: 54, height: 5)
+            .frame(maxWidth: .infinity, minHeight: 24)
             .contentShape(Rectangle())
+            .padding(.top, 10)
+            .padding(.bottom, 6)
             .onTapGesture {
                 withAnimation(.snappy(duration: 0.3)) { expanded.toggle() }
             }

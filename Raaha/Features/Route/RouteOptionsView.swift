@@ -8,20 +8,19 @@ struct RouteOptionsView: View {
             JourneyMapView()
 
             BottomPanel {
-                VStack(spacing: 12) {
+                VStack(spacing: 14) {
                     // Journey endpoints summary
                     endpointBanner
-                        .padding(.horizontal, 4)
 
                     // Route options cards (single tap navigates directly to route detail)
-                    VStack(spacing: 10) {
+                    VStack(spacing: 12) {
                         ForEach(MockData.routes) { option in
                             RouteOptionRow(option: option) {
                                 router.push(.routeDetail(option.kind))
                             }
                         }
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, 16)
                 }
             }
         }
@@ -30,40 +29,37 @@ struct RouteOptionsView: View {
 
     // MARK: - Endpoint Banner
     private var endpointBanner: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Label(router.journeyFrom, systemImage: "location.fill")
-                    .font(.raahaCaption)
-                    .foregroundStyle(Color.steelBlue)
-                    .lineLimit(1)
+        HStack(alignment: .center, spacing: 0) {
+            // Origin & Destination
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: "location.north.fill")
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color(hex: 0x008DA5))
+
+                    Text(router.journeyFrom.isEmpty ? "Current Location" : router.journeyFrom)
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color(hex: 0x3E718B))
+                        .lineLimit(1)
+                }
 
                 HStack(spacing: 6) {
-                    Image("icon_pin")
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 12, height: 12)
-                    Text(router.journeyTo)
+                    Image(systemName: "mappin.fill")
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color(hex: 0x0A2B3D))
+
+                    Text(router.journeyTo.isEmpty ? "Phoenix Mall, Velachery" : router.journeyTo)
+                        .font(.raahaCaption.weight(.semibold))
+                        .foregroundStyle(Color(hex: 0x0A2B3D))
+                        .lineLimit(1)
                 }
-                .font(.raahaCaption.weight(.semibold))
-                .foregroundStyle(Color.deepSpace)
-                .lineLimit(1)
             }
 
             Spacer()
-
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(MockData.routes.count) Multimodal")
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.steelBlue)
-                Text("Options Available")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.deepSpace)
-            }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .lightCard(radius: 18)
+        .padding(.horizontal, 18)
+        .padding(.top, 4)
+        .padding(.bottom, 2)
     }
 }
 
@@ -75,73 +71,139 @@ private struct RouteOptionRow: View {
     var body: some View {
         Button(action: action) {
             HStack(alignment: .center, spacing: 0) {
-                // Colored left accent bar keyed to route kind
-                RoundedRectangle(cornerRadius: 3, style: .continuous)
-                    .fill(option.kind.badgeFill)
-                    .frame(width: 4)
-                    .padding(.vertical, 12)
+                // Left Column: Badge, Duration, Mode Chain
+                VStack(alignment: .leading, spacing: 8) {
+                    badgeView
 
-                HStack(alignment: .center, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        RouteBadge(kind: option.kind)
+                    HStack(alignment: .firstTextBaseline, spacing: 5) {
+                        Text("Est.")
+                            .font(.raahaFootnote)
+                            .foregroundStyle(Color(hex: 0x8ECAE6).opacity(0.9))
 
-                        HStack(alignment: .firstTextBaseline, spacing: 5) {
-                            Text("Est.")
-                                .font(.raahaFootnote)
-                                .foregroundStyle(Color.steelBlue)
-                            Text("\(option.minutes) min")
-                                .font(.raahaTitle3)
-                                .foregroundStyle(Color.honeydew)
-                        }
-
-                        modeChain
-                    }
-
-                    Spacer(minLength: 0)
-
-                    Rectangle()
-                        .fill(Color.frostedBlue.opacity(0.3))
-                        .frame(width: 1)
-                        .padding(.vertical, 4)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Est. Cost")
-                            .font(.raahaCaption)
-                            .foregroundStyle(Color.frostedBlue.opacity(0.8))
-                        Text(option.fareText)
+                        Text("\(option.minutes) min")
                             .font(.raahaTitle3)
-                            .foregroundStyle(Color.honeydew)
-                        Text(option.modesText)
-                            .font(.raahaCaption2)
-                            .foregroundStyle(Color.steelBlue)
-
-                        HStack(spacing: 3) {
-                            Text("Steps")
-                                .font(.system(size: 11, weight: .semibold))
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 10))
-                        }
-                        .foregroundStyle(Color.frostedBlue)
-                        .padding(.top, 2)
+                            .foregroundStyle(Color.white)
                     }
-                    .frame(width: 84, alignment: .leading)
+                    .lineLimit(1)
+
+                    modeChain
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+
+                Spacer(minLength: 6)
+
+                // Subtle vertical divider inside the card
+                Rectangle()
+                    .fill(Color.white.opacity(0.18))
+                    .frame(width: 1, height: 52)
+                    .padding(.horizontal, 14)
+
+                // Right Column: Est. Cost & Price
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Est. Cost")
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color(hex: 0x8ECAE6).opacity(0.9))
+
+                    Text(option.fareText)
+                        .font(.raahaTitle3)
+                        .foregroundStyle(Color.white)
+                        .lineLimit(1)
+                }
+                .frame(width: 72, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, minHeight: 88)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(LinearGradient.raahaNavy)
+                    .fill(cardGradient)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                    )
             )
-            .shadow(color: Color.deepSpace.opacity(0.12), radius: 6, x: 0, y: 3)
+            .shadow(color: Color(hex: 0x051824).opacity(0.18), radius: 8, x: 0, y: 4)
         }
         .buttonStyle(TactileButtonStyle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(option.kind.title), \(option.minutes) minutes, \(option.fareText), \(option.modesText)")
+        .accessibilityLabel("\(option.kind.title), \(option.minutes) minutes, \(option.fareText)")
         .accessibilityHint("Shows the step-by-step route")
     }
 
+    // MARK: - Card Gradient
+    private var cardGradient: LinearGradient {
+        switch option.kind {
+        case .fastest:
+            return LinearGradient(
+                colors: [Color(hex: 0x054668), Color(hex: 0x033049), Color(hex: 0x021F32)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .cheapest:
+            return LinearGradient(
+                colors: [Color(hex: 0x06655C), Color(hex: 0x044744), Color(hex: 0x022C2B)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .comfortable:
+            return LinearGradient(
+                colors: [Color(hex: 0x065170), Color(hex: 0x03384F), Color(hex: 0x022234)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .safest:
+            return LinearGradient(
+                colors: [Color(hex: 0x075D4E), Color(hex: 0x044037), Color(hex: 0x022723)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+
+    // MARK: - Badge View
+    private var badgeView: some View {
+        HStack(spacing: 5) {
+            badgeIcon
+                .font(.raahaCaption2)
+            Text(option.kind.title)
+                .font(.raahaFootnoteSemibold)
+        }
+        .foregroundStyle(badgeTextColor)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Capsule().fill(badgeBackground))
+    }
+
+    @ViewBuilder
+    private var badgeIcon: some View {
+        switch option.kind {
+        case .fastest:
+            Image(systemName: "bolt.fill")
+        case .cheapest:
+            Text("₹")
+        case .comfortable:
+            Image(systemName: "sparkles")
+        case .safest:
+            Image(systemName: "shield.fill")
+        }
+    }
+
+    private var badgeBackground: Color {
+        switch option.kind {
+        case .fastest:     return Color(hex: 0x00A8E8) // Bright Cyan Blue
+        case .cheapest:    return Color(hex: 0x05C48A) // Vibrant Sea-Green
+        case .comfortable: return Color(hex: 0x8BE3E8) // Soft Aqua Mint
+        case .safest:      return Color(hex: 0x10B981) // Crisp Leaf Green
+        }
+    }
+
+    private var badgeTextColor: Color {
+        switch option.kind {
+        case .comfortable: return Color(hex: 0x0A3344) // Dark teal on light aqua
+        default:           return Color.white
+        }
+    }
+
+    // MARK: - Mode Chain
     private var modeChain: some View {
         HStack(spacing: 0) {
             ForEach(Array(option.chain.enumerated()), id: \.offset) { index, mode in
@@ -149,14 +211,43 @@ private struct RouteOptionRow: View {
                     HStack(spacing: 2) {
                         ForEach(0..<3, id: \.self) { _ in
                             Circle()
-                                .fill(Color.frostedBlue.opacity(0.7))
+                                .fill(Color.white.opacity(0.65))
                                 .frame(width: 2.5, height: 2.5)
                         }
                     }
-                    .padding(.horizontal, 3)
+                    .padding(.horizontal, 2.5)
                 }
-                ModeBadge(mode: mode, size: 28)
+
+                ZStack {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 28, height: 28)
+                        .shadow(color: Color.black.opacity(0.12), radius: 2, y: 1)
+
+                    modeGlyph(for: mode)
+                        .frame(width: 14, height: 14)
+                }
             }
         }
+    }
+
+    @ViewBuilder
+    private func modeGlyph(for mode: TransportMode) -> some View {
+        Group {
+            switch mode {
+            case .walk:
+                Image(systemName: "figure.walk")
+            case .bus:
+                Image(systemName: "bus.fill")
+            case .metro, .train:
+                Image(systemName: "tram.fill")
+            case .auto, .cab, .car:
+                Image(systemName: "car.fill")
+            case .bike:
+                Image(systemName: "bicycle")
+            }
+        }
+        .font(.system(size: 13, weight: .semibold))
+        .foregroundStyle(Color(hex: 0x0D2A3F))
     }
 }
