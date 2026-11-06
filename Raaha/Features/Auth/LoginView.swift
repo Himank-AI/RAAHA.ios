@@ -55,7 +55,7 @@ struct LoginView: View {
                         heroIllustration(width: proxy.size.width)
 
                         brandingHeader
-                            .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top + 16 : 30)
+                            .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top + 6 : 20)
                     }
 
                     // 3. Welcome Titles
@@ -142,6 +142,7 @@ struct LoginView: View {
             .resizable()
             .scaledToFill()
             .frame(width: width, height: 360, alignment: .top)
+            .offset(y: -40)          // shift image upward inside the clipped frame
             .clipped()
             // Gentle gradient mask blending edges into the deep blue gradient background
             .mask(
@@ -171,7 +172,7 @@ struct LoginView: View {
             VStack(spacing: 3) {
                 Text("Plan. Travel. Explore Chennai.")
                     .font(.system(size: 16, weight: .medium, design: .serif).italic())
-                    .foregroundStyle(Color.lightSkyBlue)
+                    .foregroundStyle(Color.white.opacity(0.92))
 
                 // Glowing electric cyan accent underline
                 Path { p in
@@ -198,26 +199,16 @@ struct LoginView: View {
             Button {
                 navigationPath.append(.emailLogin)
             } label: {
-                HStack {
+                HStack(spacing: 10) {
                     Image(systemName: "envelope.fill")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Color.white)
-                        .frame(width: 24)
-
-                    Spacer()
+                        .frame(width: 20)
 
                     Text("Continue with Email")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Color.white)
-
-                    Spacer()
-
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Color.white)
-                        .frame(width: 24)
                 }
-                .padding(.horizontal, 22)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .background(
@@ -242,21 +233,14 @@ struct LoginView: View {
             Button {
                 handleLoginSuccess()
             } label: {
-                HStack {
-                    GoogleLogoView(size: 21)
-                        .frame(width: 24)
-
-                    Spacer()
+                HStack(spacing: 10) {
+                    GoogleLogoView(size: 20)
+                        .frame(width: 20)
 
                     Text("Continue with Google")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Color.white)
-
-                    Spacer()
-
-                    Color.clear.frame(width: 24, height: 24)
                 }
-                .padding(.horizontal, 22)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .background(
@@ -276,23 +260,16 @@ struct LoginView: View {
             Button {
                 handleLoginSuccess()
             } label: {
-                HStack {
+                HStack(spacing: 10) {
                     Image(systemName: "apple.logo")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 19, weight: .semibold))
                         .foregroundStyle(Color.white)
-                        .frame(width: 24)
-
-                    Spacer()
+                        .frame(width: 20)
 
                     Text("Continue with Apple")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Color.white)
-
-                    Spacer()
-
-                    Color.clear.frame(width: 24, height: 24)
                 }
-                .padding(.horizontal, 22)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .background(
@@ -314,18 +291,18 @@ struct LoginView: View {
     private var orDivider: some View {
         HStack(spacing: 16) {
             LinearGradient(
-                colors: [Color.clear, Color.lightSkyBlue.opacity(0.40)],
+                colors: [Color.clear, Color.white.opacity(0.35)],
                 startPoint: .leading,
                 endPoint: .trailing
             )
             .frame(height: 1)
 
             Text("or")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundStyle(Color.lightSkyBlue)
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(Color.white.opacity(0.90))
 
             LinearGradient(
-                colors: [Color.lightSkyBlue.opacity(0.40), Color.clear],
+                colors: [Color.white.opacity(0.35), Color.clear],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -338,8 +315,8 @@ struct LoginView: View {
     private var signUpPrompt: some View {
         HStack(spacing: 6) {
             Text("Don't have an account?")
-                .font(.system(size: 15, weight: .regular))
-                .foregroundStyle(Color.icyBlue.opacity(0.85))
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(Color.white.opacity(0.92))
 
             Button {
                 navigationPath.append(.signUp)
@@ -370,12 +347,12 @@ struct LoginView: View {
         HStack(alignment: .center, spacing: 10) {
             Image(systemName: "shield.fill")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.lightSkyBlue)
+                .foregroundStyle(Color.white.opacity(0.85))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("By continuing, you agree to our")
                     .font(.system(size: 11, weight: .regular))
-                    .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
+                    .foregroundStyle(Color.white.opacity(0.85))
 
                 HStack(spacing: 3) {
                     Button {
@@ -388,7 +365,7 @@ struct LoginView: View {
 
                     Text("and")
                         .font(.system(size: 11, weight: .regular))
-                        .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
+                        .foregroundStyle(Color.white.opacity(0.85))
 
                     Button {
                         // Privacy tapped
