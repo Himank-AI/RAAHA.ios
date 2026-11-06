@@ -30,7 +30,11 @@ struct SignUpView: View {
     }
 
     var body: some View {
-        GeometryReader { proxy in
+        ZStack(alignment: .top) {
+            // Background ignoring safe area
+            LinearGradient.raahaScreen
+                .ignoresSafeArea()
+
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     // Back button only (no RAAHA logo)
@@ -40,11 +44,11 @@ struct SignUpView: View {
                         }
                         Spacer()
                     }
-                    .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top + 8 : 20)
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 16)
+                    .padding(.top, 4)
+                    .padding(.bottom, 6)
 
-                    VStack(alignment: .leading, spacing: 22) {
+                    VStack(alignment: .leading, spacing: 16) {
                         // Header Titles
                         headerTitles
 
@@ -143,17 +147,14 @@ struct SignUpView: View {
                         // Switch to Sign In Prompt
                         signInPrompt
                             .padding(.top, 4)
-                            .padding(.bottom, proxy.safeAreaInsets.bottom > 0 ? 18 : 28)
+                            .padding(.bottom, 28)
                     }
                     .padding(.horizontal, 24)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: proxy.size.height)
             }
             .scrollDismissesKeyboard(.interactively)
         }
-        .raahaScreenBackground()
-        .ignoresSafeArea()
     }
 
     // MARK: - Header Titles
@@ -161,7 +162,7 @@ struct SignUpView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Create Account")
                 .font(.system(size: 30, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.midnightBlue)
         }
     }
 
@@ -318,8 +319,8 @@ struct SignUpView: View {
             .frame(height: 1)
 
             Text("or sign up with")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(Color.lightSkyBlue)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.90))
 
             LinearGradient(
                 colors: [Color.white.opacity(0.25), Color.clear],

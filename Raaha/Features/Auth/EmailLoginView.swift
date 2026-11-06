@@ -14,21 +14,25 @@ struct EmailLoginView: View {
     @State private var errorMessage: String? = nil
 
     var body: some View {
-        GeometryReader { proxy in
+        ZStack(alignment: .top) {
+            // Background ignoring safe area
+            LinearGradient.raahaScreen
+                .ignoresSafeArea()
+
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    // Back button only (no RAAHA logo)
+                    // Back button
                     HStack {
                         AuthBackButton {
                             dismiss()
                         }
                         Spacer()
                     }
-                    .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top + 8 : 20)
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 18)
+                    .padding(.top, 4)
+                    .padding(.bottom, 6)
 
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 14) {
                         // Header Titles
                         headerTitles
 
@@ -82,7 +86,7 @@ struct EmailLoginView: View {
 
                                         Text("Remember me")
                                             .font(.system(size: 13, weight: .medium))
-                                            .foregroundStyle(Color.icyBlue.opacity(0.9))
+                                            .foregroundStyle(Color.midnightBlue.opacity(0.85))
                                     }
                                 }
                                 .buttonStyle(PlainButtonStyle())
@@ -122,18 +126,15 @@ struct EmailLoginView: View {
 
                         // Switch to Sign Up Prompt
                         signUpPrompt
-                            .padding(.top, 6)
-                            .padding(.bottom, proxy.safeAreaInsets.bottom > 0 ? 16 : 24)
+                            .padding(.top, 4)
+                            .padding(.bottom, 24)
                     }
                     .padding(.horizontal, 24)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: proxy.size.height)
             }
             .scrollDismissesKeyboard(.interactively)
         }
-        .raahaScreenBackground()
-        .ignoresSafeArea()
         .alert("Reset Password", isPresented: $showForgotPasswordAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -200,18 +201,18 @@ struct EmailLoginView: View {
     private var socialDivider: some View {
         HStack(spacing: 14) {
             LinearGradient(
-                colors: [Color.clear, Color.lightSkyBlue.opacity(0.40)],
+                colors: [Color.clear, Color.white.opacity(0.35)],
                 startPoint: .leading,
                 endPoint: .trailing
             )
             .frame(height: 1)
 
             Text("or continue with")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(Color.lightSkyBlue)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.90))
 
             LinearGradient(
-                colors: [Color.lightSkyBlue.opacity(0.40), Color.clear],
+                colors: [Color.white.opacity(0.35), Color.clear],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -279,7 +280,7 @@ struct EmailLoginView: View {
         HStack(spacing: 6) {
             Text("Don't have an account?")
                 .font(.system(size: 14, weight: .regular))
-                .foregroundStyle(Color.icyBlue.opacity(0.85))
+                .foregroundStyle(Color.white.opacity(0.90))
 
             Button {
                 onNavigateToSignUp()

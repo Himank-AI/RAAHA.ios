@@ -192,7 +192,7 @@ struct ProfileView: View {
                 Capsule()
                     .fill(
                         isSelected
-                        ? AnyShapeStyle(Color.neonLime)
+                        ? AnyShapeStyle(.emraldGreen)
                         : AnyShapeStyle(Color.white.opacity(0.08))
                     )
                     .background(.ultraThinMaterial, in: Capsule())
@@ -201,7 +201,7 @@ struct ProfileView: View {
                 Capsule()
                     .stroke(isSelected ? Color.white.opacity(0.4) : Color.white.opacity(0.18), lineWidth: 1)
             )
-            .shadow(color: isSelected ? Color.neonLime.opacity(0.3) : Color.clear, radius: 6, x: 0, y: 2)
+            .shadow(color: isSelected ? .emraldGreen.opacity(0.3) : Color.clear, radius: 6, x: 0, y: 2)
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
