@@ -45,6 +45,18 @@ final class AppRouter: ObservableObject {
     /// Presentation state for Login / Sign Up screen
     @Published var showLogin: Bool = true
 
+    /// Clears all navigation state and returns to the login screen.
+    func logout() {
+        homePath = []
+        tripsPath = []
+        explorePath = []
+        profilePath = []
+        tab = .home
+        withAnimation(.easeInOut(duration: 0.3)) {
+            showLogin = true
+        }
+    }
+
     /// Active journey origin & destination shared across the planning flow.
     @Published var journeyFrom: String = "Current Location"
     @Published var journeyTo: String = "Phoenix Mall, Velachery"

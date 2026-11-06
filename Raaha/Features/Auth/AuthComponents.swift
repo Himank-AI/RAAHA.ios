@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Reusable Custom Text Field for Auth
+// MARK: - Reusable Custom Text Field for Auth (Frosted Glassmorphic Design)
 struct AuthInputField: View {
     let title: String
     let placeholder: String
@@ -16,24 +16,24 @@ struct AuthInputField: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.deepSpace.opacity(0.8))
+                .foregroundStyle(Color.midnightBlue.opacity(0.85))
 
             HStack(spacing: 12) {
                 Image(systemName: systemImage)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(isFocused ? Color.strawberry : Color.steelBlue)
+                    .foregroundStyle(isFocused ? Color.neonLime : Color.royalBlue)
                     .frame(width: 22)
 
                 if isSecure && !isPasswordVisible {
-                    SecureField(placeholder, text: $text)
+                    SecureField("", text: $text, prompt: Text(placeholder).foregroundStyle(Color.royalBlue.opacity(0.5)))
                         .font(.system(size: 15))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.midnightBlue)
                         .focused($isFocused)
                         .textContentType(textContentType)
                 } else {
-                    TextField(placeholder, text: $text)
+                    TextField("", text: $text, prompt: Text(placeholder).foregroundStyle(Color.royalBlue.opacity(0.5)))
                         .font(.system(size: 15))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.midnightBlue)
                         .focused($isFocused)
                         .keyboardType(keyboardType)
                         .autocorrectionDisabled()
@@ -48,7 +48,7 @@ struct AuthInputField: View {
                         } label: {
                             Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
                                 .font(.system(size: 15))
-                                .foregroundStyle(Color.steelBlue)
+                                .foregroundStyle(Color.royalBlue)
                         }
                     } else {
                         Button {
@@ -56,7 +56,7 @@ struct AuthInputField: View {
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 15))
-                                .foregroundStyle(Color.steelBlue.opacity(0.6))
+                                .foregroundStyle(Color.royalBlue.opacity(0.7))
                         }
                     }
                 }
@@ -65,17 +65,19 @@ struct AuthInputField: View {
             .frame(height: 52)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.85))
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .fill(Color.white.opacity(0.55))
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(
-                        isFocused ? Color.strawberry.opacity(0.75) : Color(hex: 0x78B9C8).opacity(0.35),
+                        isFocused
+                            ? Color.neonLime.opacity(0.85)
+                            : Color(hex: 0x7BBDE8).opacity(0.50),
                         lineWidth: isFocused ? 1.5 : 1
                     )
             )
-            .shadow(color: isFocused ? Color.strawberry.opacity(0.12) : Color.deepSpace.opacity(0.04), radius: 6, x: 0, y: 2)
+            .shadow(color: isFocused ? Color.neonLime.opacity(0.15) : Color(hex: 0x49769F).opacity(0.12), radius: 6, x: 0, y: 2)
             .animation(.easeInOut(duration: 0.2), value: isFocused)
         }
     }
@@ -88,19 +90,19 @@ struct AuthBackButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "chevron.left")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(Color.deepSpace)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(Color.white)
                 .frame(width: 40, height: 40)
                 .background(
                     Circle()
-                        .fill(Color.white.opacity(0.85))
+                        .fill(Color.white.opacity(0.14))
                         .background(.ultraThinMaterial, in: Circle())
                 )
                 .overlay(
                     Circle()
-                        .stroke(Color(hex: 0x78B9C8).opacity(0.4), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.35), lineWidth: 1)
                 )
-                .shadow(color: Color.deepSpace.opacity(0.06), radius: 6, x: 0, y: 2)
+                .shadow(color: Color.midnightBlue.opacity(0.35), radius: 6, x: 0, y: 2)
         }
         .buttonStyle(TactileButtonStyle(scale: 0.92))
     }
@@ -113,7 +115,7 @@ struct CompactRaahaHeader: View {
             Text("RAAHA")
                 .font(.system(size: 24, weight: .black, design: .rounded))
                 .tracking(1.4)
-                .foregroundStyle(Color.deepSpace)
+                .foregroundStyle(Color.white)
 
             RaahaLocationPin()
                 .scaleEffect(0.8)

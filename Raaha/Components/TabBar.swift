@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Floating pill tab bar (Home · Trips · Explore · Profile) with fluid spring motion.
+/// Floating pill tab bar (Home · Trips · Explore · Profile) with fluid spring motion and glassmorphic styling.
 struct RaahaTabBar: View {
     @Binding var selection: AppTab
     @Namespace private var tabNamespace
@@ -11,7 +11,7 @@ struct RaahaTabBar: View {
                 tabButton(tab)
             }
         }
-        .padding(6)
+        .padding(5)
         .glassCapsule()
         .sensoryFeedback(.selection, trigger: selection)
         .accessibilityElement(children: .contain)
@@ -29,16 +29,26 @@ struct RaahaTabBar: View {
                     .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
                     .frame(height: 24)
                 Text(tab.title)
-                    .font(.raahaCaption2.weight(isSelected ? .semibold : .medium))
+                    .font(.system(size: 11, weight: isSelected ? .bold : .medium))
             }
-            .foregroundStyle(isSelected ? Color.honeydew : Color.deepSpace.opacity(0.85))
+            .foregroundStyle(isSelected ? Color.white : Color.royalBlue.opacity(0.65))
             .frame(maxWidth: .infinity, minHeight: 52)
             .background {
                 if isSelected {
                     Capsule()
-                        .fill(Color.deepSpace)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.brightBlue, Color.electricBlue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                        )
                         .matchedGeometryEffect(id: "ACTIVE_TAB", in: tabNamespace)
-                        .shadow(color: Color.deepSpace.opacity(0.2), radius: 6, x: 0, y: 3)
+                        .shadow(color: Color.electricBlue.opacity(0.5), radius: 8, x: 0, y: 3)
                 }
             }
             .contentShape(Capsule())

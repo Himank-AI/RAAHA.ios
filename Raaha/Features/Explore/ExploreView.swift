@@ -78,7 +78,7 @@ struct ExploreView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Explore")
                     .font(.raahaTitle)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.white)
                     .accessibilityAddTraits(.isHeader)
 
                 HStack(spacing: 12) {
@@ -114,12 +114,31 @@ struct ExploreView: View {
                 Text(title)
             }
             .font(.raahaSubheadlineMedium)
-            .foregroundStyle(selected ? Color.honeydew : Color.deepSpace)
+            .foregroundStyle(selected ? Color.white : Color.royalBlue)
             .frame(maxWidth: .infinity, minHeight: 44)
             .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(selected ? Color.strawberry : Color.honeydew)
+                Capsule()
+                    .fill(
+                        selected
+                        ? AnyShapeStyle(
+                            LinearGradient(
+                                colors: [Color.brightBlue, Color.electricBlue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        : AnyShapeStyle(Color.white.opacity(0.65))
+                    )
+                    .background(
+                        .regularMaterial,
+                        in: Capsule()
+                    )
             )
+            .overlay(
+                Capsule()
+                    .stroke(selected ? Color.white.opacity(0.5) : Color.white.opacity(0.8), lineWidth: 1)
+            )
+            .shadow(color: selected ? Color.electricBlue.opacity(0.45) : Color.clear, radius: 8, x: 0, y: 3)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -129,15 +148,15 @@ struct ExploreView: View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .font(.raahaSubheadlineMedium)
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.royalBlue)
             TextField(
                 "",
                 text: $vm.query,
                 prompt: Text(segment == .places ? "Search places, restaurants…" : "Search trips or places")
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.royalBlue.opacity(0.65))
             )
             .font(.raahaBody)
-            .foregroundStyle(Color.deepSpace)
+            .foregroundStyle(Color.midnightBlue)
             .submitLabel(.search)
             .onSubmit { vm.submitSearch(vm.query) }
             .accessibilityLabel("Search")
@@ -147,14 +166,19 @@ struct ExploreView: View {
                     withAnimation { vm.clearSearch() }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.royalBlue)
                 }
                 .transition(.scale.combined(with: .opacity))
             }
         }
         .padding(.horizontal, 16)
         .frame(minHeight: 48)
-        .background(Capsule().fill(Color.honeydew))
+        .background(
+            Capsule()
+                .fill(Color.white.opacity(0.65))
+                .background(.regularMaterial, in: Capsule())
+        )
+        .overlay(Capsule().stroke(Color.white.opacity(0.80), lineWidth: 1))
     }
 }
 
@@ -168,12 +192,7 @@ private struct PlacesContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // ── 1. Chennai Locality Selector ──
-            ChennaiLocalitySelector(selected: vm.selectedLocality) { loc in
-                vm.selectLocality(loc)
-            }
-
-            // ── 2. Search results (active search) ──
+            // ── 1. Search results (active search) ──
             if vm.isSearchActive {
                 searchResults
             } else {
@@ -462,13 +481,29 @@ private struct FilterChip: View {
                 Text(filter.title)
                     .font(.raahaFootnoteSemibold)
             }
-            .foregroundStyle(isSelected ? Color.honeydew : Color.deepSpace)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
+            .foregroundStyle(isSelected ? Color.white : Color.royalBlue)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
             .background(
-                Capsule().fill(isSelected ? Color.steelBlue : Color.honeydew)
+                Capsule()
+                    .fill(
+                        isSelected
+                        ? AnyShapeStyle(
+                            LinearGradient(
+                                colors: [Color.brightBlue, Color.electricBlue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        : AnyShapeStyle(Color.white.opacity(0.65))
+                    )
+                    .background(.regularMaterial, in: Capsule())
             )
-            .shadow(color: Color.deepSpace.opacity(0.08), radius: 4, x: 0, y: 2)
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.white.opacity(0.5) : Color.white.opacity(0.8), lineWidth: 1)
+            )
+            .shadow(color: isSelected ? Color.electricBlue.opacity(0.35) : Color.clear, radius: 6, x: 0, y: 2)
         }
         .buttonStyle(.plain)
         .animation(.snappy(duration: 0.2), value: isSelected)
@@ -577,21 +612,21 @@ private struct RealFeaturedPlaceCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(place.name)
                         .font(.raahaTitle2)
-                        .foregroundStyle(Color.honeydew)
+                        .foregroundStyle(Color.white)
                         .lineLimit(1)
                     HStack(spacing: 6) {
                         Text(place.category.title)
                             .font(.raahaFootnote)
-                            .foregroundStyle(Color.frostedBlue)
+                            .foregroundStyle(Color(hex: 0xBDD8E9))
                         if let rating = place.ratingText {
                             Text("· ★ \(rating)")
                                 .font(.raahaFootnote)
-                                .foregroundStyle(Color.frostedBlue)
+                                .foregroundStyle(Color(hex: 0xBDD8E9))
                         }
                         if let dist = place.distanceText {
                             Text("· \(dist)")
                                 .font(.raahaFootnote)
-                                .foregroundStyle(Color.frostedBlue.opacity(0.75))
+                                .foregroundStyle(Color(hex: 0xBDD8E9).opacity(0.85))
                         }
                     }
                 }
@@ -648,8 +683,8 @@ private struct FeaturedPlaceCard: View {
             }
             .overlay(alignment: .topLeading) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(place.name).font(.raahaTitle2).foregroundStyle(Color.honeydew)
-                    Text(place.subtitle).font(.raahaFootnote).foregroundStyle(Color.frostedBlue)
+                    Text(place.name).font(.raahaTitle2).foregroundStyle(Color.white)
+                    Text(place.subtitle).font(.raahaFootnote).foregroundStyle(Color(hex: 0xBDD8E9))
                 }
                 .padding(16)
             }
@@ -707,18 +742,18 @@ private struct ExploreOptionCard: View {
                             Text(title)
                         }
                         .font(.raahaHeadline)
-                        .foregroundStyle(Color.honeydew)
+                        .foregroundStyle(Color.white)
 
                         Text(subtitle)
                             .font(.raahaCaption)
-                            .foregroundStyle(Color.frostedBlue)
+                            .foregroundStyle(Color(hex: 0xBDD8E9))
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         LinearGradient(
-                            colors: [Color.steelBlue.opacity(0.85), Color.deepSpace.opacity(0.92)],
+                            colors: [Color.royalBlue.opacity(0.85), Color.midnightBlue.opacity(0.92)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -875,14 +910,14 @@ private struct ChennaiLocalitySelector: View {
             HStack {
                 Text("Chennai Localities")
                     .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.midnightBlue)
                 Spacer()
                 if selected != nil {
                     Button("All Chennai") {
                         onSelect(nil)
                     }
                     .font(.raahaCaption)
-                    .foregroundStyle(Color.strawberry)
+                    .foregroundStyle(Color.royalBlue)
                 }
             }
 
@@ -897,10 +932,29 @@ private struct ChennaiLocalitySelector: View {
                             Text("All Chennai")
                                 .font(.raahaFootnoteSemibold)
                         }
-                        .foregroundStyle(selected == nil ? Color.honeydew : Color.deepSpace)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(Capsule().fill(selected == nil ? Color.steelBlue : Color.honeydew))
+                        .foregroundStyle(selected == nil ? Color.white : Color.royalBlue)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    selected == nil
+                                    ? AnyShapeStyle(
+                                        LinearGradient(
+                                            colors: [Color.brightBlue, Color.electricBlue],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    : AnyShapeStyle(Color.white.opacity(0.65))
+                                )
+                                .background(.regularMaterial, in: Capsule())
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(selected == nil ? Color.white.opacity(0.5) : Color.white.opacity(0.8), lineWidth: 1)
+                        )
+                        .shadow(color: selected == nil ? Color.electricBlue.opacity(0.35) : Color.clear, radius: 6, x: 0, y: 2)
                     }
                     .buttonStyle(.plain)
 
@@ -915,10 +969,29 @@ private struct ChennaiLocalitySelector: View {
                                 Text(locality.name)
                                     .font(.raahaFootnoteSemibold)
                             }
-                            .foregroundStyle(isCurSelected ? Color.honeydew : Color.deepSpace)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(Capsule().fill(isCurSelected ? Color.steelBlue : Color.honeydew))
+                            .foregroundStyle(isCurSelected ? Color.white : Color.royalBlue)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .fill(
+                                        isCurSelected
+                                        ? AnyShapeStyle(
+                                            LinearGradient(
+                                                colors: [Color.brightBlue, Color.electricBlue],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        : AnyShapeStyle(Color.white.opacity(0.65))
+                                    )
+                                    .background(.regularMaterial, in: Capsule())
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(isCurSelected ? Color.white.opacity(0.5) : Color.white.opacity(0.8), lineWidth: 1)
+                            )
+                            .shadow(color: isCurSelected ? Color.electricBlue.opacity(0.35) : Color.clear, radius: 6, x: 0, y: 2)
                         }
                         .buttonStyle(.plain)
                     }
@@ -1087,9 +1160,20 @@ private struct CompactPillStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.raahaHeadline)
-            .foregroundStyle(Color.deepSpace)
+            .foregroundStyle(Color.white)
             .frame(maxWidth: .infinity, minHeight: 44)
-            .background(Capsule().fill(Color.honeydew))
+            .background(
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.brightBlue, Color.electricBlue],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(Capsule().stroke(Color.white.opacity(0.35), lineWidth: 1))
+            .shadow(color: Color.electricBlue.opacity(0.35), radius: 6, x: 0, y: 2)
             .opacity(configuration.isPressed ? 0.85 : 1)
     }
 }
@@ -1177,9 +1261,14 @@ private struct PlanFieldRow<Field: View>: View {
                         .font(.raahaSubheadlineMedium)
                 }
             }
-            .foregroundStyle(Color.honeydew)
+            .foregroundStyle(Color.neonLime)
             .frame(width: 34, height: 34)
-            .background(Circle().fill(Color.steelBlue))
+            .background(
+                Circle()
+                    .fill(Color.white.opacity(0.12))
+                    .background(.ultraThinMaterial, in: Circle())
+            )
+            .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
             .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 8) {
@@ -1191,8 +1280,15 @@ private struct PlanFieldRow<Field: View>: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .fill(Color.deepSpace.opacity(0.85)))
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white.opacity(0.08))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+        )
     }
 }
 

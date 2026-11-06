@@ -12,34 +12,60 @@ struct PillButtonStyle: ButtonStyle {
             .foregroundStyle(textColor)
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(surface)
+            .overlay(
+                Capsule()
+                    .stroke(strokeColor, lineWidth: 1)
+            )
             .clipShape(Capsule())
-            .shadow(color: shadowColor, radius: 8, x: 0, y: 4)
-            .opacity(configuration.isPressed ? 0.9 : 1)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.spring(response: 0.2, dampingFraction: 0.72), value: configuration.isPressed)
+            .shadow(color: shadowColor, radius: 12, x: 0, y: 6)
+            .opacity(configuration.isPressed ? 0.92 : 1)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(response: 0.22, dampingFraction: 0.72), value: configuration.isPressed)
     }
 
     private var textColor: Color {
         switch kind {
-        case .light: return Color.deepSpace
-        case .dark, .accent: return Color.honeydew
+        case .light: return Color.white
+        case .dark: return Color.white
+        case .accent: return Color(hex: 0x001D39) // High contrast dark text on Neon Lime
+        }
+    }
+
+    private var strokeColor: Color {
+        switch kind {
+        case .light: return Color.white.opacity(0.45)
+        case .dark: return Color.white.opacity(0.20)
+        case .accent: return Color.white.opacity(0.55)
         }
     }
 
     private var shadowColor: Color {
         switch kind {
-        case .light: return Color.deepSpace.opacity(0.12)
-        case .dark: return Color.deepSpace.opacity(0.24)
-        case .accent: return Color.strawberry.opacity(0.32)
+        case .light: return Color(hex: 0x4E8EA2).opacity(0.45)
+        case .dark: return Color(hex: 0x001D39).opacity(0.35)
+        case .accent: return Color(hex: 0xC6FF00).opacity(0.45)
         }
     }
 
     @ViewBuilder
     private var surface: some View {
         switch kind {
-        case .light:  LinearGradient.raahaPill
-        case .dark:   Color.deepSpace
-        case .accent: Color.strawberry
+        case .light:
+            LinearGradient(
+                colors: [Color(hex: 0x7BBDE8), Color(hex: 0x4E8EA2)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .dark:
+            Capsule()
+                .fill(Color(hex: 0x001D39).opacity(0.75))
+                .background(.ultraThinMaterial, in: Capsule())
+        case .accent:
+            LinearGradient(
+                colors: [Color(hex: 0xD8FF33), Color.neonLime],
+                startPoint: .top,
+                endPoint: .bottom
+            )
         }
     }
 }
@@ -81,12 +107,20 @@ struct ChevronLabel: View {
 struct ModeBadge: View {
     let mode: TransportMode
     var size: CGFloat = 40
-    var fill: Color = Color.honeydew
-    var tint: Color = Color.deepSpace
+    var fill: Color = Color.white.opacity(0.55)
+    var tint: Color = Color.midnightBlue
 
     var body: some View {
         ZStack {
-            Circle().fill(fill)
+            Circle()
+                .fill(fill)
+                .background(.regularMaterial, in: Circle())
+                .overlay(
+                    Circle()
+                        .stroke(Color(hex: 0x7BBDE8).opacity(0.40), lineWidth: 1)
+                )
+                .shadow(color: Color(hex: 0x49769F).opacity(0.20), radius: 6, x: 0, y: 3)
+
             glyph
                 .foregroundStyle(tint)
                 .frame(width: size * 0.5, height: size * 0.5)
@@ -112,8 +146,8 @@ struct ModeBadge: View {
 
 struct TimeChip: View {
     let text: String
-    var fill: Color = Color.frostedBlue
-    var tint: Color = Color.deepSpace
+    var fill: Color = Color.white.opacity(0.55)
+    var tint: Color = Color.midnightBlue
 
     var body: some View {
         Text(text)
@@ -121,7 +155,16 @@ struct TimeChip: View {
             .foregroundStyle(tint)
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
-            .background(Capsule().fill(fill))
+            .background(
+                Capsule()
+                    .fill(fill)
+                    .background(.regularMaterial, in: Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(Color(hex: 0x7BBDE8).opacity(0.40), lineWidth: 0.8)
+                    )
+            )
+            .shadow(color: Color(hex: 0x49769F).opacity(0.15), radius: 4, x: 0, y: 2)
     }
 }
 
@@ -135,7 +178,7 @@ struct SectionHeader: View {
         HStack {
             Text(title)
                 .font(.raahaHeadline)
-                .foregroundStyle(Color.deepSpace)
+                .foregroundStyle(Color.midnightBlue)
             Spacer()
             if let action {
                 Button {
@@ -146,7 +189,7 @@ struct SectionHeader: View {
                         if showsChevron { Image(systemName: "chevron.right").font(.raahaCaption2) }
                     }
                     .font(.raahaSubheadline)
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.royalBlue)
                 }
                 .buttonStyle(.plain)
                 .disabled(onAction == nil)
@@ -194,10 +237,23 @@ struct RouteBadge: View {
             Text(kind.title)
                 .font(.raahaFootnoteSemibold)
         }
-        .foregroundStyle(kind.badgeText)
+        .foregroundStyle(kind == .cheapest ? Color.midnightBlue : Color.white)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(Capsule().fill(kind.badgeFill))
+        .background(
+            Capsule()
+                .fill(badgeFill(for: kind))
+                .overlay(Capsule().stroke(Color.white.opacity(0.35), lineWidth: 0.8))
+        )
+    }
+
+    private func badgeFill(for kind: RouteKind) -> Color {
+        switch kind {
+        case .fastest:     return Color.electricBlue
+        case .cheapest:    return Color.neonLime
+        case .comfortable: return Color.brightBlue
+        case .safest:      return Color(hex: 0x10B981)
+        }
     }
 }
 
@@ -211,15 +267,19 @@ struct LightingTag: View {
             Text(lit ? "Well lit" : "Not well lit")
         }
         .font(.raahaCaption2)
-        .foregroundStyle(lit ? Color.statusGreen : Color(hex: 0x9B1C28))
-        .padding(.horizontal, 8)
-        .padding(.vertical, 3)
-        .background(Capsule().fill(lit ? Color(hex: 0xD8F5E3) : Color(hex: 0xFAD7DA)))
+        .foregroundStyle(lit ? Color.midnightBlue : Color.white)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 3.5)
+        .background(
+            Capsule()
+                .fill(lit ? Color.neonLime : Color.strawberry)
+                .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 0.8))
+        )
     }
 }
 
 struct DashedVLine: View {
-    var color: Color = Color.frostedBlue.opacity(0.65)
+    var color: Color = Color.lightSkyBlue.opacity(0.55)
 
     var body: some View {
         GeometryReader { proxy in
@@ -234,14 +294,14 @@ struct DashedVLine: View {
 }
 
 struct HairlineDivider: View {
-    var color: Color = Color.frostedBlue.opacity(0.22)
+    var color: Color = Color(hex: 0x49769F).opacity(0.20)
 
     var body: some View {
         Rectangle().fill(color).frame(height: 1)
     }
 }
 
-// MARK: - Slide to Start Live Journey Slider Button
+// MARK: - Slide to Start Live Journey Slider Button (Frosted Glassmorphism with Neon Lime Finish)
 
 struct SlideToStartJourneyButton: View {
     var title: String = "Start Live Journey"
@@ -263,32 +323,30 @@ struct SlideToStartJourneyButton: View {
             let textOpacity = max(0.0, 1.0 - Double(progress) * 1.6)
 
             ZStack(alignment: .leading) {
-                // 1. Light capsule track (Honeydew with subtle gradient & defined stroke)
+                // 1. Frosted Glass Capsule Track
                 Capsule()
-                    .fill(
-                        LinearGradient(
-                            stops: [
-                                .init(color: Color(hex: 0xFCFEFA), location: 0.0),
-                                .init(color: Color.honeydew, location: 0.50),
-                                .init(color: Color(hex: 0xE5F3E7), location: 1.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(Color.white.opacity(0.55))
+                    .background(.regularMaterial, in: Capsule())
                     .overlay(
                         Capsule()
-                            .stroke(Color.steelBlue.opacity(0.22), lineWidth: 1.2)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(0.80), Color(hex: 0x7BBDE8).opacity(0.30)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: 1.2
+                            )
                     )
-                    .shadow(color: Color.deepSpace.opacity(0.16), radius: 12, x: 0, y: 6)
+                    .shadow(color: Color(hex: 0x49769F).opacity(0.25), radius: 14, x: 0, y: 6)
 
                 // 2. Active fill highlight behind the knob as it slides
                 Capsule()
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.frostedBlue.opacity(0.70),
-                                Color.frostedBlue.opacity(0.20)
+                                Color.brightBlue.opacity(0.55),
+                                Color.electricBlue.opacity(0.30)
                             ],
                             startPoint: .leading,
                             endPoint: .trailing
@@ -296,52 +354,48 @@ struct SlideToStartJourneyButton: View {
                     )
                     .frame(width: max(knobSize + padding * 2, dragOffset + knobSize + padding * 2))
 
-                // 3. Center Label & Trailing Chevrons (Dark text for high contrast on light track)
+                // 3. Center Label & Trailing Chevrons
                 HStack {
                     Spacer(minLength: knobSize + padding + 8)
 
                     Text(title)
                         .font(.system(size: 16.5, weight: .bold))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.honeydew)
                         .opacity(textOpacity)
 
                     Spacer(minLength: 8)
 
-                    // Three progressive trailing chevrons (>>>) in dark / steel tones
+                    // Three progressive trailing chevrons (>>>) in bright sky tones
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.steelBlue.opacity(0.30))
+                            .foregroundStyle(Color.lightSkyBlue.opacity(0.40))
                         Image(systemName: "chevron.right")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.steelBlue.opacity(0.65))
+                            .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
                         Image(systemName: "chevron.right")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.deepSpace.opacity(0.95))
+                            .foregroundStyle(Color.neonLime)
                     }
                     .padding(.trailing, 22)
                     .opacity(textOpacity)
                 }
 
-                // 4. Draggable Circular Knob with Chevron (Dark circle with light chevron)
+                // 4. Draggable Circular Knob with Chevron
                 ZStack {
                     Circle()
                         .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.deepSpace,
-                                    Color(hex: 0x142B46)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
+                            progress > 0.85
+                                ? LinearGradient.raahaNeonPill
+                                : LinearGradient.raahaPill
                         )
                         .frame(width: knobSize, height: knobSize)
-                        .shadow(color: Color.deepSpace.opacity(0.35), radius: 6, x: 2, y: 2)
+                        .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 1.2))
+                        .shadow(color: Color.midnightBlue.opacity(0.5), radius: 8, x: 2, y: 3)
 
                     Image(systemName: progress > 0.85 ? "checkmark" : "chevron.right")
                         .font(.system(size: 19, weight: .bold))
-                        .foregroundStyle(Color.honeydew)
+                        .foregroundStyle(progress > 0.85 ? Color.midnightBlue : Color.white)
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .offset(x: padding + dragOffset)
@@ -356,7 +410,6 @@ struct SlideToStartJourneyButton: View {
                             guard !hasTriggered else { return }
                             isDragging = false
                             if dragOffset >= maxDrag * 0.70 {
-                                // Successful slide to confirm
                                 hasTriggered = true
                                 withAnimation(.spring(response: 0.22, dampingFraction: 0.75)) {
                                     dragOffset = maxDrag
@@ -364,7 +417,6 @@ struct SlideToStartJourneyButton: View {
                                 triggerHapticSuccess()
                                 action()
 
-                                // Reset back after animation
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                                     hasTriggered = false
                                     withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
@@ -372,7 +424,6 @@ struct SlideToStartJourneyButton: View {
                                     }
                                 }
                             } else {
-                                // Snap back to start position
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.72)) {
                                     dragOffset = 0
                                 }
@@ -396,4 +447,3 @@ struct SlideToStartJourneyButton: View {
         generator.notificationOccurred(.success)
     }
 }
-

@@ -8,7 +8,7 @@ struct MissedTrainView: View {
             VStack(spacing: 18) {
                 Text("Don't worry. Let's find your next train.")
                     .font(.raahaSubheadline)
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
 
@@ -18,7 +18,7 @@ struct MissedTrainView: View {
                 HStack {
                     Text("Next Available Trains")
                         .font(.raahaHeadline)
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.honeydew)
                         .accessibilityAddTraits(.isHeader)
                     Spacer()
                     HStack(spacing: 4) {
@@ -26,10 +26,18 @@ struct MissedTrainView: View {
                         Text("Illustrative")
                     }
                     .font(.raahaCaption)
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Capsule().fill(Color.frostedBlue.opacity(0.35)))
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.12))
+                            .background(.ultraThinMaterial, in: Capsule())
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    )
                 }
                 .padding(.top, 4)
 
@@ -56,14 +64,14 @@ struct MissedTrainView: View {
                     router.popToRoot()
                 }
                 .font(.raahaSubheadlineMedium)
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
                 .frame(minHeight: 44)
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
         }
         .contentMargins(.bottom, 32, for: .scrollContent)
-        .background(MintWaveBackground())
+        .raahaScreenBackground()
         .pushedChrome(title: "Missed My Train?")
     }
 
@@ -71,24 +79,31 @@ struct MissedTrainView: View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.raahaTitle3)
-                .foregroundStyle(Color.honeydew)
+                .foregroundStyle(Color.white)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(Color.honeydew.opacity(0.25)))
+                .background(Circle().fill(Color.white.opacity(0.20)))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("You missed your train")
                     .font(.raahaHeadline)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.white)
                 Text("You reached the station after the train departed. Here are your next options.")
                     .font(.raahaFootnote)
-                    .foregroundStyle(Color.honeydew.opacity(0.92))
+                    .foregroundStyle(Color.white.opacity(0.92))
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Color.strawberry)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color.strawberry.opacity(0.85))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.white.opacity(0.25), lineWidth: 1)
+        )
+        .shadow(color: Color.strawberry.opacity(0.35), radius: 10, x: 0, y: 4)
         .accessibilityElement(children: .combine)
     }
 
@@ -99,7 +114,7 @@ struct MissedTrainView: View {
                 Text("Missed")
             }
             .font(.raahaFootnoteSemibold)
-            .foregroundStyle(Color.honeydew)
+            .foregroundStyle(Color.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(Capsule().fill(Color.strawberry))
@@ -110,9 +125,14 @@ struct MissedTrainView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 26, height: 26)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.neonLime)
                     .frame(width: 52, height: 52)
-                    .background(Circle().fill(Color.steelBlue.opacity(0.5)))
+                    .background(
+                        Circle()
+                            .fill(Color.white.opacity(0.12))
+                            .background(.ultraThinMaterial, in: Circle())
+                    )
+                    .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Chennai Central → Egmore")
@@ -120,10 +140,10 @@ struct MissedTrainView: View {
                         .foregroundStyle(Color.honeydew)
                     Text("Via Chennai Metro · Central to Egmore")
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
                     Text("Original departure: 10:32 AM")
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
                         .padding(.top, 4)
                 }
 
@@ -131,15 +151,20 @@ struct MissedTrainView: View {
 
                 Text("10:32 AM")
                     .font(.raahaSubheadlineMedium)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
-                    .background(Capsule().fill(Color.steelBlue.opacity(0.5)))
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.12))
+                            .background(.ultraThinMaterial, in: Capsule())
+                    )
+                    .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .navyCard(radius: 24, gradient: LinearGradient(colors: [Color.deepSpace], startPoint: .top, endPoint: .bottom))
+        .navyCard(radius: 24)
         .accessibilityElement(children: .combine)
     }
 }
@@ -150,7 +175,7 @@ private struct BestTrainCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
-                // Fastest badge — uses steelBlue per the design spec
+                // Fastest badge
                 HStack(spacing: 4) {
                     Image(systemName: "bolt.fill")
                         .font(.raahaCaption2)
@@ -158,14 +183,15 @@ private struct BestTrainCard: View {
                     Text("Fastest")
                         .font(.raahaFootnoteSemibold)
                 }
-                .foregroundStyle(Color.honeydew)
+                .foregroundStyle(Color.midnightBlue)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Capsule().fill(Color.steelBlue))
+                .background(Capsule().fill(Color.neonLime))
+                .shadow(color: Color.neonLime.opacity(0.3), radius: 6, x: 0, y: 2)
 
                 Text("Best Option")
                     .font(.raahaFootnote)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
             }
 
             HStack(alignment: .top, spacing: 14) {
@@ -174,9 +200,14 @@ private struct BestTrainCard: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 22, height: 22)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.neonLime)
                     .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.steelBlue.opacity(0.5)))
+                    .background(
+                        Circle()
+                            .fill(Color.white.opacity(0.12))
+                            .background(.ultraThinMaterial, in: Circle())
+                    )
+                    .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(option.line)
@@ -184,10 +215,10 @@ private struct BestTrainCard: View {
                         .foregroundStyle(Color.honeydew)
                     Text(option.path)
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
                     Text(option.board)
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
                 }
 
                 Spacer(minLength: 4)
@@ -198,7 +229,7 @@ private struct BestTrainCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Departs")
                         .font(.raahaCaption)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
                     Text(option.departs)
                         .font(.raahaTitle3)
                         .foregroundStyle(Color.honeydew)
@@ -206,12 +237,12 @@ private struct BestTrainCard: View {
                 Spacer()
                 Image(systemName: "arrow.right")
                     .font(.raahaFootnote)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.neonLime)
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Arrives")
                         .font(.raahaCaption)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
                     Text(option.arrives)
                         .font(.raahaTitle3)
                         .foregroundStyle(Color.honeydew)
@@ -221,7 +252,7 @@ private struct BestTrainCard: View {
 
             Text("Sample schedule · Availability not confirmed")
                 .font(.raahaCaption2)
-                .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -240,41 +271,55 @@ private struct OtherTrainCard: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 22, height: 22)
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(Color.frostedBlue.opacity(0.45)))
+                .background(
+                    Circle()
+                        .fill(Color.white.opacity(0.12))
+                        .background(.ultraThinMaterial, in: Circle())
+                )
+                .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(option.line)
                     .font(.raahaHeadline)
-                    .foregroundStyle(Color.deepSpace)
+                    .foregroundStyle(Color.honeydew)
                 Text(option.path)
                     .font(.raahaFootnote)
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
                 Text(option.board)
                     .font(.raahaFootnote)
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
             }
 
             Spacer(minLength: 4)
 
             VStack(alignment: .trailing, spacing: 6) {
-                TimeChip(text: option.duration, fill: Color.frostedBlue.opacity(0.5), tint: Color.steelBlue)
+                TimeChip(text: option.duration)
                 Text("→ \(option.arrives)")
                     .font(.raahaFootnote)
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.honeydew)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.frostedBlue.opacity(0.5), lineWidth: 1)
+                .fill(Color.white.opacity(0.08))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.25), Color.white.opacity(0.06)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
                 )
         )
+        .shadow(color: Color.midnightBlue.opacity(0.2), radius: 8, x: 0, y: 4)
         .accessibilityElement(children: .combine)
     }
 }

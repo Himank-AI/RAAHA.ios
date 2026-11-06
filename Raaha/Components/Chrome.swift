@@ -12,13 +12,31 @@ struct NavyHeader<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 UnevenRoundedRectangle(bottomLeadingRadius: 32, bottomTrailingRadius: 32, style: .continuous)
-                    .fill(Color.deepSpace)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(hex: 0x0A4174).opacity(0.92),
+                                Color(hex: 0x49769F).opacity(0.80)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .background(
+                        .ultraThinMaterial,
+                        in: UnevenRoundedRectangle(bottomLeadingRadius: 32, bottomTrailingRadius: 32, style: .continuous)
+                    )
+                    .overlay(
+                        UnevenRoundedRectangle(bottomLeadingRadius: 32, bottomTrailingRadius: 32, style: .continuous)
+                            .stroke(Color.white.opacity(0.22), lineWidth: 1)
+                    )
+                    .shadow(color: Color(hex: 0x49769F).opacity(0.35), radius: 14, x: 0, y: 6)
                     .ignoresSafeArea(edges: .top)
             }
     }
 }
 
-// MARK: - Back button
+// MARK: - Back button (Frosted Glass Circular Button from Reference 1)
 
 struct BackButton: View {
     @Environment(\.dismiss) private var dismiss
@@ -34,17 +52,14 @@ struct BackButton: View {
 
     @ViewBuilder
     private var glyph: some View {
-        let icon = Image(systemName: "chevron.left")
-            .font(.raahaHeadline)
-            .foregroundStyle(Color.deepSpace)
-        if #available(iOS 26.0, *) {
-            // iOS 26 wraps toolbar items in Liquid Glass automatically.
-            icon.frame(width: 28, height: 28)
-        } else {
-            icon
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(Color.honeydew.opacity(0.9)))
-        }
+        Image(systemName: "chevron.left")
+            .font(.system(size: 14, weight: .bold))
+            .foregroundStyle(Color.white)
+            .frame(width: 40, height: 40)
+            .background(Circle().fill(Color.white.opacity(0.14)))
+            .background(.ultraThinMaterial, in: Circle())
+            .overlay(Circle().stroke(Color.white.opacity(0.35), lineWidth: 1))
+            .shadow(color: Color.midnightBlue.opacity(0.35), radius: 8, x: 0, y: 3)
     }
 }
 
@@ -64,7 +79,7 @@ extension View {
         self
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
     }
 
     /// Pushed screens: transparent bar, custom circular back button, optional centred title.
@@ -73,6 +88,7 @@ extension View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     BackButton()
@@ -80,7 +96,7 @@ extension View {
                 ToolbarItem(placement: .principal) {
                     Text(title ?? "")
                         .font(.raahaHeadline)
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.honeydew)
                 }
             }
     }
@@ -91,13 +107,14 @@ extension View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: 14) {
                         BackButton()
                         Text(leadingTitle)
                             .font(.raahaTitle3)
-                            .foregroundStyle(Color.deepSpace)
+                            .foregroundStyle(Color.honeydew)
                     }
                 }
             }

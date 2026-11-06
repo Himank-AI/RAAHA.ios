@@ -11,7 +11,7 @@ struct RaahaApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                // The RAAHA palette is a light design; keep system chrome consistent with it.
+                // Light mode by default as requested
                 .preferredColorScheme(.light)
         }
     }
@@ -36,7 +36,7 @@ struct RootView: View {
 
     private var mainAppView: some View {
         ZStack(alignment: .bottom) {
-            Color.honeydew.ignoresSafeArea()
+            Color(hex: 0xBDD8E9).ignoresSafeArea()
 
             Group {
                 switch router.tab {
