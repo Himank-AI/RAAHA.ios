@@ -17,12 +17,18 @@ struct RouteDetailView: View {
 
                         Text("\(option.minutes) min")
                             .font(.raahaLargeTitle)
-                            .foregroundStyle(Color.deepSpace)
+                            .foregroundStyle(Color.honeydew)
                             .padding(.top, 4)
 
-                        Text("\(option.modeCount) modes  ·  \(option.fareText)")
-                            .font(.raahaTitle3)
-                            .foregroundStyle(Color.steelBlue)
+                        HStack(spacing: 6) {
+                            Text("\(option.modeCount) modes  ·")
+                                .font(.raahaTitle3)
+                                .foregroundStyle(Color.lightSkyBlue)
+
+                            Text(option.fareText)
+                                .font(.raahaTitle3.weight(.bold))
+                                .foregroundStyle(Color.neonLime)
+                        }
                     }
 
                     Spacer()
@@ -51,9 +57,9 @@ struct RouteDetailView: View {
             .background(
                 LinearGradient(
                     colors: [
-                        Color.honeydew.opacity(0.0),
-                        Color.honeydew.opacity(0.85),
-                        Color.honeydew
+                        Color.midnightBlue.opacity(0.0),
+                        Color.midnightBlue.opacity(0.85),
+                        Color.midnightBlue
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -134,9 +140,11 @@ struct RouteDetailView: View {
         HStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .fill(Color.honeydew)
-                    .frame(width: 34, height: 34)
-                    .shadow(color: Color.deepSpace.opacity(0.08), radius: 4, x: 0, y: 2)
+                    .fill(Color.white.opacity(0.12))
+                    .background(.ultraThinMaterial, in: Circle())
+                    .frame(width: 36, height: 36)
+                    .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1))
+                    .shadow(color: Color.midnightBlue.opacity(0.25), radius: 4, x: 0, y: 2)
 
                 if isDestination {
                     Image("icon_pin")
@@ -144,10 +152,10 @@ struct RouteDetailView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 14, height: 14)
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.neonLime)
                 } else {
                     Circle()
-                        .fill(Color.deepSpace)
+                        .fill(Color.lightSkyBlue)
                         .frame(width: 10, height: 10)
                 }
             }
@@ -155,11 +163,11 @@ struct RouteDetailView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
 
                 Text(value)
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color.deepSpace)
+                    .foregroundStyle(Color.honeydew)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
             }
@@ -177,13 +185,13 @@ struct RouteDetailView: View {
                 Spacer()
                 Text("Tap step to expand")
                     .font(.raahaCaption2)
-                    .foregroundStyle(Color.frostedBlue.opacity(0.7))
+                    .foregroundStyle(Color.lightSkyBlue.opacity(0.7))
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 8)
 
-            HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+            HairlineDivider(color: Color.white.opacity(0.15))
 
             VStack(spacing: 0) {
                 ForEach(Array(option.legs.enumerated()), id: \.element.id) { index, leg in
@@ -232,7 +240,7 @@ private struct InteractiveLegRow: View {
         } label: {
             HStack(alignment: .top, spacing: 14) {
                 VStack(spacing: 4) {
-                    ModeBadge(mode: leg.mode, size: 44, fill: Color.honeydew)
+                    ModeBadge(mode: leg.mode, size: 44, fill: Color.white.opacity(0.12), tint: Color.neonLime)
                     if !isLast {
                         DashedVLine()
                             .frame(maxHeight: .infinity)
@@ -252,7 +260,7 @@ private struct InteractiveLegRow: View {
                             if isExpandable {
                                 Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
                                     .font(.system(size: 15))
-                                    .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
                             }
                         }
 
@@ -270,7 +278,7 @@ private struct InteractiveLegRow: View {
 
                     Text(leg.description)
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
                         .fixedSize(horizontal: false, vertical: true)
 
                     // Walk does not show lighting per user instructions
@@ -288,7 +296,7 @@ private struct InteractiveLegRow: View {
                     }
 
                     if !isLast {
-                        HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+                        HairlineDivider(color: Color.white.opacity(0.12))
                             .padding(.top, 8)
                             .padding(.bottom, 6)
                     }
@@ -320,7 +328,12 @@ private struct InteractiveLegRow: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.deepSpace.opacity(0.6))
+                .fill(Color.white.opacity(0.08))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
     }
 
@@ -328,7 +341,7 @@ private struct InteractiveLegRow: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color.frostedBlue)
+                .foregroundStyle(Color.neonLime)
                 .frame(width: 16)
             Text(text)
                 .font(.system(size: 11, weight: .medium))
@@ -349,16 +362,17 @@ private struct FareChip: View {
             Text(text)
                 .font(.system(size: 12, weight: .semibold))
         }
-        .foregroundStyle(Color.frostedBlue)
+        .foregroundStyle(Color.neonLime)
         .padding(.horizontal, 9)
         .padding(.vertical, 4.5)
         .background(
             Capsule()
-                .fill(Color.steelBlue.opacity(0.20))
+                .fill(Color.white.opacity(0.10))
+                .background(.ultraThinMaterial, in: Capsule())
         )
         .overlay(
             Capsule()
-                .stroke(Color.frostedBlue.opacity(0.40), lineWidth: 1)
+                .stroke(Color.white.opacity(0.20), lineWidth: 1)
         )
     }
 }

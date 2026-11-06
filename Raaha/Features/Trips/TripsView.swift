@@ -65,12 +65,12 @@ struct TripsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Trips")
                     .font(.raahaTitle)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.white)
                     .accessibilityAddTraits(.isHeader)
 
                 Text("Your upcoming journeys, bookmarked routes, and travel history across Chennai.")
                     .font(.raahaSubheadline)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color(hex: 0xBDD8E9))
 
                 quickCommuteCard
                     .padding(.top, 4)
@@ -85,23 +85,30 @@ struct TripsView: View {
             HStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(Color.frostedBlue)
-                        .frame(width: 50, height: 50)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.brightBlue, Color.electricBlue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 44, height: 44)
+                        .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 1))
                     Image(systemName: "house.fill")
-                        .font(.raahaTitle3)
-                        .foregroundStyle(Color.deepSpace)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Color.white)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Home → Work")
                         .font(.raahaHeadline)
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.midnightBlue)
                     Text("Chennai Central → T. Nagar")
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.royalBlue)
                     Text("via Metro + Walk · 22 min")
                         .font(.raahaCaption2)
-                        .foregroundStyle(Color.steelBlue.opacity(0.85))
+                        .foregroundStyle(Color.royalBlue.opacity(0.85))
                 }
 
                 Spacer(minLength: 4)
@@ -109,24 +116,41 @@ struct TripsView: View {
                 VStack(alignment: .trailing, spacing: 10) {
                     HStack(spacing: 4) {
                         Image(systemName: "bolt.fill")
-                        Text("Quick")
+                        Text("Fastest")
                     }
                     .font(.raahaCaption2)
-                    .foregroundStyle(Color.strawberry)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.strawberry.opacity(0.12)))
+                    .foregroundStyle(Color.midnightBlue)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 3.5)
+                    .background(Capsule().fill(Color.neonLime))
+                    .shadow(color: Color.neonLime.opacity(0.3), radius: 6, x: 0, y: 2)
 
                     Image(systemName: "chevron.right")
                         .font(.raahaFootnoteSemibold)
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.royalBlue)
                 }
             }
-            .padding(12)
-            .lightCard(radius: 20)
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color.white.opacity(0.80))
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.9), Color(hex: 0x7BBDE8).opacity(0.3)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.2
+                    )
+            )
+            .shadow(color: Color.midnightBlue.opacity(0.18), radius: 12, x: 0, y: 6)
         }
         .buttonStyle(TactileButtonStyle())
-        .accessibilityLabel("Quick route: Home to Work via Metro and Walk.")
+        .accessibilityLabel("Fastest route: Home to Work via Metro and Walk.")
     }
 
     // MARK: - Filter Bar
@@ -142,13 +166,37 @@ struct TripsView: View {
                 } label: {
                     Text(filter.rawValue)
                         .font(.raahaFootnoteSemibold)
-                        .foregroundStyle(isSelected ? Color.honeydew : Color.deepSpace)
+                        .foregroundStyle(isSelected ? Color.white : Color.royalBlue)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
                         .background(
                             Capsule()
-                                .fill(isSelected ? Color.deepSpace : Color.honeydew)
-                                .shadow(color: Color.deepSpace.opacity(isSelected ? 0.15 : 0.05), radius: 6, x: 0, y: 2)
+                                .fill(
+                                    isSelected
+                                    ? AnyShapeStyle(
+                                        LinearGradient(
+                                            colors: [Color.brightBlue, Color.electricBlue],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    : AnyShapeStyle(Color.white.opacity(0.65))
+                                )
+                                .background(
+                                    .regularMaterial,
+                                    in: Capsule()
+                                )
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(
+                                    isSelected ? Color.white.opacity(0.5) : Color.white.opacity(0.8),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(
+                            color: isSelected ? Color.electricBlue.opacity(0.45) : Color.clear,
+                            radius: 8, x: 0, y: 3
                         )
                 }
                 .buttonStyle(.plain)
@@ -239,14 +287,22 @@ struct TripsView: View {
     private func emptyPlaceholder(text: String) -> some View {
         HStack {
             Image(systemName: "tray")
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
             Text(text)
                 .font(.raahaFootnote)
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .center)
-        .lightCard(radius: 16)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.08))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+        )
     }
 }
 
@@ -258,61 +314,92 @@ private struct UpcomingTripCard: View {
 
     var body: some View {
         Button(action: onPlan) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
                             Text(trip.countdownText)
                                 .font(.raahaCaption2)
-                                .foregroundStyle(Color.honeydew)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(Capsule().fill(Color.strawberry))
+                                .foregroundStyle(Color.midnightBlue)
+                                .padding(.horizontal, 9)
+                                .padding(.vertical, 3.5)
+                                .background(Capsule().fill(Color.neonLime))
+                                .shadow(color: Color.neonLime.opacity(0.35), radius: 6, x: 0, y: 2)
 
                             Text(trip.scheduledDate)
                                 .font(.raahaCaption)
-                                .foregroundStyle(Color.frostedBlue)
+                                .foregroundStyle(Color.lightSkyBlue)
                         }
 
                         Text(trip.title)
                             .font(.raahaHeadline)
-                            .foregroundStyle(Color.honeydew)
+                            .foregroundStyle(Color.midnightBlue)
                     }
 
                     Spacer()
 
-                    ModeBadge(mode: trip.primaryMode, size: 36, fill: Color.steelBlue, tint: Color.honeydew)
+                    ModeBadge(mode: trip.primaryMode, size: 38, fill: Color.white.opacity(0.55), tint: Color.royalBlue)
                 }
 
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.brightBlue)
 
                     Text("\(trip.origin) → \(trip.destination)")
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.honeydew.opacity(0.9))
+                        .foregroundStyle(Color.midnightBlue.opacity(0.85))
                         .lineLimit(1)
 
                     Spacer()
 
                     Text("\(trip.estimatedDuration) · \(trip.estimatedFare)")
                         .font(.raahaFootnoteSemibold)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.royalBlue)
                 }
 
                 HStack {
                     Spacer()
                     Button("Start Live Trip", action: onPlan)
                         .font(.raahaFootnoteSemibold)
-                        .foregroundStyle(Color.deepSpace)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 6)
-                        .background(Capsule().fill(Color.honeydew))
+                        .foregroundStyle(Color.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.brightBlue, Color.electricBlue],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                        )
+                        .shadow(color: Color.electricBlue.opacity(0.4), radius: 8, x: 0, y: 3)
                 }
             }
-            .padding(16)
-            .navyCard(radius: 22, gradient: .raahaNavyGlow)
+            .padding(18)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color.white.opacity(0.65))
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.9), Color(hex: 0x7BBDE8).opacity(0.35)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.2
+                    )
+            )
+            .shadow(color: Color(hex: 0x49769F).opacity(0.18), radius: 14, x: 0, y: 6)
         }
         .buttonStyle(TactileButtonStyle())
     }
@@ -340,10 +427,15 @@ private struct SavedJourneyCard: View {
                     } label: {
                         Image(systemName: journey.isBookmarked ? "bookmark.fill" : "bookmark")
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(journey.isBookmarked ? Color.strawberry : Color.deepSpace)
+                            .foregroundStyle(journey.isBookmarked ? Color.neonLime : Color.white)
                             .frame(width: 32, height: 32)
-                            .background(Circle().fill(Color.honeydew))
-                            .shadow(radius: 3)
+                            .background(
+                                Circle()
+                                    .fill(Color.midnightBlue.opacity(0.75))
+                                    .background(.ultraThinMaterial, in: Circle())
+                            )
+                            .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1))
+                            .shadow(radius: 4)
                     }
                     .padding(8)
                     .sensoryFeedback(.impact(weight: .light), trigger: journey.isBookmarked)
@@ -353,18 +445,18 @@ private struct SavedJourneyCard: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(journey.name)
                         .font(.raahaSubheadlineMedium)
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.midnightBlue)
                         .lineLimit(1)
 
                     Text(journey.route)
                         .font(.raahaCaption2)
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.royalBlue.opacity(0.85))
                         .lineLimit(1)
 
                     HStack {
                         Label("Route", systemImage: "arrow.right.circle.fill")
                             .font(.raahaCaption2)
-                            .foregroundStyle(Color.steelBlue)
+                            .foregroundStyle(Color.royalBlue)
                         Spacer()
                     }
                     .padding(.top, 4)
@@ -372,7 +464,24 @@ private struct SavedJourneyCard: View {
                 .padding(12)
             }
             .frame(width: 170)
-            .lightCard(radius: 18)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.white.opacity(0.65))
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.9), Color(hex: 0x7BBDE8).opacity(0.3)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: Color(hex: 0x49769F).opacity(0.15), radius: 10, x: 0, y: 4)
         }
         .buttonStyle(TactileButtonStyle())
     }
@@ -389,8 +498,9 @@ private struct RecentTripRow: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.frostedBlue.opacity(0.45))
+                        .fill(Color.white.opacity(0.55))
                         .frame(width: 44, height: 44)
+                        .overlay(Circle().stroke(Color(hex: 0x7BBDE8).opacity(0.4), lineWidth: 1))
 
                     if let asset = trip.customAsset {
                         Image(asset)
@@ -398,29 +508,29 @@ private struct RecentTripRow: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 20, height: 20)
-                            .foregroundStyle(Color.deepSpace)
+                            .foregroundStyle(Color.royalBlue)
                     } else {
                         Image(systemName: trip.symbol)
                             .font(.system(size: 18, weight: .medium))
-                            .foregroundStyle(Color.deepSpace)
+                            .foregroundStyle(Color.royalBlue)
                     }
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(trip.route)
                         .font(.raahaSubheadlineMedium)
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.midnightBlue)
                         .lineLimit(1)
 
                     HStack(spacing: 6) {
                         Text(trip.mode)
                             .font(.raahaCaption)
-                            .foregroundStyle(Color.steelBlue)
+                            .foregroundStyle(Color.royalBlue.opacity(0.85))
                         Text("·")
-                            .foregroundStyle(Color.steelBlue.opacity(0.5))
+                            .foregroundStyle(Color.royalBlue.opacity(0.5))
                         Text("\(trip.day), \(trip.time)")
                             .font(.raahaCaption2)
-                            .foregroundStyle(Color.steelBlue.opacity(0.8))
+                            .foregroundStyle(Color.royalBlue.opacity(0.85))
                     }
                 }
 
@@ -429,18 +539,42 @@ private struct RecentTripRow: View {
                 HStack(spacing: 4) {
                     Text("Repeat")
                         .font(.raahaCaption)
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.midnightBlue)
                     Image(systemName: "arrow.clockwise")
                         .font(.raahaCaption2)
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.brightBlue)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Capsule().fill(Color.frostedBlue.opacity(0.3)))
+                .background(
+                    Capsule()
+                        .fill(Color.white.opacity(0.60))
+                        .background(.regularMaterial, in: Capsule())
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                )
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .lightCard(radius: 18)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.white.opacity(0.65))
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.9), Color(hex: 0x7BBDE8).opacity(0.3)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: Color(hex: 0x49769F).opacity(0.15), radius: 8, x: 0, y: 4)
         }
         .buttonStyle(TactileButtonStyle())
         .accessibilityLabel("Trip: \(trip.route) via \(trip.mode) on \(trip.day). Tap to repeat.")

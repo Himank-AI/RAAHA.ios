@@ -81,22 +81,22 @@ struct HomeView: View {
             HStack(spacing: 6) {
                 Text("\(greeting), Akshaya")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0x235148))
+                    .foregroundStyle(Color.lightSkyBlue)
 
                 Image(systemName: greetingSymbol)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0x1EA5B6))
+                    .foregroundStyle(Color.royalBlue)
             }
 
             Text("Where to in\nChennai?")
                 .font(.system(size: 34, weight: .bold))
-                .foregroundStyle(Color(hex: 0x062A26))
+                .foregroundStyle(Color.honeydew)
                 .lineSpacing(1)
                 .fixedSize(horizontal: false, vertical: true)
 
             Text("Plan your journey\nacross Chennai with\nall modes, in one place.")
                 .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: 200, alignment: .leading)
@@ -157,11 +157,18 @@ struct HomeView: View {
                 HStack(spacing: 14) {
                     ZStack {
                         Circle()
-                            .fill(Color.frostedBlue)
-                            .frame(width: 36, height: 36)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.brightBlue, Color.electricBlue],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 38, height: 38)
+                            .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 1))
                         Image(systemName: "location.fill")
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(Color.deepSpace)
+                            .foregroundStyle(Color.white)
                     }
 
                     Button {
@@ -178,14 +185,14 @@ struct HomeView: View {
                     VStack(spacing: 3) {
                         ForEach(0..<4, id: \.self) { _ in
                             Circle()
-                                .fill(Color.frostedBlue.opacity(0.5))
+                                .fill(Color.lightSkyBlue.opacity(0.4))
                                 .frame(width: 3, height: 3)
                         }
                     }
-                    .frame(width: 36)
+                    .frame(width: 38)
 
                     Rectangle()
-                        .fill(Color.frostedBlue.opacity(0.2))
+                        .fill(Color.white.opacity(0.15))
                         .frame(height: 1)
 
                     Button {
@@ -198,12 +205,13 @@ struct HomeView: View {
                     } label: {
                         ZStack {
                             Circle()
-                                .fill(Color.deepSpace.opacity(0.85))
+                                .fill(Color.royalBlue.opacity(0.65))
+                                .background(.ultraThinMaterial, in: Circle())
                                 .frame(width: 40, height: 40)
-                                .overlay(Circle().stroke(Color.frostedBlue.opacity(0.35), lineWidth: 1))
+                                .overlay(Circle().stroke(Color.white.opacity(0.30), lineWidth: 1))
                             Image(systemName: "arrow.up.arrow.down")
                                 .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(Color.honeydew)
+                                .foregroundStyle(Color.neonLime)
                                 .rotationEffect(.degrees(swapRotation))
                         }
                     }
@@ -218,14 +226,21 @@ struct HomeView: View {
                 HStack(spacing: 14) {
                     ZStack {
                         Circle()
-                            .fill(Color.deepSpace)
-                            .frame(width: 36, height: 36)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.brightBlue, Color.electricBlue],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 38, height: 38)
+                            .overlay(Circle().stroke(Color.white.opacity(0.3), lineWidth: 1))
                         Image("icon_pin")
                             .renderingMode(.template)
                             .resizable()
                             .scaledToFit()
                             .frame(width: 15, height: 15)
-                            .foregroundStyle(Color.honeydew)
+                            .foregroundStyle(Color.white)
                     }
 
                     Button {
@@ -252,26 +267,42 @@ struct HomeView: View {
             .buttonStyle(.pillLight)
             .sensoryFeedback(.impact(weight: .medium), trigger: from)
         }
-        .padding(18)
-        .navyCard(radius: 24, gradient: .raahaHero)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color.white.opacity(0.55))
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.80), Color(hex: 0x7BBDE8).opacity(0.30)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.2
+                )
+        )
+        .shadow(color: Color(hex: 0x49769F).opacity(0.20), radius: 18, x: 0, y: 8)
     }
 
     private func fieldRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 3) {
             Text(label)
                 .font(.raahaCaption2)
-                .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
 
             HStack {
                 Text(value)
                     .font(.raahaSubheadlineMedium)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.midnightBlue)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.right")
                     .font(.raahaCaption2)
-                    .foregroundStyle(Color.frostedBlue.opacity(0.6))
+                    .foregroundStyle(Color.lightSkyBlue.opacity(0.8))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -310,12 +341,12 @@ struct LocationPickerSheet: View {
                 // Search bar
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
 
                     TextField("", text: $query,
-                              prompt: Text(prompt).foregroundStyle(Color.steelBlue))
+                              prompt: Text(prompt).foregroundStyle(Color.lightSkyBlue.opacity(0.7)))
                         .font(.raahaBody)
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.white)
                         .submitLabel(.search)
                         .onSubmit {
                             if !query.isEmpty {
@@ -328,13 +359,21 @@ struct LocationPickerSheet: View {
                             query = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(Color.steelBlue)
+                                .foregroundStyle(Color.lightSkyBlue)
                         }
                     }
                 }
                 .padding(.horizontal, 16)
                 .frame(minHeight: 50)
-                .background(Color.frostedBlue.opacity(0.25), in: Capsule())
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.10))
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.white.opacity(0.20), lineWidth: 1)
+                )
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
 
@@ -345,19 +384,19 @@ struct LocationPickerSheet: View {
                     HStack(spacing: 12) {
                         Image(systemName: "location.fill")
                             .font(.raahaHeadline)
-                            .foregroundStyle(Color.steelBlue)
+                            .foregroundStyle(Color.neonLime)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Use Current Location")
                                 .font(.raahaHeadline)
-                                .foregroundStyle(Color.deepSpace)
+                                .foregroundStyle(Color.white)
                             Text("Chennai Metropolitan Area")
                                 .font(.raahaCaption)
-                                .foregroundStyle(Color.steelBlue)
+                                .foregroundStyle(Color.lightSkyBlue)
                         }
                         Spacer()
                     }
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 12)
                 }
                 .buttonStyle(.plain)
 
@@ -372,30 +411,32 @@ struct LocationPickerSheet: View {
                     } label: {
                         HStack(spacing: 12) {
                             Image(systemName: "mappin.circle.fill")
-                                .foregroundStyle(Color.steelBlue)
+                                .foregroundStyle(Color.lightSkyBlue)
                             Text(place)
                                 .font(.raahaSubheadlineMedium)
-                                .foregroundStyle(Color.deepSpace)
+                                .foregroundStyle(Color.white)
                             Spacer()
                             if place == current {
                                 Image(systemName: "checkmark")
                                     .font(.raahaCaption)
-                                    .foregroundStyle(Color.statusGreen)
+                                    .foregroundStyle(Color.neonLime)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 6)
                     }
                     .buttonStyle(.plain)
+                    .listRowBackground(Color.clear)
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
-            .background(Color.honeydew.ignoresSafeArea())
+            .raahaScreenBackground()
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
                 }
             }
         }
@@ -454,20 +495,26 @@ struct SmartRouteBanner: View {
 
                     Text("Try our Smart Route Planner")
                         .font(.system(size: 13.5, weight: .regular))
-                        .foregroundStyle(Color(hex: 0xA4C8D8).opacity(0.85))
+                        .foregroundStyle(Color.lightSkyBlue)
                 }
 
                 Spacer(minLength: 8)
 
                 ZStack {
                     Circle()
-                        .fill(Color(hex: 0x5DA1AB))
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.neonLime, Color(hex: 0x9EE600)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                         .frame(width: 48, height: 48)
-                        .shadow(color: Color.deepSpace.opacity(0.15), radius: 6, x: 0, y: 3)
+                        .shadow(color: Color.neonLime.opacity(0.35), radius: 8, x: 0, y: 3)
 
                     Image(systemName: "arrow.right")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(Color.white)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(Color.midnightBlue)
                 }
             }
             .padding(.leading, 22)
@@ -476,7 +523,18 @@ struct SmartRouteBanner: View {
             .frame(maxWidth: .infinity, minHeight: 84)
             .background(SmartRouteBackground())
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .shadow(color: Color.deepSpace.opacity(0.16), radius: 12, x: 0, y: 6)
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.3), Color.white.opacity(0.08)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: Color.midnightBlue.opacity(0.35), radius: 14, x: 0, y: 6)
         }
         .buttonStyle(TactileButtonStyle())
         .accessibilityElement(children: .combine)
@@ -494,117 +552,67 @@ private struct SmartRouteBackground: View {
             let h = proxy.size.height
 
             ZStack {
-                // 1. Base deep oceanic blue background
+                // 1. Base deep midnight to royal blue gradient background
                 LinearGradient(
                     stops: [
-                        .init(color: Color(hex: 0x163D5C), location: 0.0),
-                        .init(color: Color(hex: 0x18476A), location: 0.50),
-                        .init(color: Color(hex: 0x123652), location: 0.85),
-                        .init(color: Color(hex: 0x0F2B42), location: 1.0)
+                        .init(color: Color.midnightBlue, location: 0.0),
+                        .init(color: Color.royalBlue.opacity(0.85), location: 0.50),
+                        .init(color: Color.midnightBlue, location: 1.0)
                     ],
-                    startPoint: .leading,
-                    endPoint: .trailing
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 )
 
-                // 2. Bottom-right dark rounded cove (organic depth under the button)
-                Path { p in
-                    p.move(to: CGPoint(x: w * 0.70, y: h))
-                    p.addCurve(
-                        to: CGPoint(x: w, y: h * 0.55),
-                        control1: CGPoint(x: w * 0.76, y: h * 0.60),
-                        control2: CGPoint(x: w * 0.88, y: h * 0.40)
-                    )
-                    p.addLine(to: CGPoint(x: w, y: h))
-                    p.closeSubpath()
-                }
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(hex: 0x174961).opacity(0.85),
-                            Color(hex: 0x103147).opacity(0.95)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                // 2. Electric blue atmospheric glow
+                Circle()
+                    .fill(Color.electricBlue.opacity(0.45))
+                    .frame(width: 140, height: 140)
+                    .blur(radius: 25)
+                    .offset(x: w * 0.35, y: -h * 0.1)
 
-                // 3. Top-right sweeping teal wave (entering from top edge toward right)
+                // 3. Subtle translucent wave contour
                 Path { p in
-                    p.move(to: CGPoint(x: w * 0.73, y: 0))
+                    p.move(to: CGPoint(x: w * 0.60, y: 0))
                     p.addCurve(
-                        to: CGPoint(x: w, y: h * 0.65),
-                        control1: CGPoint(x: w * 0.76, y: h * 0.35),
-                        control2: CGPoint(x: w * 0.88, y: h * 0.52)
+                        to: CGPoint(x: w, y: h * 0.70),
+                        control1: CGPoint(x: w * 0.72, y: h * 0.25),
+                        control2: CGPoint(x: w * 0.85, y: h * 0.45)
                     )
                     p.addLine(to: CGPoint(x: w, y: 0))
                     p.closeSubpath()
                 }
                 .fill(
                     LinearGradient(
-                        stops: [
-                            .init(color: Color(hex: 0x4FB8A6).opacity(0.65), location: 0.0),
-                            .init(color: Color(hex: 0x2E8D94).opacity(0.35), location: 0.5),
-                            .init(color: Color(hex: 0x195262).opacity(0.1), location: 1.0)
+                        colors: [
+                            Color.brightBlue.opacity(0.35),
+                            Color.electricBlue.opacity(0.10)
                         ],
                         startPoint: .top,
                         endPoint: .bottomTrailing
                     )
                 )
 
-                // 4. Dark organic peninsula separating the two waves
+                // 4. Sweeping glass ribbon
                 Path { p in
-                    p.move(to: CGPoint(x: w * 0.74, y: 0))
+                    p.move(to: CGPoint(x: w * 0.50, y: 0))
                     p.addCurve(
-                        to: CGPoint(x: w * 0.60, y: h),
-                        control1: CGPoint(x: w * 0.72, y: h * 0.38),
-                        control2: CGPoint(x: w * 0.65, y: h * 0.78)
+                        to: CGPoint(x: w * 0.38, y: h),
+                        control1: CGPoint(x: w * 0.52, y: h * 0.40),
+                        control2: CGPoint(x: w * 0.45, y: h * 0.75)
                     )
-                    p.addLine(to: CGPoint(x: w * 0.68, y: h))
+                    p.addLine(to: CGPoint(x: w * 0.46, y: h))
                     p.addCurve(
-                        to: CGPoint(x: w * 0.79, y: 0),
-                        control1: CGPoint(x: w * 0.73, y: h * 0.78),
-                        control2: CGPoint(x: w * 0.78, y: h * 0.38)
+                        to: CGPoint(x: w * 0.58, y: 0),
+                        control1: CGPoint(x: w * 0.53, y: h * 0.75),
+                        control2: CGPoint(x: w * 0.60, y: h * 0.40)
                     )
                     p.closeSubpath()
                 }
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color(hex: 0x11334E).opacity(0.85),
-                            Color(hex: 0x0E283E).opacity(0.6)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-
-                // 5. The primary vibrant seafoam/teal ribbon
-                Path { p in
-                    p.move(to: CGPoint(x: w * 0.67, y: 0))
-                    // Left outer curve swooping down-left
-                    p.addCurve(
-                        to: CGPoint(x: w * 0.54, y: h),
-                        control1: CGPoint(x: w * 0.67, y: h * 0.36),
-                        control2: CGPoint(x: w * 0.60, y: h * 0.74)
-                    )
-                    // Bottom width
-                    p.addLine(to: CGPoint(x: w * 0.58, y: h))
-                    // Right inner curve back up
-                    p.addCurve(
-                        to: CGPoint(x: w * 0.75, y: 0),
-                        control1: CGPoint(x: w * 0.64, y: h * 0.74),
-                        control2: CGPoint(x: w * 0.71, y: h * 0.36)
-                    )
-                    p.closeSubpath()
-                }
-                .fill(
-                    LinearGradient(
-                        stops: [
-                            .init(color: Color(hex: 0x54C4AE), location: 0.0),
-                            .init(color: Color(hex: 0x45A699), location: 0.28),
-                            .init(color: Color(hex: 0x308C93), location: 0.58),
-                            .init(color: Color(hex: 0x226B7A).opacity(0.6), location: 0.85),
-                            .init(color: Color(hex: 0x184D5E).opacity(0.0), location: 1.0)
+                            Color.lightSkyBlue.opacity(0.25),
+                            Color.brightBlue.opacity(0.0)
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -614,5 +622,3 @@ private struct SmartRouteBackground: View {
         }
     }
 }
-
-

@@ -35,22 +35,22 @@ struct RouteOptionsView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "location.north.fill")
                         .font(.raahaCaption)
-                        .foregroundStyle(Color(hex: 0x008DA5))
+                        .foregroundStyle(Color.lightSkyBlue)
 
                     Text(router.journeyFrom.isEmpty ? "Current Location" : router.journeyFrom)
                         .font(.raahaCaption)
-                        .foregroundStyle(Color(hex: 0x3E718B))
+                        .foregroundStyle(Color.lightSkyBlue)
                         .lineLimit(1)
                 }
 
                 HStack(spacing: 6) {
                     Image(systemName: "mappin.fill")
                         .font(.raahaCaption)
-                        .foregroundStyle(Color(hex: 0x0A2B3D))
+                        .foregroundStyle(Color.neonLime)
 
                     Text(router.journeyTo.isEmpty ? "Phoenix Mall, Velachery" : router.journeyTo)
                         .font(.raahaCaption.weight(.semibold))
-                        .foregroundStyle(Color(hex: 0x0A2B3D))
+                        .foregroundStyle(Color.honeydew)
                         .lineLimit(1)
                 }
             }
@@ -78,7 +78,7 @@ private struct RouteOptionRow: View {
                     HStack(alignment: .firstTextBaseline, spacing: 5) {
                         Text("Est.")
                             .font(.raahaFootnote)
-                            .foregroundStyle(Color(hex: 0x8ECAE6).opacity(0.9))
+                            .foregroundStyle(Color.lightSkyBlue.opacity(0.9))
 
                         Text("\(option.minutes) min")
                             .font(.raahaTitle3)
@@ -101,11 +101,11 @@ private struct RouteOptionRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Est. Cost")
                         .font(.raahaCaption)
-                        .foregroundStyle(Color(hex: 0x8ECAE6).opacity(0.9))
+                        .foregroundStyle(Color.lightSkyBlue.opacity(0.9))
 
                     Text(option.fareText)
                         .font(.raahaTitle3)
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.neonLime)
                         .lineLimit(1)
                 }
                 .frame(width: 72, alignment: .leading)
@@ -114,14 +114,22 @@ private struct RouteOptionRow: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(cardGradient)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.35), Color.white.opacity(0.08)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
                     )
             )
-            .shadow(color: Color(hex: 0x051824).opacity(0.18), radius: 8, x: 0, y: 4)
+            .shadow(color: Color.midnightBlue.opacity(0.30), radius: 10, x: 0, y: 5)
         }
         .buttonStyle(TactileButtonStyle())
         .accessibilityElement(children: .ignore)
@@ -134,25 +142,25 @@ private struct RouteOptionRow: View {
         switch option.kind {
         case .fastest:
             return LinearGradient(
-                colors: [Color(hex: 0x054668), Color(hex: 0x033049), Color(hex: 0x021F32)],
+                colors: [Color.royalBlue.opacity(0.85), Color.midnightBlue.opacity(0.95)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         case .cheapest:
             return LinearGradient(
-                colors: [Color(hex: 0x06655C), Color(hex: 0x044744), Color(hex: 0x022C2B)],
+                colors: [Color.electricBlue.opacity(0.65), Color.midnightBlue.opacity(0.95)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         case .comfortable:
             return LinearGradient(
-                colors: [Color(hex: 0x065170), Color(hex: 0x03384F), Color(hex: 0x022234)],
+                colors: [Color.brightBlue.opacity(0.55), Color.midnightBlue.opacity(0.95)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         case .safest:
             return LinearGradient(
-                colors: [Color(hex: 0x075D4E), Color(hex: 0x044037), Color(hex: 0x022723)],
+                colors: [Color.royalBlue.opacity(0.70), Color.midnightBlue.opacity(0.95)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -189,17 +197,19 @@ private struct RouteOptionRow: View {
 
     private var badgeBackground: Color {
         switch option.kind {
-        case .fastest:     return Color(hex: 0x00A8E8) // Bright Cyan Blue
-        case .cheapest:    return Color(hex: 0x05C48A) // Vibrant Sea-Green
-        case .comfortable: return Color(hex: 0x8BE3E8) // Soft Aqua Mint
-        case .safest:      return Color(hex: 0x10B981) // Crisp Leaf Green
+        case .fastest:     return Color.brightBlue
+        case .cheapest:    return Color.neonLime
+        case .comfortable: return Color.lightSkyBlue
+        case .safest:      return Color.neonLime
         }
     }
 
     private var badgeTextColor: Color {
         switch option.kind {
-        case .comfortable: return Color(hex: 0x0A3344) // Dark teal on light aqua
-        default:           return Color.white
+        case .cheapest, .safest, .comfortable:
+            return Color.midnightBlue
+        default:
+            return Color.white
         }
     }
 
@@ -220,8 +230,10 @@ private struct RouteOptionRow: View {
 
                 ZStack {
                     Circle()
-                        .fill(Color.white)
+                        .fill(Color.white.opacity(0.15))
+                        .background(.ultraThinMaterial, in: Circle())
                         .frame(width: 28, height: 28)
+                        .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 0.8))
                         .shadow(color: Color.black.opacity(0.12), radius: 2, y: 1)
 
                     modeGlyph(for: mode)
@@ -248,6 +260,6 @@ private struct RouteOptionRow: View {
             }
         }
         .font(.system(size: 13, weight: .semibold))
-        .foregroundStyle(Color(hex: 0x0D2A3F))
+        .foregroundStyle(Color.honeydew)
     }
 }

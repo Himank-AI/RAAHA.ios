@@ -41,21 +41,21 @@ struct LiveJourneyView: View {
             HStack {
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(Color.statusGreen)
+                        .fill(Color.neonLime)
                         .frame(width: 8, height: 8)
                     Text("LIVE TRANSIT")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color.statusGreen)
+                        .foregroundStyle(Color.neonLime)
                 }
                 .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(Color.statusGreen.opacity(0.15)))
+                .padding(.vertical, 3.5)
+                .background(Capsule().fill(Color.neonLime.opacity(0.20)))
 
                 Spacer()
 
                 Text("Step \(step + 1) of \(screens.count)")
                     .font(.raahaCaption.weight(.semibold))
-                    .foregroundStyle(Color.deepSpace)
+                    .foregroundStyle(Color.honeydew)
             }
 
             // Progress segments
@@ -64,8 +64,8 @@ struct LiveJourneyView: View {
                     Capsule()
                         .fill(
                             idx < step
-                                ? Color.statusGreen
-                                : (idx == step ? Color.strawberry : Color.steelBlue.opacity(0.3))
+                                ? Color.neonLime
+                                : (idx == step ? Color.brightBlue : Color.white.opacity(0.18))
                         )
                         .frame(height: 5)
                 }
@@ -73,7 +73,15 @@ struct LiveJourneyView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .lightCard(radius: 16)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.08))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.white.opacity(0.18), lineWidth: 1)
+        )
     }
 
     @ViewBuilder
@@ -97,12 +105,12 @@ private struct CurrentlyOnCard: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
-            ModeBadge(mode: content.mode, size: 54, fill: Color.honeydew)
+            ModeBadge(mode: content.mode, size: 54, fill: Color.white.opacity(0.12), tint: Color.neonLime)
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(Color.strawberry)
+                        .fill(Color.neonLime)
                         .frame(width: 8, height: 8)
                         .scaleEffect(isPulsing ? 1.25 : 0.8)
                         .opacity(isPulsing ? 1.0 : 0.55)
@@ -111,14 +119,14 @@ private struct CurrentlyOnCard: View {
 
                     Text("CURRENTLY ON")
                         .font(.raahaCaption2)
-                        .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                        .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
                 }
                 Text(content.title)
                     .font(.raahaHeadline)
                     .foregroundStyle(Color.honeydew)
                 Text(content.subtitle)
                     .font(.raahaSubheadline)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
             }
@@ -143,20 +151,20 @@ private struct WalkTimelineCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             VStack(spacing: 0) {
-                Circle().fill(Color.frostedBlue).frame(width: 14, height: 14)
-                Rectangle().fill(Color.frostedBlue.opacity(0.8)).frame(width: 2)
-                Circle().stroke(Color.frostedBlue, lineWidth: 2.5).frame(width: 14, height: 14)
+                Circle().fill(Color.lightSkyBlue).frame(width: 14, height: 14)
+                Rectangle().fill(Color.lightSkyBlue.opacity(0.8)).frame(width: 2)
+                Circle().stroke(Color.lightSkyBlue, lineWidth: 2.5).frame(width: 14, height: 14)
             }
             .padding(.vertical, 18)
 
             VStack(spacing: 0) {
-                row(asset: "icon_pin", tint: Color.frostedBlue, title: info.startTitle,
+                row(asset: "icon_pin", tint: Color.lightSkyBlue, title: info.startTitle,
                     caption: info.startCaption, chip: nil, chevron: true)
-                HairlineDivider()
-                row(symbol: "figure.walk", tint: Color.frostedBlue, title: info.walkTitle,
+                HairlineDivider(color: Color.white.opacity(0.15))
+                row(symbol: "figure.walk", tint: Color.neonLime, title: info.walkTitle,
                     caption: info.walkCaption, chip: info.walkChip, chevron: false)
-                HairlineDivider()
-                row(asset: "icon_pin", tint: Color.strawberry, title: info.endTitle,
+                HairlineDivider(color: Color.white.opacity(0.15))
+                row(asset: "icon_pin", tint: Color.neonLime, title: info.endTitle,
                     caption: info.endCaption, chip: nil, chevron: true)
             }
         }
@@ -189,7 +197,7 @@ private struct WalkTimelineCard: View {
                     .foregroundStyle(Color.honeydew)
                 Text(caption)
                     .font(.raahaFootnote)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
             }
             Spacer(minLength: 4)
             if let chip {
@@ -198,7 +206,7 @@ private struct WalkTimelineCard: View {
             if chevron {
                 Image(systemName: "chevron.right")
                     .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
             }
         }
         .padding(.vertical, 14)
@@ -220,7 +228,7 @@ private struct StopsTimelineCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(alignment: .leading) {
             Rectangle()
-                .fill(Color.steelBlue.opacity(0.9))
+                .fill(Color.lightSkyBlue.opacity(0.5))
                 .frame(width: 2)
                 .padding(.leading, 14 + 15)
                 .padding(.vertical, 30)
@@ -241,10 +249,10 @@ private struct StopRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(stop.name)
                         .font(.raahaSubheadlineMedium)
-                        .foregroundStyle(stop.state == .next ? Color.deepSpace : Color.honeydew)
+                        .foregroundStyle(Color.honeydew)
                     Text(stop.caption)
                         .font(.raahaFootnote)
-                        .foregroundStyle(stop.state == .next ? Color.steelBlue : Color.frostedBlue)
+                        .foregroundStyle(stop.state == .next ? Color.neonLime : Color.lightSkyBlue)
                 }
                 Spacer()
                 if stop.state == .next {
@@ -253,22 +261,31 @@ private struct StopRow: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 14, height: 14)
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.neonLime)
                         .frame(width: 28, height: 28)
-                        .background(Circle().fill(Color.honeydew))
+                        .background(
+                            Circle()
+                                .fill(Color.midnightBlue.opacity(0.85))
+                                .background(.ultraThinMaterial, in: Circle())
+                        )
+                        .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1))
                 }
             }
             .padding(.horizontal, stop.state == .next ? 14 : 0)
             .padding(.vertical, stop.state == .next ? 10 : 0)
             .background {
                 if stop.state == .next {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color.frostedBlue, Color.frostedBlue.opacity(0.55)],
+                                colors: [Color.electricBlue.opacity(0.35), Color.royalBlue.opacity(0.25)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(Color.white.opacity(0.25), lineWidth: 1)
                         )
                 }
             }
@@ -280,18 +297,18 @@ private struct StopRow: View {
     private var dot: some View {
         switch stop.state {
         case .boarded:
-            Circle().fill(Color.steelBlue).frame(width: 16, height: 16)
+            Circle().fill(Color.brightBlue).frame(width: 16, height: 16)
         case .next:
             Circle()
-                .fill(Color.strawberry)
+                .fill(Color.neonLime)
                 .frame(width: 14, height: 14)
-                .overlay(Circle().stroke(Color.honeydew, lineWidth: 3))
+                .overlay(Circle().stroke(Color.white, lineWidth: 3))
                 .frame(width: 24, height: 24)
         case .upcoming, .arriving:
             Circle()
-                .fill(Color.honeydew)
+                .fill(Color.white.opacity(0.3))
                 .frame(width: 12, height: 12)
-                .overlay(Circle().stroke(Color.steelBlue, lineWidth: 2))
+                .overlay(Circle().stroke(Color.lightSkyBlue, lineWidth: 2))
         }
     }
 }
@@ -312,17 +329,17 @@ private struct PickupDropCard: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 22, height: 22)
-                        .foregroundStyle(Color.frostedBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
                         .frame(height: 34)
                     Rectangle()
-                        .fill(Color.frostedBlue.opacity(0.7))
+                        .fill(Color.lightSkyBlue.opacity(0.7))
                         .frame(width: 2)
                     Image("icon_pin")
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 22, height: 22)
-                        .foregroundStyle(Color.strawberry)
+                        .foregroundStyle(Color.neonLime)
                         .frame(height: 34)
                 }
                 .frame(width: 34)
@@ -344,7 +361,7 @@ private struct PickupDropCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(.raahaFootnote)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
                 Text(name)
                     .font(.raahaTitle3)
                     .foregroundStyle(Color.honeydew)
@@ -352,7 +369,7 @@ private struct PickupDropCard: View {
             Spacer()
             Text(time)
                 .font(.raahaSubheadline)
-                .foregroundStyle(Color.frostedBlue)
+                .foregroundStyle(Color.neonLime)
         }
         .accessibilityElement(children: .combine)
     }
@@ -366,17 +383,17 @@ private struct MissedAlertBanner: View {
             HStack(spacing: 14) {
                 Image(systemName: "exclamationmark")
                     .font(.raahaTitle2)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.white)
                     .frame(width: 40, height: 40)
                     .background(Circle().fill(Color.strawberry))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Missed my train!")
                         .font(.raahaHeadline)
-                        .foregroundStyle(Color.strawberry)
+                        .foregroundStyle(Color.white)
                     Text("Find the next available train, get real-time updates and alternatives.")
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
                         .multilineTextAlignment(.leading)
                 }
 
@@ -384,14 +401,19 @@ private struct MissedAlertBanner: View {
 
                 Image(systemName: "chevron.right")
                     .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.strawberry)
+                    .foregroundStyle(Color.white)
             }
             .padding(14)
             .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color.strawberry.opacity(0.14))
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color.strawberry.opacity(0.20))
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             )
-            .shadow(color: Color.deepSpace.opacity(0.08), radius: 8, x: 0, y: 4)
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(Color.strawberry.opacity(0.35), lineWidth: 1)
+            )
+            .shadow(color: Color.midnightBlue.opacity(0.25), radius: 8, x: 0, y: 4)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -408,9 +430,14 @@ private struct NextTransferCard: View {
             HStack(alignment: .top, spacing: 14) {
                 Image(systemName: next.icon.symbolName)
                     .font(.raahaTitle3)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.neonLime)
                     .frame(width: 54, height: 54)
-                    .background(Circle().fill(Color.steelBlue.opacity(0.6)))
+                    .background(
+                        Circle()
+                            .fill(Color.white.opacity(0.12))
+                            .background(.ultraThinMaterial, in: Circle())
+                    )
+                    .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
@@ -427,13 +454,13 @@ private struct NextTransferCard: View {
                         HStack {
                             Text(line.text)
                                 .font(.raahaCaption)
-                                .foregroundStyle(Color.frostedBlue)
+                                .foregroundStyle(Color.lightSkyBlue)
                                 .multilineTextAlignment(.leading)
                             if let trailing = line.trailing {
                                 Spacer()
                                 Text(trailing)
                                     .font(.raahaCaption)
-                                    .foregroundStyle(Color.frostedBlue)
+                                    .foregroundStyle(Color.lightSkyBlue)
                             }
                         }
                     }

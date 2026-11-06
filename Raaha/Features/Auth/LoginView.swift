@@ -94,7 +94,7 @@ struct LoginView: View {
     private var brandingHeader: some View {
         VStack(spacing: 6) {
             ZStack {
-                // Soft teal motion swoosh trailing behind logo
+                // Soft electric blue motion swoosh trailing behind logo
                 Path { p in
                     p.move(to: CGPoint(x: 10, y: 32))
                     p.addQuadCurve(
@@ -103,7 +103,11 @@ struct LoginView: View {
                     )
                 }
                 .stroke(
-                    Color(hex: 0x82D0DB).opacity(0.6),
+                    LinearGradient(
+                        colors: [Color.brightBlue.opacity(0.8), Color.lightSkyBlue.opacity(0.4)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
                     style: StrokeStyle(lineWidth: 3.5, lineCap: .round)
                 )
                 .frame(width: 210, height: 42)
@@ -112,8 +116,8 @@ struct LoginView: View {
                 Text("RAAHA")
                     .font(.system(size: 38, weight: .black, design: .rounded))
                     .tracking(1.8)
-                    .foregroundStyle(Color.deepSpace)
-                    .shadow(color: Color.white.opacity(0.55), radius: 6, x: 0, y: 2)
+                    .foregroundStyle(Color.white)
+                    .shadow(color: Color.electricBlue.opacity(0.6), radius: 10, x: 0, y: 3)
                     .overlay(alignment: .topTrailing) {
                         RaahaLocationPin()
                             .offset(x: 18, y: -6)
@@ -124,9 +128,9 @@ struct LoginView: View {
             // Center-aligned Tagline
             Text("Every Path Leads to You")
                 .font(.system(size: 15, weight: .medium, design: .serif).italic())
-                .foregroundStyle(Color(hex: 0x1E4962))
+                .foregroundStyle(Color.icyBlue)
                 .tracking(0.3)
-                .shadow(color: Color.white.opacity(0.6), radius: 4, x: 0, y: 1)
+                .shadow(color: Color.midnightBlue.opacity(0.6), radius: 4, x: 0, y: 1)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
@@ -139,15 +143,15 @@ struct LoginView: View {
             .scaledToFill()
             .frame(width: width, height: 360, alignment: .top)
             .clipped()
-            // Gentle gradient mask blending edges into the existing calm motion background
+            // Gentle gradient mask blending edges into the deep blue gradient background
             .mask(
                 LinearGradient(
                     stops: [
                         .init(color: .clear, location: 0.0),
-                        .init(color: .black.opacity(0.85), location: 0.05),
-                        .init(color: .black, location: 0.16),
-                        .init(color: .black, location: 0.88),
-                        .init(color: .black.opacity(0.4), location: 0.95),
+                        .init(color: .black.opacity(0.85), location: 0.06),
+                        .init(color: .black, location: 0.18),
+                        .init(color: .black, location: 0.86),
+                        .init(color: .black.opacity(0.4), location: 0.94),
                         .init(color: .clear, location: 1.0)
                     ],
                     startPoint: .top,
@@ -162,20 +166,24 @@ struct LoginView: View {
         VStack(spacing: 5) {
             Text("Welcome to RAAHA!")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.deepSpace)
+                .foregroundStyle(Color.white)
 
             VStack(spacing: 3) {
                 Text("Plan. Travel. Explore Chennai.")
                     .font(.system(size: 16, weight: .medium, design: .serif).italic())
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
 
-                // Soft teal accent underline
+                // Glowing electric cyan accent underline
                 Path { p in
                     p.move(to: CGPoint(x: 0, y: 2))
                     p.addQuadCurve(to: CGPoint(x: 100, y: 2), control: CGPoint(x: 50, y: -1))
                 }
                 .stroke(
-                    Color.frostedBlue.opacity(0.8),
+                    LinearGradient(
+                        colors: [Color.neonLime, Color.brightBlue],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
                     style: StrokeStyle(lineWidth: 2, lineCap: .round)
                 )
                 .frame(width: 100, height: 4)
@@ -183,10 +191,10 @@ struct LoginView: View {
         }
     }
 
-    // MARK: - 4. Action Buttons
+    // MARK: - 4. Action Buttons (Fintech Glassmorphism Style)
     private var actionButtons: some View {
         VStack(spacing: 14) {
-            // Continue with Email (Primary Accent Button)
+            // Continue with Email (Electric Blue Primary Button)
             Button {
                 navigationPath.append(.emailLogin)
             } label: {
@@ -216,17 +224,21 @@ struct LoginView: View {
                     Capsule()
                         .fill(
                             LinearGradient(
-                                colors: [Color(hex: 0xEE4D4D), Color(hex: 0xD83A3A)],
-                                startPoint: .leading,
-                                endPoint: .trailing
+                                colors: [Color.brightBlue, Color.electricBlue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
                         )
-                        .shadow(color: Color(hex: 0xEE4D4D).opacity(0.32), radius: 10, x: 0, y: 5)
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.white.opacity(0.40), lineWidth: 1)
+                        )
+                        .shadow(color: Color.electricBlue.opacity(0.45), radius: 12, x: 0, y: 6)
                 )
             }
             .buttonStyle(TactileButtonStyle())
 
-            // Continue with Google (Secondary Glass Pill)
+            // Continue with Google (Frosted Glass Pill)
             Button {
                 handleLoginSuccess()
             } label: {
@@ -238,7 +250,7 @@ struct LoginView: View {
 
                     Text("Continue with Google")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.white)
 
                     Spacer()
 
@@ -249,32 +261,32 @@ struct LoginView: View {
                 .frame(height: 54)
                 .background(
                     Capsule()
-                        .fill(Color.white.opacity(0.85))
+                        .fill(Color.white.opacity(0.12))
                         .background(.ultraThinMaterial, in: Capsule())
                 )
                 .overlay(
                     Capsule()
-                        .stroke(Color(hex: 0x78B9C8).opacity(0.4), lineWidth: 1.2)
+                        .stroke(Color.white.opacity(0.30), lineWidth: 1.2)
                 )
-                .shadow(color: Color.deepSpace.opacity(0.06), radius: 6, x: 0, y: 2)
+                .shadow(color: Color.midnightBlue.opacity(0.25), radius: 8, x: 0, y: 4)
             }
             .buttonStyle(TactileButtonStyle())
 
-            // Continue with Apple (Secondary Glass Pill)
+            // Continue with Apple (Frosted Glass Pill)
             Button {
                 handleLoginSuccess()
             } label: {
                 HStack {
                     Image(systemName: "apple.logo")
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(Color.black)
+                        .foregroundStyle(Color.white)
                         .frame(width: 24)
 
                     Spacer()
 
                     Text("Continue with Apple")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.white)
 
                     Spacer()
 
@@ -285,14 +297,14 @@ struct LoginView: View {
                 .frame(height: 54)
                 .background(
                     Capsule()
-                        .fill(Color.white.opacity(0.85))
+                        .fill(Color.white.opacity(0.12))
                         .background(.ultraThinMaterial, in: Capsule())
                 )
                 .overlay(
                     Capsule()
-                        .stroke(Color(hex: 0x78B9C8).opacity(0.4), lineWidth: 1.2)
+                        .stroke(Color.white.opacity(0.30), lineWidth: 1.2)
                 )
-                .shadow(color: Color.deepSpace.opacity(0.06), radius: 6, x: 0, y: 2)
+                .shadow(color: Color.midnightBlue.opacity(0.25), radius: 8, x: 0, y: 4)
             }
             .buttonStyle(TactileButtonStyle())
         }
@@ -302,22 +314,22 @@ struct LoginView: View {
     private var orDivider: some View {
         HStack(spacing: 16) {
             LinearGradient(
-                colors: [Color.clear, Color(hex: 0x76B6C4).opacity(0.45)],
+                colors: [Color.clear, Color.lightSkyBlue.opacity(0.40)],
                 startPoint: .leading,
                 endPoint: .trailing
             )
-            .frame(height: 1.2)
+            .frame(height: 1)
 
             Text("or")
                 .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
 
             LinearGradient(
-                colors: [Color(hex: 0x76B6C4).opacity(0.45), Color.clear],
+                colors: [Color.lightSkyBlue.opacity(0.40), Color.clear],
                 startPoint: .leading,
                 endPoint: .trailing
             )
-            .frame(height: 1.2)
+            .frame(height: 1)
         }
         .padding(.horizontal, 44)
     }
@@ -327,7 +339,7 @@ struct LoginView: View {
         HStack(spacing: 6) {
             Text("Don't have an account?")
                 .font(.system(size: 15, weight: .regular))
-                .foregroundStyle(Color.deepSpace.opacity(0.85))
+                .foregroundStyle(Color.icyBlue.opacity(0.85))
 
             Button {
                 navigationPath.append(.signUp)
@@ -335,15 +347,15 @@ struct LoginView: View {
                 VStack(spacing: 2) {
                     Text("Sign Up")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(Color(hex: 0xEE4D4D))
+                        .foregroundStyle(Color.neonLime)
 
-                    // Hand-drawn style red curved underline
+                    // Hand-drawn style neon lime curved underline
                     Path { p in
                         p.move(to: CGPoint(x: 0, y: 1))
                         p.addQuadCurve(to: CGPoint(x: 56, y: 1), control: CGPoint(x: 28, y: 4.5))
                     }
                     .stroke(
-                        Color(hex: 0xEE4D4D),
+                        Color.neonLime,
                         style: StrokeStyle(lineWidth: 2, lineCap: .round)
                     )
                     .frame(width: 56, height: 4)
@@ -358,12 +370,12 @@ struct LoginView: View {
         HStack(alignment: .center, spacing: 10) {
             Image(systemName: "shield.fill")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color(hex: 0x6E9FB2))
+                .foregroundStyle(Color.lightSkyBlue)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("By continuing, you agree to our")
                     .font(.system(size: 11, weight: .regular))
-                    .foregroundStyle(Color(hex: 0x4A6B82))
+                    .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
 
                 HStack(spacing: 3) {
                     Button {
@@ -371,19 +383,19 @@ struct LoginView: View {
                     } label: {
                         Text("Terms of Service")
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(Color.deepSpace)
+                            .foregroundStyle(Color.white)
                     }
 
                     Text("and")
                         .font(.system(size: 11, weight: .regular))
-                        .foregroundStyle(Color(hex: 0x4A6B82))
+                        .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
 
                     Button {
                         // Privacy tapped
                     } label: {
                         Text("Privacy Policy")
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(Color.deepSpace)
+                            .foregroundStyle(Color.white)
                     }
                 }
             }

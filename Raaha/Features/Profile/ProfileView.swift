@@ -2,10 +2,10 @@ import SwiftUI
 
 struct ProfileView: View {
     // MARK: - State
+    @EnvironmentObject private var router: AppRouter
     @State private var selectedCommuteModes: Set<String> = ["Metro", "Bus", "Local Train"]
     @State private var selectedInterests: Set<String> = ["Beaches", "Heritage", "Food"]
     @State private var showLogoutDialog: Bool = false
-    @State private var logoutSuccessBanner: Bool = false
 
     private let commuteModes: [(name: String, symbol: String, customAsset: String?)] = [
         ("Bike", "bicycle", "icon_bike"),
@@ -63,26 +63,11 @@ struct ProfileView: View {
             titleVisibility: .visible
         ) {
             Button("Log Out", role: .destructive) {
-                withAnimation { logoutSuccessBanner = true }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                    withAnimation { logoutSuccessBanner = false }
-                }
+                router.logout()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("You will need to sign in again to sync your journeys.")
-        }
-        .overlay(alignment: .top) {
-            if logoutSuccessBanner {
-                Text("Logged out of session")
-                    .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.honeydew)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Capsule().fill(Color.deepSpace).shadow(radius: 8))
-                    .padding(.top, 60)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
         }
     }
 
@@ -96,44 +81,51 @@ struct ProfileView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 72, height: 72)
-                        .foregroundStyle(Color.frostedBlue)
-                        .background(Circle().fill(Color.steelBlue.opacity(0.4)))
-                        .overlay(Circle().stroke(Color.honeydew.opacity(0.4), lineWidth: 2))
+                        .foregroundStyle(Color.lightSkyBlue)
+                        .background(Circle().fill(Color.white.opacity(0.12)))
+                        .overlay(Circle().stroke(Color.white.opacity(0.35), lineWidth: 2))
 
                     Circle()
-                        .fill(Color.strawberry)
+                        .fill(Color.neonLime)
                         .frame(width: 24, height: 24)
                         .overlay(
                             Image(systemName: "checkmark")
                                 .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(Color.honeydew)
+                                .foregroundStyle(Color.midnightBlue)
                         )
-                        .overlay(Circle().stroke(Color.deepSpace, lineWidth: 2))
+                        .overlay(Circle().stroke(Color.midnightBlue, lineWidth: 2))
                         .offset(x: 2, y: 2)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Akshaya Kumar")
                         .font(.raahaTitle2)
-                        .foregroundStyle(Color.honeydew)
+                        .foregroundStyle(Color.white)
 
                     Text("akshaya.kumar@gmail.com")
                         .font(.raahaCaption)
-                        .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                        .foregroundStyle(Color(hex: 0xBDD8E9))
 
                     // Trips taken with numbers only arranged neatly
                     HStack(spacing: 6) {
                         Image(systemName: "tram.fill")
                             .font(.system(size: 11))
+                            .foregroundStyle(Color.neonLime)
                         Text("28")
                             .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Color.neonLime)
                         Text("Trips Taken")
                             .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.white)
                     }
-                    .foregroundStyle(Color.honeydew)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.steelBlue.opacity(0.6)))
+                    .padding(.vertical, 4.5)
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.12))
+                            .background(.ultraThinMaterial, in: Capsule())
+                    )
+                    .overlay(Capsule().stroke(Color.white.opacity(0.22), lineWidth: 1))
                     .padding(.top, 2)
                 }
 
@@ -152,7 +144,7 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Select your preferred Chennai transit options:")
                     .font(.raahaCaption)
-                    .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
 
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
@@ -194,16 +186,22 @@ struct ProfileView: View {
                     .font(.raahaCaption)
                     .lineLimit(1)
             }
-            .foregroundStyle(isSelected ? Color.deepSpace : Color.honeydew)
+            .foregroundStyle(isSelected ? Color.midnightBlue : Color.white)
             .frame(maxWidth: .infinity, minHeight: 38)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.honeydew : Color.deepSpace.opacity(0.6))
+                    .fill(
+                        isSelected
+                        ? AnyShapeStyle(Color.neonLime)
+                        : AnyShapeStyle(Color.white.opacity(0.08))
+                    )
+                    .background(.ultraThinMaterial, in: Capsule())
             )
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.clear : Color.frostedBlue.opacity(0.4), lineWidth: 1)
+                    .stroke(isSelected ? Color.white.opacity(0.4) : Color.white.opacity(0.18), lineWidth: 1)
             )
+            .shadow(color: isSelected ? Color.neonLime.opacity(0.3) : Color.clear, radius: 6, x: 0, y: 2)
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
@@ -219,21 +217,21 @@ struct ProfileView: View {
                     symbol: "house.fill",
                     title: "Home",
                     detail: "Chennai Central, Park Town",
-                    color: Color.steelBlue
+                    color: Color.brightBlue
                 )
-                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+                HairlineDivider(color: Color.white.opacity(0.12))
                 placeRow(
                     symbol: "briefcase.fill",
                     title: "Workplace",
                     detail: "T. Nagar Smart City Complex",
-                    color: Color.frostedBlue
+                    color: Color.electricBlue
                 )
-                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+                HairlineDivider(color: Color.white.opacity(0.12))
                 placeRow(
                     symbol: "figure.run",
                     title: "Fitness",
                     detail: "Besant Nagar Beach Promenade",
-                    color: Color.honeydew
+                    color: Color.neonLime
                 )
             }
             .padding(.horizontal, 14)
@@ -245,7 +243,7 @@ struct ProfileView: View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.raahaSubheadlineMedium)
-                .foregroundStyle(Color.deepSpace)
+                .foregroundStyle(color == Color.neonLime ? Color.midnightBlue : Color.white)
                 .frame(width: 32, height: 32)
                 .background(Circle().fill(color))
 
@@ -255,7 +253,7 @@ struct ProfileView: View {
                     .foregroundStyle(Color.honeydew)
                 Text(detail)
                     .font(.raahaCaption2)
-                    .foregroundStyle(Color.frostedBlue.opacity(0.8))
+                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
             }
 
             Spacer()
@@ -264,10 +262,15 @@ struct ProfileView: View {
             } label: {
                 Text("Edit")
                     .font(.raahaCaption)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Capsule().stroke(Color.frostedBlue.opacity(0.4), lineWidth: 1))
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.08))
+                            .background(.ultraThinMaterial, in: Capsule())
+                    )
+                    .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
             }
             .buttonStyle(.plain)
         }
@@ -282,7 +285,7 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Customize your Chennai Explore recommendations:")
                     .font(.raahaCaption)
-                    .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
 
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
@@ -316,16 +319,22 @@ struct ProfileView: View {
                     .font(.raahaCaption)
                     .lineLimit(1)
             }
-            .foregroundStyle(isSelected ? Color.deepSpace : Color.honeydew)
+            .foregroundStyle(isSelected ? Color.midnightBlue : Color.white)
             .frame(maxWidth: .infinity, minHeight: 38)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.honeydew : Color.deepSpace.opacity(0.6))
+                    .fill(
+                        isSelected
+                        ? AnyShapeStyle(Color.neonLime)
+                        : AnyShapeStyle(Color.white.opacity(0.08))
+                    )
+                    .background(.ultraThinMaterial, in: Capsule())
             )
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.clear : Color.frostedBlue.opacity(0.4), lineWidth: 1)
+                    .stroke(isSelected ? Color.white.opacity(0.4) : Color.white.opacity(0.18), lineWidth: 1)
             )
+            .shadow(color: isSelected ? Color.neonLime.opacity(0.3) : Color.clear, radius: 6, x: 0, y: 2)
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
@@ -344,7 +353,7 @@ struct ProfileView: View {
                     trailing: "Guide"
                 )
 
-                HairlineDivider(color: Color.frostedBlue.opacity(0.2))
+                HairlineDivider(color: Color.white.opacity(0.12))
 
                 // Logout button
                 Button {
@@ -355,7 +364,11 @@ struct ProfileView: View {
                             .font(.raahaSubheadlineMedium)
                             .foregroundStyle(Color.strawberry)
                             .frame(width: 32, height: 32)
-                            .background(Circle().fill(Color.strawberry.opacity(0.2)))
+                            .background(
+                                Circle()
+                                    .fill(Color.strawberry.opacity(0.2))
+                                    .background(.ultraThinMaterial, in: Circle())
+                            )
 
                         Text("Logout")
                             .font(.raahaSubheadlineMedium)
@@ -365,7 +378,7 @@ struct ProfileView: View {
 
                         Image(systemName: "chevron.right")
                             .font(.raahaCaption)
-                            .foregroundStyle(Color.frostedBlue.opacity(0.5))
+                            .foregroundStyle(Color.lightSkyBlue.opacity(0.5))
                     }
                     .padding(.vertical, 10)
                 }
@@ -382,7 +395,12 @@ struct ProfileView: View {
                 .font(.raahaSubheadlineMedium)
                 .foregroundStyle(Color.honeydew)
                 .frame(width: 32, height: 32)
-                .background(Circle().fill(Color.steelBlue.opacity(0.6)))
+                .background(
+                    Circle()
+                        .fill(Color.white.opacity(0.12))
+                        .background(.ultraThinMaterial, in: Circle())
+                )
+                .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
 
             Text(title)
                 .font(.raahaSubheadlineMedium)
@@ -392,11 +410,11 @@ struct ProfileView: View {
 
             Text(trailing)
                 .font(.raahaCaption)
-                .foregroundStyle(Color.frostedBlue)
+                .foregroundStyle(Color.lightSkyBlue)
 
             Image(systemName: "chevron.right")
                 .font(.raahaCaption)
-                .foregroundStyle(Color.frostedBlue.opacity(0.5))
+                .foregroundStyle(Color.lightSkyBlue.opacity(0.5))
         }
         .padding(.vertical, 10)
     }
@@ -406,10 +424,10 @@ struct ProfileView: View {
         HStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.neonLime)
             Text(title)
                 .font(.raahaFootnoteSemibold)
-                .foregroundStyle(Color.deepSpace)
+                .foregroundStyle(Color.honeydew)
         }
         .padding(.leading, 4)
     }
@@ -419,10 +437,10 @@ struct ProfileView: View {
         VStack(spacing: 4) {
             Text("RAAHA Chennai • Multimodal Urban Transit")
                 .font(.raahaCaption)
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
             Text("Version 2.2.0 (Build 50) • Native SwiftUI")
                 .font(.raahaCaption2)
-                .foregroundStyle(Color.steelBlue.opacity(0.75))
+                .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 8)

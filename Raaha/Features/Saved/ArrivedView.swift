@@ -11,31 +11,35 @@ struct ArrivedView: View {
 
                 Text("You've Arrived!")
                     .font(.raahaTitle)
-                    .foregroundStyle(Color.deepSpace)
+                    .foregroundStyle(Color.honeydew)
                     .padding(.top, 20)
 
                 Text(router.journeyTo)
                     .font(.raahaTitle3)
-                    .foregroundStyle(Color.statusGreen)
+                    .foregroundStyle(Color.neonLime)
                     .padding(.top, 6)
 
                 Text("Great journey! You've successfully completed your multimodal trip to \(router.journeyTo).")
                     .font(.raahaSubheadline)
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
 
                 HStack(spacing: 6) {
-                    Circle().fill(Color.statusGreen).frame(width: 6, height: 6)
+                    Circle().fill(Color.neonLime).frame(width: 6, height: 6)
                     Text("Journey Complete")
                 }
                 .font(.raahaFootnoteSemibold)
-                .foregroundStyle(Color.statusGreen)
+                .foregroundStyle(Color.neonLime)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
-                .background(Capsule().fill(Color.honeydew))
-                .overlay(Capsule().stroke(Color.frostedBlue, lineWidth: 1))
+                .background(
+                    Capsule()
+                        .fill(Color.white.opacity(0.10))
+                        .background(.ultraThinMaterial, in: Capsule())
+                )
+                .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
                 .padding(.top, 12)
 
                 summary
@@ -45,7 +49,7 @@ struct ArrivedView: View {
                     router.showHome()
                 }
                 .font(.raahaBody)
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
                 .frame(minHeight: 44)
                 .padding(.top, 8)
 
@@ -60,7 +64,7 @@ struct ArrivedView: View {
             .padding(.horizontal, 20)
         }
         .contentMargins(.bottom, 24, for: .scrollContent)
-        .background(MintWaveBackground())
+        .raahaScreenBackground()
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -68,28 +72,30 @@ struct ArrivedView: View {
             ToolbarItem(placement: .principal) {
                 Text("Destination Reached")
                     .font(.raahaSubheadline)
-                    .foregroundStyle(Color.deepSpace)
+                    .foregroundStyle(Color.honeydew)
             }
         }
     }
 
     private var badge: some View {
         ZStack {
-            Circle().fill(Color.frostedBlue.opacity(0.22)).frame(width: 180, height: 180)
-            Circle().fill(Color.frostedBlue.opacity(0.35)).frame(width: 140, height: 140)
-            Circle().fill(Color.deepSpace).frame(width: 110, height: 110)
+            Circle().fill(Color.white.opacity(0.06)).frame(width: 180, height: 180)
+            Circle().fill(Color.white.opacity(0.10)).frame(width: 140, height: 140)
+            Circle().fill(Color.midnightBlue.opacity(0.85)).frame(width: 110, height: 110)
+                .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
             Image("icon_pin")
                 .renderingMode(.template)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 44, height: 44)
-                .foregroundStyle(Color.honeydew)
+                .foregroundStyle(Color.neonLime)
             Image(systemName: "checkmark")
                 .font(.raahaFootnoteSemibold)
-                .foregroundStyle(Color.honeydew)
+                .foregroundStyle(Color.midnightBlue)
                 .frame(width: 30, height: 30)
-                .background(Circle().fill(Color.statusGreen))
-                .overlay(Circle().stroke(Color.honeydew, lineWidth: 2))
+                .background(Circle().fill(Color.neonLime))
+                .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                .shadow(color: Color.neonLime.opacity(0.35), radius: 6, x: 0, y: 2)
                 .offset(x: 38, y: -34)
         }
         .frame(height: 180)
@@ -106,25 +112,25 @@ struct ArrivedView: View {
                 Spacer()
                 Text("Completed")
                     .font(.raahaCaption)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.midnightBlue)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.statusGreen))
+                    .background(Capsule().fill(Color.neonLime))
             }
 
             HStack(spacing: 0) {
                 stat(symbol: "clock", label: "Arrived At", value: "10:43 AM")
-                Rectangle().fill(Color.frostedBlue.opacity(0.3)).frame(width: 1, height: 44)
+                Rectangle().fill(Color.white.opacity(0.18)).frame(width: 1, height: 44)
                 stat(symbol: "stopwatch", label: "Total Time", value: "62 min")
-                Rectangle().fill(Color.frostedBlue.opacity(0.3)).frame(width: 1, height: 44)
+                Rectangle().fill(Color.white.opacity(0.18)).frame(width: 1, height: 44)
                 stat(symbol: "map", label: "Distance", value: "9.4 km")
             }
 
-            HairlineDivider(color: Color.frostedBlue.opacity(0.3))
+            HairlineDivider(color: Color.white.opacity(0.15))
 
             Text("TRANSPORT USED")
                 .font(.raahaCaption2)
-                .foregroundStyle(Color.frostedBlue)
+                .foregroundStyle(Color.lightSkyBlue)
 
             HStack(spacing: 6) {
                 transportChip("Walk", symbol: "figure.walk")
@@ -134,10 +140,10 @@ struct ArrivedView: View {
                 Text("₹ 112")
                     .font(.raahaCaption)
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.midnightBlue)
                     .padding(.horizontal, 10)
                     .frame(minHeight: 28)
-                    .background(Capsule().fill(Color.statusGreen))
+                    .background(Capsule().fill(Color.neonLime))
             }
         }
         .padding(16)
@@ -149,42 +155,42 @@ struct ArrivedView: View {
         VStack(spacing: 4) {
             HStack(spacing: 4) {
                 Image(systemName: symbol)
+                    .font(.raahaCaption2)
+                    .foregroundStyle(Color.lightSkyBlue)
                 Text(label)
+                    .font(.raahaCaption2)
+                    .foregroundStyle(Color.lightSkyBlue)
             }
-            .font(.raahaCaption2)
-            .foregroundStyle(Color.frostedBlue)
             Text(value)
-                .font(.raahaTitle3)
-                .foregroundStyle(Color.honeydew)
+                .font(.raahaHeadline)
+                .foregroundStyle(Color.neonLime)
         }
         .frame(maxWidth: .infinity)
     }
 
-    private func transportChip(_ title: String, symbol: String) -> some View {
+    private func transportChip(_ name: String, symbol: String? = nil, asset: String? = nil) -> some View {
         HStack(spacing: 4) {
-            Image(systemName: symbol)
-            Text(title)
+            if let asset {
+                Image(asset)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 12, height: 12)
+            } else if let symbol {
+                Image(systemName: symbol)
+                    .font(.system(size: 11))
+            }
+            Text(name)
+                .font(.raahaCaption2)
         }
-        .font(.raahaCaption)
-        .foregroundStyle(Color.frostedBlue)
+        .foregroundStyle(Color.honeydew)
         .padding(.horizontal, 8)
         .frame(minHeight: 28)
-        .background(Capsule().fill(Color.steelBlue.opacity(0.4)))
-    }
-
-    private func transportChip(_ title: String, asset: String) -> some View {
-        HStack(spacing: 4) {
-            Image(asset)
-                .renderingMode(.template)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 14, height: 14)
-            Text(title)
-        }
-        .font(.raahaCaption)
-        .foregroundStyle(Color.frostedBlue)
-        .padding(.horizontal, 8)
-        .frame(minHeight: 28)
-        .background(Capsule().fill(Color.steelBlue.opacity(0.4)))
+        .background(
+            Capsule()
+                .fill(Color.white.opacity(0.10))
+                .background(.ultraThinMaterial, in: Capsule())
+        )
+        .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
     }
 }

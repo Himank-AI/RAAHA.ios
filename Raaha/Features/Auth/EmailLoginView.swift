@@ -78,11 +78,11 @@ struct EmailLoginView: View {
                                     HStack(spacing: 8) {
                                         Image(systemName: rememberMe ? "checkmark.square.fill" : "square")
                                             .font(.system(size: 17))
-                                            .foregroundStyle(rememberMe ? Color.strawberry : Color.steelBlue)
+                                            .foregroundStyle(rememberMe ? Color.neonLime : Color.lightSkyBlue)
 
                                         Text("Remember me")
                                             .font(.system(size: 13, weight: .medium))
-                                            .foregroundStyle(Color.deepSpace.opacity(0.85))
+                                            .foregroundStyle(Color.icyBlue.opacity(0.9))
                                     }
                                 }
                                 .buttonStyle(PlainButtonStyle())
@@ -94,7 +94,7 @@ struct EmailLoginView: View {
                                 } label: {
                                     Text("Forgot Password?")
                                         .font(.system(size: 13, weight: .semibold))
-                                        .foregroundStyle(Color.strawberry)
+                                        .foregroundStyle(Color.neonLime)
                                 }
                             }
                             .padding(.top, 4)
@@ -102,14 +102,14 @@ struct EmailLoginView: View {
                         .padding(20)
                         .background(
                             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                .fill(Color.white.opacity(0.72))
+                                .fill(Color.white.opacity(0.08))
                                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                .stroke(Color(hex: 0x78B9C8).opacity(0.4), lineWidth: 1.2)
+                                .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
                         )
-                        .shadow(color: Color.deepSpace.opacity(0.06), radius: 10, x: 0, y: 4)
+                        .shadow(color: Color.midnightBlue.opacity(0.40), radius: 16, x: 0, y: 6)
 
                         // Primary Sign In Button
                         signInButton
@@ -146,11 +146,11 @@ struct EmailLoginView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Sign in with Email")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.deepSpace)
+                .foregroundStyle(Color.midnightBlue)
 
             Text("Enter your credentials to manage your journeys, metro passes, and saved Chennai routes.")
                 .font(.system(size: 14, weight: .regular))
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.royalBlue.opacity(0.75))
                 .lineSpacing(2)
         }
     }
@@ -180,12 +180,16 @@ struct EmailLoginView: View {
                 Capsule()
                     .fill(
                         LinearGradient(
-                            colors: [Color(hex: 0xEE4D4D), Color(hex: 0xD83A3A)],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                            colors: [Color.brightBlue, Color.electricBlue],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
                     )
-                    .shadow(color: Color(hex: 0xEE4D4D).opacity(0.35), radius: 10, x: 0, y: 5)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.40), lineWidth: 1)
+                    )
+                    .shadow(color: Color.electricBlue.opacity(0.45), radius: 12, x: 0, y: 6)
             )
         }
         .buttonStyle(TactileButtonStyle())
@@ -196,7 +200,7 @@ struct EmailLoginView: View {
     private var socialDivider: some View {
         HStack(spacing: 14) {
             LinearGradient(
-                colors: [Color.clear, Color(hex: 0x76B6C4).opacity(0.45)],
+                colors: [Color.clear, Color.lightSkyBlue.opacity(0.40)],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -204,10 +208,10 @@ struct EmailLoginView: View {
 
             Text("or continue with")
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
 
             LinearGradient(
-                colors: [Color(hex: 0x76B6C4).opacity(0.45), Color.clear],
+                colors: [Color.lightSkyBlue.opacity(0.40), Color.clear],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -226,18 +230,18 @@ struct EmailLoginView: View {
                     GoogleLogoView(size: 18)
                     Text("Google")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.white)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(0.85))
+                        .fill(Color.white.opacity(0.12))
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color(hex: 0x78B9C8).opacity(0.4), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.28), lineWidth: 1)
                 )
             }
             .buttonStyle(TactileButtonStyle())
@@ -249,21 +253,21 @@ struct EmailLoginView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "apple.logo")
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Color.black)
+                        .foregroundStyle(Color.white)
                     Text("Apple")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.white)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(0.85))
+                        .fill(Color.white.opacity(0.12))
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color(hex: 0x78B9C8).opacity(0.4), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.28), lineWidth: 1)
                 )
             }
             .buttonStyle(TactileButtonStyle())
@@ -275,7 +279,7 @@ struct EmailLoginView: View {
         HStack(spacing: 6) {
             Text("Don't have an account?")
                 .font(.system(size: 14, weight: .regular))
-                .foregroundStyle(Color.deepSpace.opacity(0.85))
+                .foregroundStyle(Color.icyBlue.opacity(0.85))
 
             Button {
                 onNavigateToSignUp()
@@ -283,7 +287,7 @@ struct EmailLoginView: View {
                 VStack(spacing: 2) {
                     Text("Sign Up")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Color(hex: 0xEE4D4D))
+                        .foregroundStyle(Color.neonLime)
 
                     // Hand-drawn red curved underline
                     Path { p in
@@ -291,7 +295,7 @@ struct EmailLoginView: View {
                         p.addQuadCurve(to: CGPoint(x: 52, y: 1), control: CGPoint(x: 26, y: 4))
                     }
                     .stroke(
-                        Color(hex: 0xEE4D4D),
+                        Color.neonLime,
                         style: StrokeStyle(lineWidth: 2, lineCap: .round)
                     )
                     .frame(width: 52, height: 4)

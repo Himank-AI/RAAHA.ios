@@ -23,9 +23,9 @@ struct SignUpView: View {
         } else if password.count < 8 {
             return (2, "Fair", Color(hex: 0xF59E0B))
         } else if password.count < 10 {
-            return (3, "Good", Color(hex: 0x3B82F6))
+            return (3, "Good", Color.brightBlue)
         } else {
-            return (4, "Strong", Color(hex: 0x10B981))
+            return (4, "Strong", Color.neonLime)
         }
     }
 
@@ -62,7 +62,7 @@ struct SignUpView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.strawberry.opacity(0.12))
+                                    .fill(Color.strawberry.opacity(0.18))
                             )
                         }
 
@@ -114,15 +114,22 @@ struct SignUpView: View {
                         }
                         .padding(20)
                         .background(
-                            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                .fill(Color.white.opacity(0.72))
-                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .fill(Color.white.opacity(0.08))
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
                         )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                .stroke(Color(hex: 0x78B9C8).opacity(0.4), lineWidth: 1.2)
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.35), Color.white.opacity(0.08)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 1
+                                )
                         )
-                        .shadow(color: Color.deepSpace.opacity(0.06), radius: 10, x: 0, y: 4)
+                        .shadow(color: Color.midnightBlue.opacity(0.35), radius: 20, x: 0, y: 10)
 
                         // Primary Create Account Button
                         createAccountButton
@@ -153,8 +160,8 @@ struct SignUpView: View {
     private var headerTitles: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Create Account")
-                .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.deepSpace)
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.white)
         }
     }
 
@@ -164,11 +171,11 @@ struct SignUpView: View {
             HStack {
                 Text("Mobile Number")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.deepSpace.opacity(0.8))
+                    .foregroundStyle(Color.white.opacity(0.9))
 
                 Text("(for transit alerts)")
                     .font(.system(size: 11, weight: .regular))
-                    .foregroundStyle(Color.steelBlue)
+                    .foregroundStyle(Color.lightSkyBlue)
             }
 
             HStack(spacing: 10) {
@@ -178,28 +185,29 @@ struct SignUpView: View {
                         .font(.system(size: 14))
                     Text("+91")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.white)
                 }
                 .padding(.horizontal, 10)
                 .frame(height: 52)
                 .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color(hex: 0xE8F5EE).opacity(0.7))
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.10))
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color(hex: 0x78B9C8).opacity(0.3), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.white.opacity(0.20), lineWidth: 1)
                 )
 
                 // Phone Input
                 HStack(spacing: 8) {
                     Image(systemName: "phone.fill")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Color.steelBlue)
+                        .foregroundStyle(Color.lightSkyBlue)
 
                     TextField("98765 43210", text: $phoneNumber)
                         .font(.system(size: 15))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.white)
                         .keyboardType(.phonePad)
                         .textContentType(.telephoneNumber)
                 }
@@ -207,12 +215,12 @@ struct SignUpView: View {
                 .frame(height: 52)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.85))
+                        .fill(Color.white.opacity(0.10))
                         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color(hex: 0x78B9C8).opacity(0.35), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.20), lineWidth: 1)
                 )
             }
         }
@@ -225,7 +233,7 @@ struct SignUpView: View {
             HStack(spacing: 4) {
                 ForEach(1...4, id: \.self) { index in
                     Capsule()
-                        .fill(index <= strength.level ? strength.color : Color.gray.opacity(0.2))
+                        .fill(index <= strength.level ? strength.color : Color.white.opacity(0.15))
                         .frame(height: 4)
                 }
             }
@@ -245,12 +253,12 @@ struct SignUpView: View {
             HStack(alignment: .top, spacing: 10) {
                 Image(systemName: agreeToTerms ? "checkmark.square.fill" : "square")
                     .font(.system(size: 18))
-                    .foregroundStyle(agreeToTerms ? Color.strawberry : Color.steelBlue)
+                    .foregroundStyle(agreeToTerms ? Color.neonLime : Color.lightSkyBlue)
                     .offset(y: 1)
 
                 Text("I agree to RAAHA's Terms of Service and Privacy Policy for Chennai travel services.")
                     .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(Color.deepSpace.opacity(0.85))
+                    .foregroundStyle(Color.white.opacity(0.85))
                     .multilineTextAlignment(.leading)
                     .lineSpacing(2)
             }
@@ -283,12 +291,16 @@ struct SignUpView: View {
                 Capsule()
                     .fill(
                         LinearGradient(
-                            colors: [Color(hex: 0xEE4D4D), Color(hex: 0xD83A3A)],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                            colors: [Color.brightBlue, Color.electricBlue],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
                     )
-                    .shadow(color: Color(hex: 0xEE4D4D).opacity(0.35), radius: 10, x: 0, y: 5)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                    )
+                    .shadow(color: Color.electricBlue.opacity(0.45), radius: 12, x: 0, y: 5)
             )
         }
         .buttonStyle(TactileButtonStyle())
@@ -299,7 +311,7 @@ struct SignUpView: View {
     private var socialDivider: some View {
         HStack(spacing: 14) {
             LinearGradient(
-                colors: [Color.clear, Color(hex: 0x76B6C4).opacity(0.45)],
+                colors: [Color.clear, Color.white.opacity(0.25)],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -307,10 +319,10 @@ struct SignUpView: View {
 
             Text("or sign up with")
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
 
             LinearGradient(
-                colors: [Color(hex: 0x76B6C4).opacity(0.45), Color.clear],
+                colors: [Color.white.opacity(0.25), Color.clear],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -329,18 +341,18 @@ struct SignUpView: View {
                     GoogleLogoView(size: 18)
                     Text("Google")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.white)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(0.85))
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.10))
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color(hex: 0x78B9C8).opacity(0.4), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.white.opacity(0.22), lineWidth: 1)
                 )
             }
             .buttonStyle(TactileButtonStyle())
@@ -352,21 +364,21 @@ struct SignUpView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "apple.logo")
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Color.black)
+                        .foregroundStyle(Color.white)
                     Text("Apple")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.deepSpace)
+                        .foregroundStyle(Color.white)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(0.85))
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.10))
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color(hex: 0x78B9C8).opacity(0.4), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.white.opacity(0.22), lineWidth: 1)
                 )
             }
             .buttonStyle(TactileButtonStyle())
@@ -378,7 +390,7 @@ struct SignUpView: View {
         HStack(spacing: 6) {
             Text("Already have an account?")
                 .font(.system(size: 14, weight: .regular))
-                .foregroundStyle(Color.deepSpace.opacity(0.85))
+                .foregroundStyle(Color.white.opacity(0.85))
 
             Button {
                 onNavigateToSignIn()
@@ -386,15 +398,15 @@ struct SignUpView: View {
                 VStack(spacing: 2) {
                     Text("Sign In")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Color(hex: 0xEE4D4D))
+                        .foregroundStyle(Color.neonLime)
 
-                    // Hand-drawn red curved underline
+                    // Hand-drawn curved underline
                     Path { p in
                         p.move(to: CGPoint(x: 0, y: 1))
                         p.addQuadCurve(to: CGPoint(x: 48, y: 1), control: CGPoint(x: 24, y: 4))
                     }
                     .stroke(
-                        Color(hex: 0xEE4D4D),
+                        Color.neonLime,
                         style: StrokeStyle(lineWidth: 2, lineCap: .round)
                     )
                     .frame(width: 48, height: 4)

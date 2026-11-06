@@ -12,16 +12,16 @@ struct TripSavedView: View {
 
             Text("Trip Saved!")
                 .font(.raahaLargeTitle)
-                .foregroundStyle(Color.deepSpace)
+                .foregroundStyle(Color.honeydew)
 
             Text(router.plan.destination)
                 .font(.raahaTitle3)
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.neonLime)
                 .padding(.top, 8)
 
             Text(router.plan.combinedText)
                 .font(.raahaSubheadline)
-                .foregroundStyle(Color.steelBlue)
+                .foregroundStyle(Color.lightSkyBlue)
                 .padding(.top, 6)
 
             Button {
@@ -36,7 +36,7 @@ struct TripSavedView: View {
                 router.popToRoot()
             }
             .font(.raahaHeadline)
-            .foregroundStyle(Color.steelBlue)
+            .foregroundStyle(Color.lightSkyBlue)
             .frame(minHeight: 44)
             .padding(.top, 10)
 
@@ -44,7 +44,7 @@ struct TripSavedView: View {
         }
         .padding(.horizontal, 24)
         .frame(maxWidth: .infinity)
-        .background(MintWaveBackground())
+        .raahaScreenBackground()
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -54,17 +54,23 @@ struct TripSavedView: View {
     private var illustration: some View {
         ZStack {
             Circle()
-                .fill(Color.frostedBlue.opacity(0.35))
+                .fill(Color.white.opacity(0.08))
+                .background(.ultraThinMaterial, in: Circle())
                 .frame(width: 210, height: 210)
+                .overlay(Circle().stroke(Color.white.opacity(0.15), lineWidth: 1))
 
             // Calendar
             ZStack(alignment: .top) {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color.deepSpace)
+                    .fill(Color.midnightBlue.opacity(0.85))
                     .frame(width: 130, height: 118)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    )
 
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.honeydew)
+                    .fill(Color.white.opacity(0.12))
                     .frame(width: 118, height: 82)
                     .offset(y: 30)
                     .overlay(alignment: .center) {
@@ -86,10 +92,11 @@ struct TripSavedView: View {
             // Check badge
             Image(systemName: "checkmark")
                 .font(.raahaLargeTitle)
-                .foregroundStyle(Color.honeydew)
+                .foregroundStyle(Color.midnightBlue)
                 .frame(width: 66, height: 66)
-                .background(Circle().fill(Color.steelBlue))
-                .overlay(Circle().stroke(Color.honeydew, lineWidth: 3))
+                .background(Circle().fill(Color.neonLime))
+                .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                .shadow(color: Color.neonLime.opacity(0.4), radius: 8, x: 0, y: 3)
                 .offset(x: 52, y: 44)
         }
         .frame(height: 220)
@@ -99,13 +106,13 @@ struct TripSavedView: View {
 
     private var cell: some View {
         RoundedRectangle(cornerRadius: 5, style: .continuous)
-            .fill(Color.frostedBlue)
+            .fill(Color.lightSkyBlue.opacity(0.6))
             .frame(width: 26, height: 20)
     }
 
     private var ring: some View {
         Capsule()
-            .fill(Color.frostedBlue)
+            .fill(Color.lightSkyBlue)
             .frame(width: 10, height: 30)
     }
 }

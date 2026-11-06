@@ -60,8 +60,23 @@ struct BottomPanel<Content: View>: View {
             .frame(width: proxy.size.width, height: fullHeight, alignment: .top)
             .background(
                 UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous)
-                    .fill(Color(hex: 0xEDF7F7))
-                    .shadow(color: Color(hex: 0x0A2B3D).opacity(0.16), radius: 16, x: 0, y: -4)
+                    .fill(Color(hex: 0x03195B).opacity(0.88))
+                    .background(
+                        .ultraThinMaterial,
+                        in: UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous)
+                    )
+                    .overlay(
+                        UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(0.35), Color.white.opacity(0.08)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+                    .shadow(color: Color.black.opacity(0.40), radius: 18, x: 0, y: -4)
             )
             .offset(y: offset)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -71,8 +86,8 @@ struct BottomPanel<Content: View>: View {
 
     private var grabber: some View {
         Capsule()
-            .fill(Color(hex: 0x245A75).opacity(0.85))
-            .frame(width: 54, height: 5)
+            .fill(Color.white.opacity(0.40))
+            .frame(width: 44, height: 5)
             .frame(maxWidth: .infinity, minHeight: 24)
             .contentShape(Rectangle())
             .padding(.top, 10)
