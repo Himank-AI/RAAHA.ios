@@ -30,7 +30,7 @@ struct LiveJourneyView: View {
                         router.push(isLastStep ? .arrived : .live(kind, step + 1))
                     }
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, 16)
             }
         }
         .pushedChrome(title: "Live Chennai Journey")
@@ -40,13 +40,12 @@ struct LiveJourneyView: View {
 
     private var liveProgressTracker: some View {
         VStack(spacing: 10) {
-            // Top row: LIVE badge + step counter
+            // Step counter (no green LIVE TRANSIT badge)
             HStack {
-                LiveBadge()
-                Spacer()
                 Text("Step \(step + 1) of \(screens.count)")
                     .font(.raahaCaption.weight(.semibold))
                     .foregroundStyle(Color.royalBlue)
+                Spacer()
             }
 
             // Animated icon-chain progress bar
@@ -67,35 +66,6 @@ struct LiveJourneyView: View {
         case .pickupDrop(let info):
             PickupDropCard(info: info)
         }
-    }
-}
-
-// MARK: - Live Badge (pulsing emerald dot)
-
-private struct LiveBadge: View {
-    @State private var isPulsing = false
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(Color(hex: 0x18866B))
-                .frame(width: 8, height: 8)
-                .scaleEffect(isPulsing ? 1.3 : 0.75)
-                .opacity(isPulsing ? 1.0 : 0.5)
-                .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: isPulsing)
-                .onAppear { isPulsing = true }
-
-            Text("LIVE TRANSIT")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(hex: 0x18866B))
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(
-            Capsule()
-                .fill(Color(hex: 0x18866B).opacity(0.12))
-                .overlay(Capsule().stroke(Color(hex: 0x18866B).opacity(0.30), lineWidth: 1))
-        )
     }
 }
 
@@ -212,7 +182,7 @@ private struct CurrentlyOnCard: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(Color(hex: 0x18866B))
+                        .fill(Color.royalBlue)
                         .frame(width: 7, height: 7)
                         .scaleEffect(isPulsing ? 1.25 : 0.80)
                         .opacity(isPulsing ? 1.0 : 0.50)
