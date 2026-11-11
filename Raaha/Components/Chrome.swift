@@ -36,30 +36,35 @@ struct NavyHeader<Content: View>: View {
     }
 }
 
-// MARK: - Back button (Frosted Glass Circular Button from Reference 1)
+// MARK: - Back button (Unified Frosted Glass Circular Back Button)
 
 struct BackButton: View {
     @Environment(\.dismiss) private var dismiss
+    var action: (() -> Void)? = nil
 
     var body: some View {
         Button {
-            dismiss()
+            if let action = action {
+                action()
+            } else {
+                dismiss()
+            }
         } label: {
-            glyph
-        }
-        .accessibilityLabel("Back")
-    }
+            ZStack {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .frame(width: 38, height: 38)
 
-    @ViewBuilder
-    private var glyph: some View {
-        Image(systemName: "chevron.left")
-            .font(.system(size: 14, weight: .bold))
-            .foregroundStyle(Color.white)
-            .frame(width: 40, height: 40)
-            .background(Circle().fill(Color.white.opacity(0.14)))
-            .background(.ultraThinMaterial, in: Circle())
-            .overlay(Circle().stroke(Color.white.opacity(0.35), lineWidth: 1))
-            .shadow(color: Color.midnightBlue.opacity(0.35), radius: 8, x: 0, y: 3)
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Color(hex: 0x0A4174))
+                    .offset(x: -1)
+            }
+            .frame(width: 38, height: 38)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Back")
     }
 }
 
@@ -79,7 +84,7 @@ extension View {
         self
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
     }
 
     /// Pushed screens: transparent bar, custom circular back button, optional centred title.
@@ -88,7 +93,7 @@ extension View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     BackButton()
@@ -96,7 +101,7 @@ extension View {
                 ToolbarItem(placement: .principal) {
                     Text(title ?? "")
                         .font(.raahaHeadline)
-                        .foregroundStyle(Color.honeydew)
+                        .foregroundStyle(Color.midnightBlue)
                 }
             }
     }
@@ -107,14 +112,14 @@ extension View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: 14) {
+                    HStack(spacing: 12) {
                         BackButton()
                         Text(leadingTitle)
                             .font(.raahaTitle3)
-                            .foregroundStyle(Color.honeydew)
+                            .foregroundStyle(Color.midnightBlue)
                     }
                 }
             }

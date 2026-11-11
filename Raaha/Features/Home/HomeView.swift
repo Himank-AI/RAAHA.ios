@@ -257,12 +257,8 @@ struct HomeView: View {
             Button {
                 router.planJourney(from: from, to: to)
             } label: {
-                HStack(spacing: 8) {
-                    Text("Find Best Routes")
-                        .font(.raahaHeadline)
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 15, weight: .bold))
-                }
+                Text("Find Best Routes")
+                    .font(.raahaHeadline)
             }
             .buttonStyle(.pillLight)
             .sensoryFeedback(.impact(weight: .medium), trigger: from)

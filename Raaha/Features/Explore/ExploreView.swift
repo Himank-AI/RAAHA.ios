@@ -1321,6 +1321,7 @@ private struct PickerSheet<Content: View>: View {
                 Spacer(minLength: 0)
             }
             .padding()
+            .raahaScreenBackground()
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

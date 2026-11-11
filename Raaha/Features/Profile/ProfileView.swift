@@ -131,8 +131,7 @@ struct ProfileView: View {
 
                 Spacer()
             }
-            .padding(.top, 4)
-            .padding(.bottom, 6)
+            .frame(maxWidth: .infinity, minHeight: 154, alignment: .leading)
         }
     }
 
@@ -225,13 +224,6 @@ struct ProfileView: View {
                     title: "Workplace",
                     detail: "T. Nagar Smart City Complex",
                     color: Color.electricBlue
-                )
-                HairlineDivider(color: Color.white.opacity(0.12))
-                placeRow(
-                    symbol: "figure.run",
-                    title: "Fitness",
-                    detail: "Besant Nagar Beach Promenade",
-                    color: Color.neonLime
                 )
             }
             .padding(.horizontal, 14)

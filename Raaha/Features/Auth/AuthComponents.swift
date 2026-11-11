@@ -83,28 +83,12 @@ struct AuthInputField: View {
     }
 }
 
-// MARK: - Reusable Frosted Back Button
+// MARK: - Reusable Frosted Glass Back Button
 struct AuthBackButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            Image(systemName: "chevron.left")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(Color.white)
-                .frame(width: 40, height: 40)
-                .background(
-                    Circle()
-                        .fill(Color.white.opacity(0.14))
-                        .background(.ultraThinMaterial, in: Circle())
-                )
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.35), lineWidth: 1)
-                )
-                .shadow(color: Color.midnightBlue.opacity(0.35), radius: 6, x: 0, y: 2)
-        }
-        .buttonStyle(TactileButtonStyle(scale: 0.92))
+        BackButton(action: action)
     }
 }
 
