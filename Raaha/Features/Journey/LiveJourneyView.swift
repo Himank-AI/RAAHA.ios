@@ -16,7 +16,7 @@ struct LiveJourneyView: View {
         ZStack {
             JourneyMapView()
 
-            BottomPanel {
+            BottomPanel(fitsContent: true) {
                 VStack(spacing: 12) {
                     // Step Progress Tracker
                     liveProgressTracker
