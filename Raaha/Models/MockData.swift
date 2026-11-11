@@ -11,11 +11,11 @@ enum MockData {
             kind: .fastest,
             minutes: 58,
             fare: 112,
-            chain: [.walk, .bus, .bus, .walk],
+            chain: [.walk, .metro, .bus, .walk],
             legs: [
                 RouteLeg(id: "f1", mode: .walk, title: "Walk", detail: "2 min · 180 m",
                          description: "From your location to\nChennai Metro Station"),
-                RouteLeg(id: "f2", mode: .bus, title: "Bus (Green Line)", detail: "22 min · 5 stops",
+                RouteLeg(id: "f2", mode: .metro, title: "Metro (Green Line)", detail: "22 min · 5 stops",
                          description: "Chennai Metro Station →\nSt. Thomas Mount", fare: "₹ 40"),
                 RouteLeg(id: "f3", mode: .bus, title: "Bus", detail: "10 min · 3.2 km",
                          description: "St. Thomas Mount →\nPhoenix Mall", fare: "₹ 72"),
