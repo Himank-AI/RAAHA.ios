@@ -183,9 +183,6 @@ struct RouteDetailView: View {
                     .font(.raahaFootnoteSemibold)
                     .foregroundStyle(Color.midnightBlue)
                 Spacer()
-                Text("Tap step to expand")
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.steelBlue.opacity(0.8))
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
