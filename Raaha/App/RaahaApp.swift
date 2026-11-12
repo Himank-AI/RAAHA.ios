@@ -4,10 +4,37 @@ import SwiftUI
 struct RaahaApp: App {
     var body: some Scene {
         WindowGroup {
-            RootView()
+            AppEntryPoint()
                 // Light mode by default
                 .preferredColorScheme(.light)
         }
+    }
+}
+
+/// One-time splash gate: shows SplashAnimationView on first launch, then hands off to RootView.
+struct AppEntryPoint: View {
+    @State private var splashDone = false
+
+    var body: some View {
+        Group {
+            if splashDone {
+                RootView()
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.combined(with: .scale(scale: 1.04)),
+                            removal: .opacity
+                        )
+                    )
+            } else {
+                SplashAnimationView {
+                    withAnimation(.easeInOut(duration: 0.6)) {
+                        splashDone = true
+                    }
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.5), value: splashDone)
     }
 }
 
