@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TripSavedView: View {
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         VStack(spacing: 0) {

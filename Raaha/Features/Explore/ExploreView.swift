@@ -6,18 +6,15 @@ import MapKit
 struct ExploreView: View {
     enum Segment { case places, planAhead }
 
-    @EnvironmentObject private var router: AppRouter
-    @StateObject private var vm: ExploreViewModel
+    @Environment(AppRouter.self) private var router
+    @State private var vm = ExploreViewModel()
 
     @State private var segment: Segment = .places
     @State private var selectedPlace: ExplorePlace?
     @State private var showAllNearby = false
 
-    init() {
-        _vm = StateObject(wrappedValue: ExploreViewModel())
-    }
-
     var body: some View {
+        @Bindable var vm = vm
         VStack(spacing: 0) {
             header
 
@@ -44,7 +41,7 @@ struct ExploreView: View {
         .raahaScreenBackground()
         .navyHeaderChrome()
         .onAppear { vm.onAppear() }
-        .onChange(of: vm.query) { vm.onQueryChange(vm.query) }
+        .onChange(of: vm.query) { _, newValue in vm.onQueryChange(newValue) }
         .navigationDestination(isPresented: Binding(
             get: { selectedPlace != nil },
             set: { if !$0 { selectedPlace = nil } }
@@ -185,10 +182,10 @@ struct ExploreView: View {
 // MARK: - Places Content
 
 private struct PlacesContent: View {
-    @ObservedObject var vm: ExploreViewModel
+    let vm: ExploreViewModel
     @Binding var selectedPlace: ExplorePlace?
     @Binding var showAllNearby: Bool
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -770,10 +767,10 @@ private struct ExploreOptionCard: View {
 // MARK: - All Nearby Sheet
 
 private struct AllNearbySheet: View {
-    @ObservedObject var vm: ExploreViewModel
+    let vm: ExploreViewModel
     @Binding var selectedPlace: ExplorePlace?
     @Binding var showAllNearby: Bool
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -1181,11 +1178,12 @@ private struct CompactPillStyle: ButtonStyle {
 // MARK: - Plan Ahead (unchanged)
 
 private struct PlanAheadCard: View {
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
     @State private var showDateSheet = false
     @State private var showTimeSheet = false
 
     var body: some View {
+        @Bindable var router = router
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Plan Ahead")

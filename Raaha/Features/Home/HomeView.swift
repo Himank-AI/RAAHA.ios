@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Creative, premium, interactive Home screen for RAAHA Chennai multimodal journey planner.
 struct HomeView: View {
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
 
     @State private var from: String = "Current Location"
     @State private var to: String   = "Phoenix Mall, Velachery"

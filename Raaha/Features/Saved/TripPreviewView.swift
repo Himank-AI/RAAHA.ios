@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TripPreviewView: View {
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         ScrollView {

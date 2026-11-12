@@ -3,7 +3,7 @@ import SwiftUI
 struct LiveJourneyView: View {
     let kind: RouteKind
     let step: Int
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
 
     private var screens: [LiveScreen] { MockData.route(kind).liveScreens }
     private var content: LiveContent {
