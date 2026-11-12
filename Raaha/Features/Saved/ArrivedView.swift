@@ -66,8 +66,8 @@ struct ArrivedView: View {
         .contentMargins(.bottom, 24, for: .scrollContent)
         .raahaScreenBackground()
         .navigationBarBackButtonHidden(true)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarTitleDisplayMode(.inline)
+        .hideToolbarBackground()
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Destination Reached")

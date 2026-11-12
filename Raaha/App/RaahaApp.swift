@@ -6,12 +6,23 @@ struct RaahaApp: App {
         // Hide scroll indicators globally across the entire app
         UIScrollView.appearance().showsVerticalScrollIndicator = false
         UIScrollView.appearance().showsHorizontalScrollIndicator = false
+
+        // Completely transparent navigation bar globally so maps and hero illustrations flow seamlessly behind chrome
+        let navBarAppearance = UINavigationBarAppearance()
+        navBarAppearance.configureWithTransparentBackground()
+        navBarAppearance.backgroundColor = .clear
+        navBarAppearance.shadowColor = .clear
+        navBarAppearance.backgroundEffect = nil
+        UINavigationBar.appearance().standardAppearance = navBarAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navBarAppearance
+        UINavigationBar.appearance().compactAppearance = navBarAppearance
+        UINavigationBar.appearance().compactScrollEdgeAppearance = navBarAppearance
     }
 
     var body: some Scene {
         WindowGroup {
             RootView()
-                // Light mode by default as requested
+                // Light mode by default
                 .preferredColorScheme(.light)
         }
     }

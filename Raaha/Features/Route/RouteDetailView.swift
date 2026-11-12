@@ -86,10 +86,8 @@ struct RouteDetailView: View {
             .resizable()
             .scaledToFill()
             .opacity(0.70)
-            .frame(
-                width: UIScreen.main.bounds.width * 0.65,
-                height: UIScreen.main.bounds.height * 0.42
-            )
+            .containerRelativeFrame(.horizontal) { length, _ in length * 0.65 }
+            .containerRelativeFrame(.vertical) { length, _ in length * 0.42 }
             .clipped()
             // Left-edge fade + bottom-edge fade combined via nested mask
             .mask(

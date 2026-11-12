@@ -74,25 +74,25 @@ extension View {
     /// Tab-root screens: light status bar over the navy header, transparent empty nav bar.
     func navyHeaderChrome() -> some View {
         self
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarTitleDisplayMode(.inline)
+            .hideToolbarBackground()
             .toolbarColorScheme(.dark, for: .navigationBar)
     }
 
     /// Tab-root screens with light header: dark status bar over light background.
     func lightHeaderChrome() -> some View {
         self
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarTitleDisplayMode(.inline)
+            .hideToolbarBackground()
             .toolbarColorScheme(.light, for: .navigationBar)
     }
 
     /// Pushed screens: transparent bar, custom circular back button, optional centred title.
     func pushedChrome(title: String? = nil) -> some View {
         self
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
-            .toolbarBackground(.hidden, for: .navigationBar)
+            .hideToolbarBackground()
             .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -109,9 +109,9 @@ extension View {
     /// Pushed screens whose title sits left-aligned beside the back button (Trip Preview).
     func pushedChrome(leadingTitle: String) -> some View {
         self
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
-            .toolbarBackground(.hidden, for: .navigationBar)
+            .hideToolbarBackground()
             .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -123,5 +123,17 @@ extension View {
                     }
                 }
             }
+    }
+
+    @ViewBuilder
+    func hideToolbarBackground() -> some View {
+        if #available(iOS 18.0, *) {
+            self
+                .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
+                .toolbarBackground(.hidden, for: .navigationBar)
+        } else {
+            self
+                .toolbarBackground(.hidden, for: .navigationBar)
+        }
     }
 }

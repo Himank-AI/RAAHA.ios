@@ -46,8 +46,8 @@ struct TripSavedView: View {
         .frame(maxWidth: .infinity)
         .raahaScreenBackground()
         .navigationBarBackButtonHidden(true)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarTitleDisplayMode(.inline)
+        .hideToolbarBackground()
     }
 
     /// Calendar-with-check illustration drawn natively.
