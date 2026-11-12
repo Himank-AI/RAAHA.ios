@@ -2,16 +2,10 @@ import SwiftUI
 
 @main
 struct RaahaApp: App {
-    init() {
-        // Hide scroll indicators globally across the entire app
-        UIScrollView.appearance().showsVerticalScrollIndicator = false
-        UIScrollView.appearance().showsHorizontalScrollIndicator = false
-    }
-
     var body: some Scene {
         WindowGroup {
             RootView()
-                // Light mode by default as requested
+                // Light mode by default
                 .preferredColorScheme(.light)
         }
     }
@@ -96,17 +90,5 @@ struct RouteDestination: View {
         case .login:
             LoginView()
         }
-    }
-}
-
-// Keeps the interactive swipe-back gesture working when the system back button is replaced.
-extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
-    override open func viewDidLoad() {
-        super.viewDidLoad()
-        interactivePopGestureRecognizer?.delegate = self
-    }
-
-    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        viewControllers.count > 1
     }
 }

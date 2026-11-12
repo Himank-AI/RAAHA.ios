@@ -26,12 +26,15 @@ struct JourneyMapView: View {
 
 /// Honeydew bottom sheet with a grabber. Drag (or tap) the grabber to expand / collapse.
 /// Pass `isExpanded` binding to observe expansion state from outside (e.g. for dynamic content padding).
+/// Set `fitsContent: true` when the panel height should snugly wrap the content and sit at the bottom.
 struct BottomPanel<Content: View>: View {
     var isExpanded: Binding<Bool>?
+    var fitsContent: Bool = false
     let content: Content
 
-    init(isExpanded: Binding<Bool>? = nil, @ViewBuilder content: () -> Content) {
+    init(isExpanded: Binding<Bool>? = nil, fitsContent: Bool = false, @ViewBuilder content: () -> Content) {
         self.isExpanded = isExpanded
+        self.fitsContent = fitsContent
         self.content = content()
     }
 
@@ -52,51 +55,68 @@ struct BottomPanel<Content: View>: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let fullHeight = proxy.size.height * 0.88
-            let collapsedVisible = proxy.size.height * 0.58
-            let hidden = fullHeight - collapsedVisible
-            let base = expanded ? 0 : hidden
-            let offset = min(max(base + drag, 0), hidden)
-
-            VStack(spacing: 0) {
-                grabber
-                    .gesture(
-                        DragGesture()
-                            .updating($drag) { value, state, _ in state = value.translation.height }
-                            .onEnded { value in
-                                withAnimation(.snappy(duration: 0.3)) {
-                                    if value.translation.height < -30 { setExpanded(true) }
-                                    else if value.translation.height > 30 { setExpanded(false) }
-                                }
-                            }
-                    )
-
-                ScrollView(showsIndicators: false) {
-                    content
-                        .padding(.bottom, 48)
+            if fitsContent {
+                VStack(spacing: 0) {
+                    grabber
+                    ScrollView(showsIndicators: false) {
+                        content
+                            .padding(.bottom, 28)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
                 }
+                .frame(width: proxy.size.width)
+                .frame(maxHeight: proxy.size.height * 0.85, alignment: .bottom)
+                .background(panelBackground)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            } else {
+                let fullHeight = proxy.size.height * 0.88
+                let collapsedVisible = proxy.size.height * 0.58
+                let hidden = fullHeight - collapsedVisible
+                let base = expanded ? 0 : hidden
+                let offset = min(max(base + drag, 0), hidden)
+
+                VStack(spacing: 0) {
+                    grabber
+                        .gesture(
+                            DragGesture()
+                                .updating($drag) { value, state, _ in state = value.translation.height }
+                                .onEnded { value in
+                                    withAnimation(.snappy(duration: 0.3)) {
+                                        if value.translation.height < -30 { setExpanded(true) }
+                                        else if value.translation.height > 30 { setExpanded(false) }
+                                    }
+                                }
+                        )
+
+                    ScrollView(showsIndicators: false) {
+                        content
+                            .padding(.bottom, 48)
+                    }
+                }
+                .frame(width: proxy.size.width, height: fullHeight, alignment: .top)
+                .background(panelBackground)
+                .offset(y: offset)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
-            .frame(width: proxy.size.width, height: fullHeight, alignment: .top)
-            .background(
-                RaahaScreenBackground()
-                    .clipShape(UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous))
-                    .overlay(
-                        UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [Color.white.opacity(0.85), Color.white.opacity(0.25)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                ),
-                                lineWidth: 1.2
-                            )
-                    )
-                    .shadow(color: Color(hex: 0x49769F).opacity(0.35), radius: 18, x: 0, y: -4)
-            )
-            .offset(y: offset)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
         .ignoresSafeArea(edges: .bottom)
+    }
+
+    private var panelBackground: some View {
+        RaahaScreenBackground()
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous))
+            .overlay(
+                UnevenRoundedRectangle(topLeadingRadius: 32, topTrailingRadius: 32, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.85), Color.white.opacity(0.25)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1.2
+                    )
+            )
+            .shadow(color: Color(hex: 0x49769F).opacity(0.35), radius: 18, x: 0, y: -4)
     }
 
     private var grabber: some View {

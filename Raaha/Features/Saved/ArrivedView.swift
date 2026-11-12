@@ -65,15 +65,13 @@ struct ArrivedView: View {
         }
         .contentMargins(.bottom, 24, for: .scrollContent)
         .raahaScreenBackground()
-        .navigationBarBackButtonHidden(true)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Destination Reached")
-                    .font(.raahaSubheadline)
-                    .foregroundStyle(Color.honeydew)
-            }
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top) {
+            Text("Destination Reached")
+                .font(.raahaSubheadline)
+                .foregroundStyle(Color.honeydew)
+                .padding(.top, 4)
+                .padding(.bottom, 4)
         }
     }
 

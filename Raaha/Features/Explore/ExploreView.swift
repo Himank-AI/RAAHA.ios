@@ -814,7 +814,7 @@ private struct AllNearbySheet: View {
                 }
             }
             .navigationTitle("Nearby Spots")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
@@ -1323,7 +1323,7 @@ private struct PickerSheet<Content: View>: View {
             .padding()
             .raahaScreenBackground()
             .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }

@@ -17,17 +17,17 @@ struct RouteDetailView: View {
 
                         Text("\(option.minutes) min")
                             .font(.raahaLargeTitle)
-                            .foregroundStyle(Color.honeydew)
+                            .foregroundStyle(Color.midnightBlue)
                             .padding(.top, 4)
 
                         HStack(spacing: 6) {
                             Text("\(option.modeCount) modes  ·")
                                 .font(.raahaTitle3)
-                                .foregroundStyle(Color.lightSkyBlue)
+                                .foregroundStyle(Color.steelBlue)
 
                             Text(option.fareText)
                                 .font(.raahaTitle3.weight(.bold))
-                                .foregroundStyle(Color.neonLime)
+                                .foregroundStyle(Color.royalBlue)
                         }
                     }
 
@@ -57,9 +57,9 @@ struct RouteDetailView: View {
             .background(
                 LinearGradient(
                     colors: [
-                        Color.midnightBlue.opacity(0.0),
-                        Color.midnightBlue.opacity(0.85),
-                        Color.midnightBlue
+                        Color(hex: 0x4E8EA2).opacity(0.0),
+                        Color(hex: 0x4E8EA2).opacity(0.20),
+                        Color(hex: 0x49769F).opacity(0.55)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -86,10 +86,8 @@ struct RouteDetailView: View {
             .resizable()
             .scaledToFill()
             .opacity(0.70)
-            .frame(
-                width: UIScreen.main.bounds.width * 0.65,
-                height: UIScreen.main.bounds.height * 0.42
-            )
+            .containerRelativeFrame(.horizontal) { length, _ in length * 0.65 }
+            .containerRelativeFrame(.vertical) { length, _ in length * 0.42 }
             .clipped()
             // Left-edge fade + bottom-edge fade combined via nested mask
             .mask(
@@ -140,11 +138,11 @@ struct RouteDetailView: View {
         HStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(0.12))
-                    .background(.ultraThinMaterial, in: Circle())
+                    .fill(Color.white.opacity(0.70))
+                    .background(.regularMaterial, in: Circle())
                     .frame(width: 36, height: 36)
-                    .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1))
-                    .shadow(color: Color.midnightBlue.opacity(0.25), radius: 4, x: 0, y: 2)
+                    .overlay(Circle().stroke(Color.white.opacity(0.75), lineWidth: 1))
+                    .shadow(color: Color(hex: 0x49769F).opacity(0.18), radius: 4, x: 0, y: 2)
 
                 if isDestination {
                     Image("icon_pin")
@@ -152,10 +150,10 @@ struct RouteDetailView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 14, height: 14)
-                        .foregroundStyle(Color.neonLime)
+                        .foregroundStyle(Color(hex: 0x0A4174))
                 } else {
                     Circle()
-                        .fill(Color.lightSkyBlue)
+                        .fill(Color(hex: 0x4E8EA2))
                         .frame(width: 10, height: 10)
                 }
             }
@@ -163,11 +161,11 @@ struct RouteDetailView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color.lightSkyBlue)
+                    .foregroundStyle(Color.steelBlue)
 
                 Text(value)
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.midnightBlue)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
             }
@@ -181,17 +179,14 @@ struct RouteDetailView: View {
             HStack {
                 Text("Step-by-Step Directions")
                     .font(.raahaFootnoteSemibold)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(Color.midnightBlue)
                 Spacer()
-                Text("Tap step to expand")
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.lightSkyBlue.opacity(0.7))
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 8)
 
-            HairlineDivider(color: Color.white.opacity(0.15))
+            HairlineDivider(color: Color(hex: 0x49769F).opacity(0.15))
 
             VStack(spacing: 0) {
                 ForEach(Array(option.legs.enumerated()), id: \.element.id) { index, leg in
@@ -240,9 +235,9 @@ private struct InteractiveLegRow: View {
         } label: {
             HStack(alignment: .top, spacing: 14) {
                 VStack(spacing: 4) {
-                    ModeBadge(mode: leg.mode, size: 44, fill: Color.white.opacity(0.12), tint: Color.neonLime)
+                    ModeBadge(mode: leg.mode, size: 44, fill: Color.white.opacity(0.75), tint: Color(hex: 0x0A4174))
                     if !isLast {
-                        DashedVLine()
+                        DashedVLine(color: Color(hex: 0x4E8EA2).opacity(0.40))
                             .frame(maxHeight: .infinity)
                             .padding(.bottom, 2)
                     }
@@ -252,15 +247,13 @@ private struct InteractiveLegRow: View {
                     // Top header line: Title (+ expand indicator) & Fare Chip uniformly right-aligned
                     HStack(alignment: .center, spacing: 8) {
                         HStack(spacing: 6) {
-                            Text(leg.title)
-                                .font(.raahaHeadline)
-                                .foregroundStyle(Color.honeydew)
+                            legTitleView(for: leg.title)
 
                             // Show chevron indicator directly beside expandable mode titles (e.g. Metro)
                             if isExpandable {
                                 Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
                                     .font(.system(size: 15))
-                                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
+                                    .foregroundStyle(Color(hex: 0x4E8EA2))
                             }
                         }
 
@@ -274,11 +267,11 @@ private struct InteractiveLegRow: View {
 
                     Text(leg.detail)
                         .font(.raahaSubheadline)
-                        .foregroundStyle(Color.honeydew.opacity(0.9))
+                        .foregroundStyle(Color.midnightBlue.opacity(0.85))
 
                     Text(leg.description)
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.lightSkyBlue)
+                        .foregroundStyle(Color.steelBlue)
                         .fixedSize(horizontal: false, vertical: true)
 
                     // Walk does not show lighting per user instructions
@@ -296,7 +289,7 @@ private struct InteractiveLegRow: View {
                     }
 
                     if !isLast {
-                        HairlineDivider(color: Color.white.opacity(0.12))
+                        HairlineDivider(color: Color(hex: 0x49769F).opacity(0.12))
                             .padding(.top, 8)
                             .padding(.bottom, 6)
                     }
@@ -308,6 +301,25 @@ private struct InteractiveLegRow: View {
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityElement(children: .combine)
         .sensoryFeedback(.selection, trigger: isExpanded)
+    }
+
+    @ViewBuilder
+    private func legTitleView(for title: String) -> some View {
+        if title.contains("(Green Line)") {
+            HStack(spacing: 4) {
+                Text(title.replacingOccurrences(of: "(Green Line)", with: "").trimmingCharacters(in: .whitespaces))
+                    .font(.raahaHeadline)
+                    .foregroundStyle(Color.midnightBlue)
+
+                Text("(Green Line)")
+                    .font(.raahaHeadline)
+                    .foregroundStyle(Color(hex: 0x18866B))
+            }
+        } else {
+            Text(title)
+                .font(.raahaHeadline)
+                .foregroundStyle(Color.midnightBlue)
+        }
     }
 
     @ViewBuilder
@@ -328,12 +340,12 @@ private struct InteractiveLegRow: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.white.opacity(0.08))
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .fill(Color.white.opacity(0.60))
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                .stroke(Color(hex: 0xBDD8E9).opacity(0.60), lineWidth: 1)
         )
     }
 
@@ -341,11 +353,11 @@ private struct InteractiveLegRow: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color.neonLime)
+                .foregroundStyle(Color(hex: 0x0A4174))
                 .frame(width: 16)
             Text(text)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.honeydew)
+                .foregroundStyle(Color.midnightBlue)
             Spacer()
         }
     }
@@ -360,19 +372,19 @@ private struct FareChip: View {
             Image(systemName: "ticket")
                 .font(.system(size: 11, weight: .semibold))
             Text(text)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 12, weight: .bold))
         }
-        .foregroundStyle(Color.neonLime)
+        .foregroundStyle(Color.royalBlue)
         .padding(.horizontal, 9)
         .padding(.vertical, 4.5)
         .background(
             Capsule()
-                .fill(Color.white.opacity(0.10))
-                .background(.ultraThinMaterial, in: Capsule())
+                .fill(Color(hex: 0x7BBDE8).opacity(0.20))
+                .background(.regularMaterial, in: Capsule())
         )
         .overlay(
             Capsule()
-                .stroke(Color.white.opacity(0.20), lineWidth: 1)
+                .stroke(Color(hex: 0x49769F).opacity(0.25), lineWidth: 1)
         )
     }
 }

@@ -226,18 +226,18 @@ struct RouteBadge: View {
             Group {
                 switch kind {
                 case .fastest:     Image(systemName: "bolt.fill")
-                case .cheapest:    Text("₹")
+                case .cheapest:    Image(systemName: "indianrupeesign")
                 case .comfortable: Image(systemName: "sparkles")
                 case .safest:      Image(systemName: "shield.fill")
                 }
             }
-            .font(.raahaCaption2)
+            .font(.system(size: 11, weight: .bold))
             .frame(width: 12, height: 12)
 
             Text(kind.title)
                 .font(.raahaFootnoteSemibold)
         }
-        .foregroundStyle(kind == .cheapest ? Color.midnightBlue : Color.white)
+        .foregroundStyle(kind == .comfortable ? Color(hex: 0x1D3557) : Color.white)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .background(
@@ -249,10 +249,10 @@ struct RouteBadge: View {
 
     private func badgeFill(for kind: RouteKind) -> Color {
         switch kind {
-        case .fastest:     return Color.electricBlue
-        case .cheapest:    return Color.neonLime
-        case .comfortable: return Color.brightBlue
-        case .safest:      return Color(hex: 0x10B981)
+        case .fastest:     return Color(hex: 0x457B9D)
+        case .cheapest:    return Color(hex: 0x299D8F)
+        case .comfortable: return Color(hex: 0xA8DADC)
+        case .safest:      return Color(hex: 0x18866B)
         }
     }
 }
@@ -267,13 +267,13 @@ struct LightingTag: View {
             Text(lit ? "Well lit" : "Not well lit")
         }
         .font(.raahaCaption2)
-        .foregroundStyle(lit ? Color.midnightBlue : Color.white)
+        .foregroundStyle(lit ? Color(hex: 0x0A4174) : Color.strawberry)
         .padding(.horizontal, 9)
         .padding(.vertical, 3.5)
         .background(
             Capsule()
-                .fill(lit ? Color.neonLime : Color.strawberry)
-                .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 0.8))
+                .fill(lit ? Color(hex: 0x7BBDE8).opacity(0.25) : Color.strawberry.opacity(0.20))
+                .overlay(Capsule().stroke(lit ? Color(hex: 0x4E8EA2).opacity(0.35) : Color.strawberry.opacity(0.35), lineWidth: 0.8))
         )
     }
 }
@@ -345,8 +345,8 @@ struct SlideToStartJourneyButton: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.brightBlue.opacity(0.55),
-                                Color.electricBlue.opacity(0.30)
+                                Color(hex: 0x7BBDE8).opacity(0.40),
+                                Color(hex: 0x4E8EA2).opacity(0.30)
                             ],
                             startPoint: .leading,
                             endPoint: .trailing
@@ -360,22 +360,22 @@ struct SlideToStartJourneyButton: View {
 
                     Text(title)
                         .font(.system(size: 16.5, weight: .bold))
-                        .foregroundStyle(Color.honeydew)
+                        .foregroundStyle(Color.midnightBlue)
                         .opacity(textOpacity)
 
                     Spacer(minLength: 8)
 
-                    // Three progressive trailing chevrons (>>>) in bright sky tones
+                    // Three progressive trailing chevrons (>>>) in oceanic tones
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.lightSkyBlue.opacity(0.40))
+                            .foregroundStyle(Color(hex: 0x4E8EA2).opacity(0.35))
                         Image(systemName: "chevron.right")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
+                            .foregroundStyle(Color(hex: 0x4E8EA2).opacity(0.70))
                         Image(systemName: "chevron.right")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.neonLime)
+                            .foregroundStyle(Color(hex: 0x0A4174))
                     }
                     .padding(.trailing, 22)
                     .opacity(textOpacity)
@@ -386,16 +386,16 @@ struct SlideToStartJourneyButton: View {
                     Circle()
                         .fill(
                             progress > 0.85
-                                ? LinearGradient.raahaNeonPill
+                                ? LinearGradient(colors: [Color(hex: 0x299D8F), Color(hex: 0x18866B)], startPoint: .topLeading, endPoint: .bottomTrailing)
                                 : LinearGradient.raahaPill
                         )
                         .frame(width: knobSize, height: knobSize)
                         .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 1.2))
-                        .shadow(color: Color.midnightBlue.opacity(0.5), radius: 8, x: 2, y: 3)
+                        .shadow(color: Color(hex: 0x0A4174).opacity(0.35), radius: 8, x: 2, y: 3)
 
                     Image(systemName: progress > 0.85 ? "checkmark" : "chevron.right")
                         .font(.system(size: 19, weight: .bold))
-                        .foregroundStyle(progress > 0.85 ? Color.midnightBlue : Color.white)
+                        .foregroundStyle(Color.white)
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .offset(x: padding + dragOffset)
@@ -414,7 +414,6 @@ struct SlideToStartJourneyButton: View {
                                 withAnimation(.spring(response: 0.22, dampingFraction: 0.75)) {
                                     dragOffset = maxDrag
                                 }
-                                triggerHapticSuccess()
                                 action()
 
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
@@ -434,16 +433,12 @@ struct SlideToStartJourneyButton: View {
             .frame(height: height)
         }
         .frame(height: height)
+        .sensoryFeedback(.success, trigger: hasTriggered) { _, newValue in newValue == true }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
         .accessibilityHint("Slide right or double-tap to start live journey")
         .accessibilityAction {
             action()
         }
-    }
-
-    private func triggerHapticSuccess() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.success)
     }
 }

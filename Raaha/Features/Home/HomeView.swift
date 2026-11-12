@@ -116,7 +116,7 @@ struct HomeView: View {
         Image("transit_illustration")
             .resizable()
             .scaledToFill()
-            .frame(width: UIScreen.main.bounds.width * 0.68)
+            .containerRelativeFrame(.horizontal) { length, _ in length * 0.68 }
             .offset(y: -44)
             .frame(height: 290, alignment: .topTrailing)
             .mask {
@@ -428,7 +428,7 @@ struct LocationPickerSheet: View {
             }
             .raahaScreenBackground()
             .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
