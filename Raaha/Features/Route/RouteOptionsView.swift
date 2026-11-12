@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct RouteOptionsView: View {
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
     @State private var selectedRoute: RouteKind = .fastest
     @State private var isPanelExpanded: Bool = true
 

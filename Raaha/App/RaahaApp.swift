@@ -12,23 +12,28 @@ struct RaahaApp: App {
 }
 
 struct RootView: View {
-    @StateObject private var router = AppRouter()
+    @State private var router = AppRouter()
 
     var body: some View {
+        @Bindable var router = router
         Group {
             if router.showLogin {
                 LoginView()
                     .transition(.opacity)
             } else {
-                mainAppView
+                MainAppView(router: router)
                     .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.3), value: router.showLogin)
-        .environmentObject(router)
+        .environment(router)
     }
+}
 
-    private var mainAppView: some View {
+private struct MainAppView: View {
+    @Bindable var router: AppRouter
+
+    var body: some View {
         ZStack(alignment: .bottom) {
             Color(hex: 0xBDD8E9).ignoresSafeArea()
 

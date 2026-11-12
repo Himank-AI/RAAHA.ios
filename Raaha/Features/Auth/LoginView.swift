@@ -9,7 +9,7 @@ enum AuthFlowScreen: Hashable {
 /// RAAHA Login / Sign Up screen.
 /// Layers the Chennai multimodal transportation hero illustration on top of the established RAAHA calm motion screen background.
 struct LoginView: View {
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
     @State private var navigationPath: [AuthFlowScreen] = []
 

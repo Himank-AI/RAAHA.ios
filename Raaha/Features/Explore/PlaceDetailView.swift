@@ -7,7 +7,7 @@ import MapKit
 /// rating, address, contact information, mini-map preview, and direct route integration.
 struct PlaceDetailView: View {
     let place: ExplorePlace
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 

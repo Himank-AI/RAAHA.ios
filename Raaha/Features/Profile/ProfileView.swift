@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     // MARK: - State
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
     @State private var selectedCommuteModes: Set<String> = ["Metro", "Bus", "Local Train"]
     @State private var selectedInterests: Set<String> = ["Beaches", "Heritage", "Food"]
     @State private var showLogoutDialog: Bool = false

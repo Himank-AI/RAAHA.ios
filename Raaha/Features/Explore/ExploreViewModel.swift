@@ -1,22 +1,23 @@
 import Foundation
-import Combine
+import Observation
 
 // MARK: - ExploreViewModel (Frontend Mock Data Engine)
 
 /// Frontend-only view model for Explore, powered by centralized static Chennai mock data.
 /// Fast, responsive, offline-capable, and completely decoupled from network or backend dependencies.
+@Observable
 @MainActor
-final class ExploreViewModel: ObservableObject {
+final class ExploreViewModel {
 
-    // MARK: - Published State
+    // MARK: - State
 
-    @Published private(set) var nearbyState: PlacesLoadState = .idle
-    @Published private(set) var searchState: PlacesLoadState = .idle
-    @Published private(set) var featuredPlaces: [ExplorePlace] = []
-    @Published private(set) var isFeaturedLoading = false
-    @Published var activeFilter: ExploreFilter = .all
-    @Published var query: String = ""
-    @Published var recentSearches: [String] = [
+    private(set) var nearbyState: PlacesLoadState = .idle
+    private(set) var searchState: PlacesLoadState = .idle
+    private(set) var featuredPlaces: [ExplorePlace] = []
+    private(set) var isFeaturedLoading = false
+    var activeFilter: ExploreFilter = .all
+    var query: String = ""
+    var recentSearches: [String] = [
         "Marina Beach",
         "Murugan Idli Shop",
         "Besant Nagar",
@@ -24,9 +25,9 @@ final class ExploreViewModel: ObservableObject {
     ]
 
     // Chennai locality selection & overrides
-    @Published var selectedLocality: ChennaiLocality? = nil
-    @Published private(set) var autocompleteSuggestions: [String] = []
-    @Published var outsideBoundaryAlertMessage: String? = nil
+    var selectedLocality: ChennaiLocality? = nil
+    private(set) var autocompleteSuggestions: [String] = []
+    var outsideBoundaryAlertMessage: String? = nil
 
     var isSearchActive: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
 

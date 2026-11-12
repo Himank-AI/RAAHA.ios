@@ -1,4 +1,5 @@
 import SwiftUI
+import Observation
 
 enum AppTab: Int, CaseIterable, Identifiable {
     case home, trips, explore, profile
@@ -35,15 +36,16 @@ enum Route: Hashable {
     case login
 }
 
-final class AppRouter: ObservableObject {
-    @Published var tab: AppTab = .home
-    @Published var homePath: [Route] = []
-    @Published var tripsPath: [Route] = []
-    @Published var explorePath: [Route] = []
-    @Published var profilePath: [Route] = []
+@Observable
+final class AppRouter {
+    var tab: AppTab = .home
+    var homePath: [Route] = []
+    var tripsPath: [Route] = []
+    var explorePath: [Route] = []
+    var profilePath: [Route] = []
 
     /// Presentation state for Login / Sign Up screen
-    @Published var showLogin: Bool = true
+    var showLogin: Bool = true
 
     /// Clears all navigation state and returns to the login screen.
     func logout() {
@@ -58,11 +60,11 @@ final class AppRouter: ObservableObject {
     }
 
     /// Active journey origin & destination shared across the planning flow.
-    @Published var journeyFrom: String = "Current Location"
-    @Published var journeyTo: String = "Phoenix Mall, Velachery"
+    var journeyFrom: String = "Current Location"
+    var journeyTo: String = "Phoenix Mall, Velachery"
 
     /// Shared state for the Plan Ahead → Trip Preview → Trip Saved flow.
-    @Published var plan = TripPlan()
+    var plan = TripPlan()
 
     /// The floating tab bar is only shown on a tab's root screen.
     var isTabBarVisible: Bool {

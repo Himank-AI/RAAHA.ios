@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RouteDetailView: View {
     let kind: RouteKind
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
     @State private var expandedLegIds: Set<String> = []
 
     private var option: RouteOption { MockData.route(kind) }

@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Premium, interactive Trips screen featuring a clear hierarchy for Upcoming, Saved, and Recent journeys.
 struct TripsView: View {
-    @EnvironmentObject private var router: AppRouter
+    @Environment(AppRouter.self) private var router
 
     enum TripFilter: String, CaseIterable, Identifiable {
         case all = "All"
