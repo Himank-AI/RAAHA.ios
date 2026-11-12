@@ -1,1137 +1,1239 @@
 import SwiftUI
 
-// MARK: - SplashAnimationView
-// A fully animated multimodal Chennai transportation intro screen.
-// Duration ≈ 5.5 s transport animation + 1.5 s logo reveal = ~7 s total.
-// Respects @Environment(\.accessibilityReduceMotion) to skip to logo instantly.
+// ============================================================
+// MARK: – RAAHA Cinematic Splash  (5.8 s, pure SwiftUI 60 fps)
+//
+//  Scene 1   0.0 – 2.0 s   Chennai multimodal cityscape
+//  Scene 2   2.0 – 3.2 s   Cinematic iPhone zoom-in transition
+//  Scene 3   3.2 – 5.8 s   RAAHA brand reveal
+// ============================================================
+
+// MARK: - Helpers
+
+private func clamp01(_ v: Double) -> Double { max(0, min(1, v)) }
+private func easeOut(_ t: Double) -> Double { 1 - pow(1 - t, 3) }
+private func easeIn(_ t: Double) -> Double  { t * t * t }
+private func easeIO(_ t: Double) -> Double {
+    t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2
+}
+
+// MARK: - Entry Point
 
 struct SplashAnimationView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var onFinished: () -> Void
 
-    // Phase drives the whole sequence
-    @State private var animationStarted: Bool = false
+    @State private var startDate: Date?
+    @State private var finished = false
 
-    // ── sky / clouds
-    @State private var cloud1X: CGFloat = -200
-    @State private var cloud2X: CGFloat = -300
-    @State private var cloud3X: CGFloat = -400
-    @State private var birdsY: CGFloat = 0
-    @State private var birdsX: CGFloat = -50
-
-    // ── cityscape rise
-    @State private var cityscapeOffset: CGFloat = 120
-    @State private var cityscapeOpacity: Double = 0
-
-    // ── ground road
-    @State private var roadOpacity: Double = 0
-
-    // ── vehicle offsets & opacity (all start off-screen)
-    @State private var bikeX: CGFloat = -220
-    @State private var bikeOpacity: Double = 0
-    @State private var bikeWheelAngle: Double = 0
-
-    @State private var autoX: CGFloat = 440
-    @State private var autoOpacity: Double = 0
-    @State private var autoWheelAngle: Double = 0
-
-    @State private var cabX: CGFloat = -260
-    @State private var cabOpacity: Double = 0
-    @State private var cabWheelAngle: Double = 0
-
-    @State private var busX: CGFloat = 440
-    @State private var busOpacity: Double = 0
-    @State private var busWheelAngle: Double = 0
-
-    @State private var trainX: CGFloat = -400
-    @State private var trainOpacity: Double = 0
-    @State private var trainWheelAngle: Double = 0
-
-    @State private var metroX: CGFloat = 440
-    @State private var metroOpacity: Double = 0
-    @State private var metroGlowPulse: Bool = false
-
-    // ── track rise
-    @State private var railTrackOffset: CGFloat = 60
-    @State private var railTrackOpacity: Double = 0
-    @State private var flyoverOffset: CGFloat = 80
-    @State private var flyoverOpacity: Double = 0
-
-    // ── logo reveal
-    @State private var logoScale: CGFloat = 0.5
-    @State private var logoOpacity: Double = 0
-    @State private var taglineOpacity: Double = 0
-    @State private var pinBounce: CGFloat = -20
-    @State private var pinOpacity: Double = 0
-    @State private var logoGlow: Double = 0
-
-    // ── scene fade-out
-    @State private var sceneFade: Double = 1
+    private let kDuration = 5.8
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-
-            ZStack {
-                // ── Background sky gradient
-                skyGradient
-
-                // ── Animated clouds
-                clouds(width: w, height: h)
-
-                // ── Animated birds
-                birds(width: w, height: h)
-
-                // ── Cityscape silhouette
-                CityscapeSilhouette(width: w)
-                    .offset(y: cityscapeOffset)
-                    .opacity(cityscapeOpacity)
-
-                // ── Elevated metro flyover
-                FlyoverTrack(width: w)
-                    .frame(width: w)
-                    .position(x: w / 2, y: h * 0.42)
-                    .offset(y: flyoverOffset)
-                    .opacity(flyoverOpacity)
-
-                // ── Railway track (ground level)
-                RailTrack(width: w)
-                    .frame(width: w)
-                    .position(x: w / 2, y: h * 0.59)
-                    .offset(y: railTrackOffset)
-                    .opacity(railTrackOpacity)
-
-                // ── Ground road surface
-                RoadSurface(width: w)
-                    .position(x: w / 2, y: h * 0.73)
-                    .opacity(roadOpacity)
-
-                // ══ VEHICLES ══
-
-                // 1. Bike (left → right, ground road upper lane)
-                BikeVehicle(wheelAngle: bikeWheelAngle)
-                    .frame(width: 90, height: 52)
-                    .position(x: bikeX, y: h * 0.69)
-                    .opacity(bikeOpacity)
-
-                // 2. Auto (right → left, ground road lower lane)
-                AutoVehicle(wheelAngle: autoWheelAngle)
-                    .frame(width: 80, height: 56)
-                    .position(x: autoX, y: h * 0.715)
-                    .opacity(autoOpacity)
-
-                // 3. Cab (left → right, road upper lane)
-                CabVehicle(wheelAngle: cabWheelAngle)
-                    .frame(width: 100, height: 54)
-                    .position(x: cabX, y: h * 0.705)
-                    .opacity(cabOpacity)
-
-                // 4. Bus (right → left, road lower lane)
-                BusVehicle(wheelAngle: busWheelAngle)
-                    .frame(width: 130, height: 68)
-                    .position(x: busX, y: h * 0.700)
-                    .opacity(busOpacity)
-
-                // 5. Local Train (left → right, rail track)
-                LocalTrainVehicle(wheelAngle: trainWheelAngle)
-                    .frame(width: 220, height: 54)
-                    .position(x: trainX, y: h * 0.588)
-                    .opacity(trainOpacity)
-
-                // 6. Metro (right → left, elevated flyover)
-                MetroVehicle(glow: metroGlowPulse)
-                    .frame(width: 200, height: 46)
-                    .position(x: metroX, y: h * 0.408)
-                    .opacity(metroOpacity)
-
-                // ── Logo reveal overlay (layered on top at end)
-                LogoRevealOverlay(
-                    logoScale: logoScale,
-                    logoOpacity: logoOpacity,
-                    taglineOpacity: taglineOpacity,
-                    pinBounce: pinBounce,
-                    pinOpacity: pinOpacity,
-                    logoGlow: logoGlow,
-                    width: w,
-                    height: h
-                )
+        GeometryReader { proxy in
+            if reduceMotion {
+                // Instant brand reveal for accessibility
+                ZStack {
+                    raahaBackground
+                    BrandRevealView(t: 1.0, size: proxy.size)
+                }
+                .ignoresSafeArea()
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { onFinished() }
+                }
+            } else {
+                TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: finished)) { ctx in
+                    let t: Double = {
+                        guard let s = startDate else { return 0 }
+                        return min(ctx.date.timeIntervalSince(s), kDuration + 0.2)
+                    }()
+                    SplashStageView(t: t, size: proxy.size)
+                        .onChange(of: t) { _, newT in
+                            guard !finished, newT >= kDuration else { return }
+                            finished = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { onFinished() }
+                        }
+                }
+                .onAppear { startDate = Date() }
             }
-            .opacity(sceneFade)
-            .ignoresSafeArea()
-            .onAppear { startSequence(width: w) }
         }
         .ignoresSafeArea()
     }
 
-    // MARK: - Sky
-
-    private var skyGradient: some View {
+    private var raahaBackground: some View {
         LinearGradient(
             stops: [
                 .init(color: Color(hex: 0xEAF4FB), location: 0.0),
-                .init(color: Color(hex: 0xBDD8E9), location: 0.25),
-                .init(color: Color(hex: 0x7BBDE8), location: 0.55),
-                .init(color: Color(hex: 0x4E8EA2), location: 0.80),
+                .init(color: Color(hex: 0xBDD8E9), location: 0.18),
+                .init(color: Color(hex: 0x7BBDE8), location: 0.42),
+                .init(color: Color(hex: 0x4E8EA2), location: 0.72),
                 .init(color: Color(hex: 0x1D3557), location: 1.0)
             ],
-            startPoint: .top,
-            endPoint: .bottom
+            startPoint: .top, endPoint: .bottom
         )
         .ignoresSafeArea()
     }
+}
 
-    // MARK: - Clouds
+// MARK: - Stage Orchestrator
 
-    private func clouds(width: CGFloat, height: CGFloat) -> some View {
+private struct SplashStageView: View {
+    let t: Double
+    let size: CGSize
+
+    // ── Phase normalised 0…1
+    var cityP:    Double { clamp01(t / 2.0) }
+    var transP:   Double { clamp01((t - 2.0) / 1.2) }
+    var brandP:   Double { clamp01((t - 3.2) / 2.6) }
+    var fadeInP:  Double { clamp01(t / 0.35) }
+    var fadeOutP: Double { clamp01((t - 5.5) / 0.3) }
+
+    // City fades out as phone zooms in
+    var cityOpacity: Double { max(0, 1 - easeIn(max(0, transP - 0.4) / 0.6)) }
+    // Ken-Burns slow zoom on city
+    var cityZoom: CGFloat { 1 + CGFloat(easeOut(cityP) * 0.045) }
+
+    var body: some View {
         ZStack {
-            CloudShape()
-                .fill(Color.white.opacity(0.70))
-                .frame(width: 110, height: 38)
-                .blur(radius: 2)
-                .position(x: cloud1X, y: height * 0.14)
+            // 1. Sky – always visible, hue-shifts into deep blue for brand phase
+            SkyGradientLayer(transP: transP, brandP: brandP)
 
-            CloudShape()
-                .fill(Color.white.opacity(0.50))
-                .frame(width: 80, height: 28)
-                .blur(radius: 1.5)
-                .position(x: cloud2X, y: height * 0.09)
+            // 2. City scene
+            CitySceneView(cityT: cityP * 2.0, size: size)
+                .scaleEffect(cityZoom, anchor: UnitPoint(x: 0.5, y: 0.85))
+                .opacity(cityOpacity)
 
-            CloudShape()
-                .fill(Color.white.opacity(0.40))
-                .frame(width: 60, height: 22)
-                .blur(radius: 1)
-                .position(x: cloud3X, y: height * 0.17)
-        }
-    }
-
-    // MARK: - Birds
-
-    private func birds(width: CGFloat, height: CGFloat) -> some View {
-        HStack(spacing: 10) {
-            ForEach(0..<4, id: \.self) { i in
-                BirdShape()
-                    .stroke(Color(hex: 0x0A4174).opacity(0.6), lineWidth: 1.2)
-                    .frame(width: 14, height: 7)
-                    .offset(y: i % 2 == 0 ? birdsY : -birdsY)
-            }
-        }
-        .position(x: birdsX, y: height * 0.20)
-    }
-
-    // MARK: - Animation Sequence
-
-    private func startSequence(width: CGFloat) {
-        guard !reduceMotion else {
-            // Immediately show logo for Reduce Motion users
-            showLogoInstant()
-            return
-        }
-
-        // ── 0.0s: Clouds start drifting (continuous)
-        withAnimation(.linear(duration: 28).repeatForever(autoreverses: false)) {
-            cloud1X = width + 120
-        }
-        withAnimation(.linear(duration: 36).repeatForever(autoreverses: false)) {
-            cloud2X = width + 100
-        }
-        withAnimation(.linear(duration: 44).repeatForever(autoreverses: false)) {
-            cloud3X = width + 80
-        }
-        // Birds flap (repeating offset)
-        withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
-            birdsY = 3
-        }
-        withAnimation(.linear(duration: 10).repeatForever(autoreverses: false)) {
-            birdsX = width + 60
-        }
-
-        // ── 0.0s: Cityscape rises from below
-        withAnimation(.spring(response: 1.1, dampingFraction: 0.72).delay(0.1)) {
-            cityscapeOffset = 0
-            cityscapeOpacity = 1
-        }
-
-        // ── 0.3s: Road appears
-        withAnimation(.easeOut(duration: 0.6).delay(0.3)) {
-            roadOpacity = 1
-        }
-
-        // ── 0.5s: Rail track rises
-        withAnimation(.spring(response: 0.8, dampingFraction: 0.75).delay(0.5)) {
-            railTrackOffset = 0
-            railTrackOpacity = 1
-        }
-
-        // ── 0.7s: Metro flyover rises
-        withAnimation(.spring(response: 0.9, dampingFraction: 0.72).delay(0.7)) {
-            flyoverOffset = 0
-            flyoverOpacity = 1
-        }
-
-        // ── 1.0s: Bike enters left → right
-        withAnimation(.easeIn(duration: 0.3).delay(1.0)) { bikeOpacity = 1 }
-        withAnimation(.linear(duration: 2.8).delay(1.0)) {
-            bikeX = width + 100
-        }
-        withAnimation(.linear(duration: 2.8).repeatForever(autoreverses: false).delay(1.0)) {
-            bikeWheelAngle = 360
-        }
-
-        // ── 1.4s: Auto enters right → left
-        withAnimation(.easeIn(duration: 0.3).delay(1.4)) { autoOpacity = 1 }
-        withAnimation(.linear(duration: 2.4).delay(1.4)) {
-            autoX = -100
-        }
-        withAnimation(.linear(duration: 2.4).repeatForever(autoreverses: false).delay(1.4)) {
-            autoWheelAngle = -360
-        }
-
-        // ── 1.9s: Cab enters left → right
-        withAnimation(.easeIn(duration: 0.3).delay(1.9)) { cabOpacity = 1 }
-        withAnimation(.linear(duration: 2.6).delay(1.9)) {
-            cabX = width + 140
-        }
-        withAnimation(.linear(duration: 2.6).repeatForever(autoreverses: false).delay(1.9)) {
-            cabWheelAngle = 360
-        }
-
-        // ── 2.2s: Bus enters right → left
-        withAnimation(.easeIn(duration: 0.3).delay(2.2)) { busOpacity = 1 }
-        withAnimation(.linear(duration: 2.8).delay(2.2)) {
-            busX = -160
-        }
-        withAnimation(.linear(duration: 2.8).repeatForever(autoreverses: false).delay(2.2)) {
-            busWheelAngle = -360
-        }
-
-        // ── 2.6s: Local train enters left → right on track
-        withAnimation(.easeIn(duration: 0.4).delay(2.6)) { trainOpacity = 1 }
-        withAnimation(.linear(duration: 2.0).delay(2.6)) {
-            trainX = width + 240
-        }
-        withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false).delay(2.6)) {
-            trainWheelAngle = 360
-        }
-
-        // ── 3.0s: Metro enters right → left on flyover
-        withAnimation(.easeIn(duration: 0.4).delay(3.0)) { metroOpacity = 1 }
-        withAnimation(.linear(duration: 1.8).delay(3.0)) {
-            metroX = -240
-        }
-        withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true).delay(3.0)) {
-            metroGlowPulse = true
-        }
-
-        // ── 5.0s: Fade out scene, reveal logo
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-            revealLogo()
-        }
-    }
-
-    private func revealLogo() {
-        // Fade scene softly
-        withAnimation(.easeOut(duration: 0.8)) {
-            sceneFade = 0.15
-        }
-        // Logo pops in
-        withAnimation(.spring(response: 0.7, dampingFraction: 0.62).delay(0.2)) {
-            logoScale = 1.0
-            logoOpacity = 1.0
-        }
-        // Location pin bounces down
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.5).delay(0.5)) {
-            pinBounce = 0
-            pinOpacity = 1
-        }
-        // Tagline fades in
-        withAnimation(.easeOut(duration: 0.6).delay(0.9)) {
-            taglineOpacity = 1
-        }
-        // Glow pulse
-        withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true).delay(1.0)) {
-            logoGlow = 1
-        }
-        // Dismiss after logo shown for 1.8 s
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
-            withAnimation(.easeInOut(duration: 0.5)) {
-                sceneFade = 0
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
-                onFinished()
-            }
-        }
-    }
-
-    private func showLogoInstant() {
-        logoScale = 1
-        logoOpacity = 1
-        pinBounce = 0
-        pinOpacity = 1
-        taglineOpacity = 1
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            onFinished()
-        }
-    }
-}
-
-// MARK: - Logo Reveal Overlay
-
-private struct LogoRevealOverlay: View {
-    let logoScale: CGFloat
-    let logoOpacity: Double
-    let taglineOpacity: Double
-    let pinBounce: CGFloat
-    let pinOpacity: Double
-    let logoGlow: Double
-    let width: CGFloat
-    let height: CGFloat
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            VStack(spacing: 14) {
-                // Logo word
-                ZStack(alignment: .topTrailing) {
-                    Text("RAAHA")
-                        .font(.system(size: 56, weight: .black, design: .rounded))
-                        .tracking(3)
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color.white, Color(hex: 0xBDD8E9)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .shadow(
-                            color: Color(hex: 0x0A4174).opacity(0.5 + 0.4 * logoGlow),
-                            radius: 18 + 10 * logoGlow,
-                            x: 0, y: 4
-                        )
-
-                    // Animated pin
-                    SplashLocationPin()
-                        .offset(x: 14, y: -10 + pinBounce)
-                        .opacity(pinOpacity)
-                        .scaleEffect(pinOpacity)
-                }
-                .scaleEffect(logoScale)
-                .opacity(logoOpacity)
-
-                // Motion swoosh underline
-                Path { p in
-                    p.move(to: CGPoint(x: 10, y: 4))
-                    p.addQuadCurve(
-                        to: CGPoint(x: 160, y: 4),
-                        control: CGPoint(x: 85, y: -4)
-                    )
-                }
-                .stroke(
-                    LinearGradient(
-                        colors: [Color(hex: 0x7BBDE8).opacity(0.9), Color(hex: 0xA8DADC).opacity(0.5)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ),
-                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+            // 3. Atmospheric depth haze (bottom of city scene)
+            if cityOpacity > 0 {
+                LinearGradient(
+                    stops: [.init(color: .clear, location: 0.55),
+                            .init(color: Color(hex: 0xBDD8E9).opacity(0.30), location: 1.0)],
+                    startPoint: .top, endPoint: .bottom
                 )
-                .frame(width: 170, height: 10)
-                .opacity(logoOpacity)
-                .scaleEffect(logoScale)
-
-                // Tagline
-                Text("Every Path Leads to You")
-                    .font(.system(size: 17, weight: .medium, design: .serif).italic())
-                    .foregroundStyle(Color.white.opacity(0.92))
-                    .tracking(0.5)
-                    .opacity(taglineOpacity)
-                    .padding(.top, 4)
-
-                // Mode pills row
-                HStack(spacing: 10) {
-                    ForEach(SplashModePill.allCases, id: \.self) { pill in
-                        SplashModePillView(pill: pill)
-                    }
-                }
-                .opacity(taglineOpacity)
-                .padding(.top, 8)
+                .opacity(cityOpacity)
+                .allowsHitTesting(false)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, 80)
+
+            // 4. iPhone zoom transition
+            if transP > 0 {
+                PhoneTransitionView(transP: transP, brandP: brandP, size: size)
+            }
+
+            // 5. Brand reveal (draws inside phone screen once large enough)
+            if brandP > 0 {
+                BrandRevealView(t: brandP, size: size)
+                    .clipShape(
+                        RoundedRectangle(
+                            cornerRadius: phoneScreenRadius(transP: transP, size: size),
+                            style: .continuous
+                        )
+                    )
+                    .opacity(easeOut(brandP) > 0 ? 1 : 0)
+            }
+
+            // 6. Fade-in and fade-out veils
+            Color.black.opacity(1.0 - easeOut(fadeInP))
+                .allowsHitTesting(false)
+            Color.black.opacity(easeIn(fadeOutP))
+                .allowsHitTesting(false)
         }
-        .frame(width: width, height: height)
+        .ignoresSafeArea()
+    }
+
+    private func phoneScreenRadius(transP: Double, size: CGSize) -> CGFloat {
+        let p = clamp01(transP / 0.9)
+        let full = size.width / 2 // effectively 0 when phone fills screen
+        return max(0, 32 * (1 - easeIO(p)))
     }
 }
 
-// MARK: - Mode Pills
+// MARK: - Sky Gradient Layer
 
-private enum SplashModePill: String, CaseIterable {
-    case bike = "bicycle"
-    case auto = "car.fill"
-    case bus = "bus.fill"
-    case train = "train.side.front.car"
-    case metro = "tram.fill"
+private struct SkyGradientLayer: View {
+    let transP: Double
+    let brandP: Double
+
+    // Sky slowly shifts from cyan-day to deep brand blue
+    var topAlpha: Double { 1.0 - easeIO(brandP) * 0.7 }
+    var body: some View {
+        LinearGradient(
+            stops: [
+                .init(color: Color(hex: 0xEAF4FB).opacity(topAlpha), location: 0.0),
+                .init(color: Color(hex: 0xBDD8E9).opacity(0.9), location: 0.18),
+                .init(color: Color(hex: 0x7BBDE8).opacity(0.9 - brandP * 0.3), location: 0.42),
+                .init(color: Color(hex: 0x4E8EA2), location: 0.72),
+                .init(color: Color(hex: 0x1D3557), location: 1.0)
+            ],
+            startPoint: .top, endPoint: .bottom
+        )
+        .ignoresSafeArea()
+    }
 }
 
-private struct SplashModePillView: View {
-    let pill: SplashModePill
-    @State private var appeared = false
+// MARK: - City Scene (Scene 1)
+
+private struct CitySceneView: View {
+    let cityT: Double   // 0…2 seconds
+    let size: CGSize
+
+    private var w: CGFloat { size.width }
+    private var h: CGFloat { size.height }
+
+    // ── Shared vehicle road/track/flyover Y positions
+    private var roadY:  CGFloat { h * 0.740 }
+    private var railY:  CGFloat { h * 0.615 }
+    private var flyY:   CGFloat { h * 0.435 }
+
+    // ── Generic position helpers
+    private func posLR(enter: Double, exit: Double, offScreen: CGFloat = 120) -> CGFloat {
+        let p = clamp01((cityT - enter) / max(0.01, exit - enter))
+        return -offScreen + CGFloat(easeIO(p)) * (w + offScreen * 2)
+    }
+    private func posRL(enter: Double, exit: Double, offScreen: CGFloat = 120) -> CGFloat {
+        let p = clamp01((cityT - enter) / max(0.01, exit - enter))
+        return w + offScreen - CGFloat(easeIO(p)) * (w + offScreen * 2)
+    }
+    private func vFade(_ enter: Double) -> Double { clamp01((cityT - enter) / 0.25) }
+    private func wheelAngle(_ enter: Double, _ exit: Double, r: CGFloat = 14) -> Angle {
+        let progress = clamp01((cityT - enter) / max(0.01, exit - enter))
+        return .degrees(Double(progress) * Double(w + 240) / Double(r) * 180 / .pi)
+    }
+
+    // ── Vehicle positions
+    private var bikeX:    CGFloat { posLR(enter: 0.05, exit: 1.75, offScreen: 110) }
+    private var autoX:    CGFloat { posRL(enter: 0.30, exit: 2.00, offScreen: 95) }
+    private var cabX:     CGFloat { posLR(enter: 0.10, exit: 2.00, offScreen: 130) }
+    private var busX:     CGFloat { posRL(enter: 0.00, exit: 2.00, offScreen: 155) }
+    private var trainX:   CGFloat { posLR(enter: 0.00, exit: 1.85, offScreen: 260) }
+    private var metroX:   CGFloat { posRL(enter: 0.00, exit: 1.80, offScreen: 240) }
+
+    private var bikeWh:   Angle { wheelAngle(0.05, 1.75, r: 11) }
+    private var autoWh:   Angle { .degrees(-wheelAngle(0.30, 2.00, r: 11).degrees) }
+    private var cabWh:    Angle { wheelAngle(0.10, 2.00, r: 13) }
+    private var busWh:    Angle { .degrees(-wheelAngle(0.00, 2.00, r: 16).degrees) }
+    private var trainWh:  Angle { wheelAngle(0.00, 1.85, r: 10) }
+
+    // Cloud drift
+    private var cloud1X: CGFloat { -80  + CGFloat(cityT / 2.0) * 50 }
+    private var cloud2X: CGFloat { w * 0.45 + CGFloat(cityT / 2.0) * 30 }
+    private var cloud3X: CGFloat { w * 0.72 + CGFloat(cityT / 2.0) * 20 }
 
     var body: some View {
-        Image(systemName: pill.rawValue)
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(Color(hex: 0x0A4174))
-            .frame(width: 32, height: 32)
-            .background(
-                Circle()
-                    .fill(Color.white.opacity(0.85))
-                    .background(.ultraThinMaterial, in: Circle())
-            )
-            .overlay(Circle().stroke(Color(hex: 0xA8DADC).opacity(0.6), lineWidth: 1))
-            .scaleEffect(appeared ? 1 : 0.1)
-            .opacity(appeared ? 1 : 0)
-            .onAppear {
-                let delay = Double(SplashModePill.allCases.firstIndex(of: pill) ?? 0) * 0.1
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.6).delay(delay + 0.3)) {
-                    appeared = true
-                }
+        ZStack {
+            // ── Static cityscape drawn in Canvas (buildings, temple, trees, sun)
+            CityBackgroundCanvas(size: size)
+
+            // ── Animated clouds
+            AnimatedCloudsLayer(c1x: cloud1X, c2x: cloud2X, c3x: cloud3X, h: h)
+
+            // ── Birds  
+            BirdsLayer(cityT: cityT, h: h, w: w)
+
+            // ── Metro flyover structure
+            MetroFlyoverView(w: w)
+                .frame(width: w, height: 20)
+                .position(x: w / 2, y: flyY)
+
+            // ── Ground rail track
+            GroundRailView(w: w)
+                .frame(width: w, height: 20)
+                .position(x: w / 2, y: railY)
+
+            // ── Road surface
+            RoadSurfaceView(w: w)
+                .frame(width: w, height: 50)
+                .position(x: w / 2, y: roadY)
+
+            // ── METRO  (r→l, elevated, most prominent)
+            MetroTrainView()
+                .frame(width: 220, height: 44)
+                .scaleEffect(x: -1) // flip to face left
+                .position(x: metroX, y: flyY - 22)
+                .opacity(vFade(0.0))
+                .shadow(color: Color(hex: 0x0A4174).opacity(0.35), radius: 8, y: 6)
+
+            // ── LOCAL TRAIN  (l→r)
+            LocalTrainView(wheelAngle: trainWh)
+                .frame(width: 240, height: 52)
+                .position(x: trainX, y: railY - 20)
+                .opacity(vFade(0.0))
+                .shadow(color: Color(hex: 0x1D3557).opacity(0.3), radius: 6, y: 4)
+
+            // ── BUS  (r→l)
+            CityBusView(wheelAngle: busWh)
+                .frame(width: 148, height: 66)
+                .scaleEffect(x: -1) // face left
+                .position(x: busX, y: roadY - 24)
+                .opacity(vFade(0.0))
+                .shadow(color: Color(hex: 0x1D3557).opacity(0.28), radius: 6, y: 5)
+
+            // ── CAB  (l→r)
+            CabCarView(wheelAngle: cabWh)
+                .frame(width: 112, height: 50)
+                .position(x: cabX, y: roadY - 16)
+                .opacity(vFade(0.1))
+                .shadow(color: Color(hex: 0x1D3557).opacity(0.25), radius: 5, y: 4)
+
+            // ── AUTO  (r→l)
+            AutoRickshawView(wheelAngle: autoWh)
+                .frame(width: 90, height: 56)
+                .scaleEffect(x: -1) // face left
+                .position(x: autoX, y: roadY - 20)
+                .opacity(vFade(0.3))
+                .shadow(color: Color(hex: 0x1D3557).opacity(0.22), radius: 4, y: 3)
+
+            // ── BIKE  (l→r, foreground)
+            MotorbikeView(wheelAngle: bikeWh)
+                .frame(width: 100, height: 54)
+                .position(x: bikeX, y: roadY - 14)
+                .opacity(vFade(0.05))
+                .shadow(color: Color(hex: 0x1D3557).opacity(0.22), radius: 4, y: 3)
+        }
+    }
+}
+
+// MARK: - City Background Canvas
+
+private struct CityBackgroundCanvas: View {
+    let size: CGSize
+
+    var body: some View {
+        Canvas { ctx, cs in
+            let w = cs.width, h = cs.height
+
+            // ── Atmospheric sun bloom (upper right)
+            ctx.drawLayer { lc in
+                let sunC = CGPoint(x: w * 0.78, y: h * 0.07)
+                lc.opacity = 0.6
+                let sunPath = Path(ellipseIn: CGRect(x: sunC.x - w * 0.38, y: sunC.y - h * 0.22,
+                                                     width: w * 0.76, height: h * 0.44))
+                lc.fill(sunPath, with: .linearGradient(
+                    Gradient(stops: [
+                        .init(color: Color(hex: 0xEAF4FB).opacity(0.9), location: 0),
+                        .init(color: Color(hex: 0x7BBDE8).opacity(0.3), location: 0.6),
+                        .init(color: .clear, location: 1)
+                    ]),
+                    startPoint: sunC,
+                    endPoint: CGPoint(x: sunC.x, y: h * 0.4)
+                ))
             }
-    }
-}
 
-// MARK: - Cityscape Silhouette (SVG-drawn with SwiftUI Path)
-
-private struct CityscapeSilhouette: View {
-    let width: CGFloat
-
-    var body: some View {
-        Canvas { ctx, size in
-            let w = size.width
-            let h = size.height
-
-            // Sky-scrapers and Chennai temple silhouette
-            var skyline = Path()
-
-            // Far background tall buildings (deep blue tinted)
-            let buildings: [(x: CGFloat, w: CGFloat, h: CGFloat)] = [
-                (0.0, 0.07, 0.42), (0.08, 0.05, 0.36), (0.14, 0.09, 0.50),
-                (0.24, 0.06, 0.38), (0.31, 0.11, 0.55), (0.43, 0.07, 0.44),
-                (0.51, 0.05, 0.32), (0.57, 0.10, 0.48), (0.68, 0.06, 0.60),
-                (0.75, 0.08, 0.40), (0.84, 0.07, 0.52), (0.92, 0.08, 0.35)
+            // ── Far background skyline
+            let skylineColor = Color(hex: 0x1D3557).opacity(0.52)
+            let bldgs: [(Double, Double, Double)] = [
+                // (xFrac, widthFrac, heightFrac of canvas)
+                (0.00, 0.052, 0.38), (0.055, 0.038, 0.31),
+                (0.095, 0.072, 0.48), (0.17, 0.042, 0.35),
+                (0.215, 0.080, 0.55), (0.30, 0.055, 0.42),
+                (0.36, 0.038, 0.30), (0.40, 0.078, 0.50),
+                (0.48, 0.045, 0.37), (0.53, 0.062, 0.58),
+                (0.60, 0.040, 0.40), (0.645, 0.070, 0.46),
+                (0.72, 0.052, 0.53), (0.78, 0.038, 0.33),
+                (0.82, 0.072, 0.47), (0.90, 0.052, 0.38),
+                (0.955, 0.045, 0.42)
             ]
-            for b in buildings {
-                let bx = b.x * w
-                let bw = b.w * w
-                let bh = b.h * h
-                skyline.addRect(CGRect(x: bx, y: h - bh, width: bw, height: bh))
+            let groundY = h * 0.78
+            for b in bldgs {
+                let bx = CGFloat(b.0) * w
+                let bw = CGFloat(b.1) * w
+                let bh = CGFloat(b.2) * h * 0.78
+                let rect = CGRect(x: bx, y: groundY - bh, width: bw, height: bh)
+                var bPath = Path(rect)
                 // Antenna
-                skyline.move(to: CGPoint(x: bx + bw / 2, y: h - bh))
-                skyline.addLine(to: CGPoint(x: bx + bw / 2, y: h - bh - 10))
+                bPath.move(to: CGPoint(x: bx + bw / 2, y: groundY - bh))
+                bPath.addLine(to: CGPoint(x: bx + bw / 2, y: groundY - bh - 7))
+                ctx.fill(bPath, with: .color(skylineColor))
+                // Window rows
+                let rows = max(2, Int(bh / 15))
+                for row in 0..<rows {
+                    let wy = groundY - bh + 7 + CGFloat(row) * 13
+                    let winRect = CGRect(x: bx + bw * 0.2, y: wy, width: bw * 0.65, height: 4)
+                    ctx.fill(Path(winRect), with: .color(Color(hex: 0xEAF4FB).opacity(0.28)))
+                }
             }
-            ctx.fill(skyline, with: .color(Color(hex: 0x1D3557).opacity(0.55)))
 
-            // Foreground trees (greenery along road)
-            var trees = Path()
-            let treePositions: [CGFloat] = [0.05, 0.15, 0.27, 0.38, 0.50, 0.62, 0.74, 0.86, 0.95]
-            for tx in treePositions {
-                let cx = tx * w
-                let cy = h * 0.75
-                // Trunk
-                trees.addRect(CGRect(x: cx - 2, y: cy, width: 4, height: 14))
-                // Canopy (triangle-ish with circle)
-                trees.addEllipse(in: CGRect(x: cx - 10, y: cy - 20, width: 20, height: 22))
-            }
-            ctx.fill(trees, with: .color(Color(hex: 0x299D8F).opacity(0.65)))
+            // ── Kapaleeshwarar Temple gopuram (left side)
+            drawTemple(ctx: ctx, cx: w * 0.11, groundY: groundY * 0.98, h: h)
 
-            // Simple Kapaleeshwarar-style temple outline (left side)
-            var temple = Path()
-            let tx = w * 0.08
-            let ty = h * 0.55
-            // Gopuram tiers
-            let tiers: [(w: CGFloat, h: CGFloat)] = [(46, 10), (38, 10), (30, 10), (22, 10), (14, 10), (8, 12)]
-            var curY = ty
-            for tier in tiers {
-                let tierX = tx - tier.w / 2
-                temple.addRect(CGRect(x: tierX, y: curY - tier.h, width: tier.w, height: tier.h))
-                curY -= tier.h
-            }
-            // Kalasha on top
-            temple.addEllipse(in: CGRect(x: tx - 4, y: curY - 10, width: 8, height: 10))
-            ctx.fill(temple, with: .color(Color(hex: 0x457B9D).opacity(0.75)))
+            // ── Modern glass tower cluster (right of centre)
+            drawGlassTowers(ctx: ctx, startX: w * 0.60, groundY: groundY, h: h)
 
+            // ── Greenery / tree canopy band
+            drawTreeBand(ctx: ctx, w: w, h: h, bandY: groundY * 0.98)
+
+            // ── Ground plane (grass strip)
+            let grass = Path(CGRect(x: 0, y: groundY, width: w, height: h * 0.25))
+            ctx.fill(grass, with: .linearGradient(
+                Gradient(colors: [Color(hex: 0x299D8F).opacity(0.35), Color(hex: 0x1D3557).opacity(0.5)]),
+                startPoint: CGPoint(x: 0, y: groundY),
+                endPoint: CGPoint(x: 0, y: h)
+            ))
         }
-        .frame(width: width, height: 220)
-        .frame(maxWidth: .infinity)
+        .frame(width: size.width, height: size.height)
+        .allowsHitTesting(false)
+    }
+
+    private func drawTemple(ctx: GraphicsContext, cx: CGFloat, groundY: CGFloat, h: CGFloat) {
+        // Layered gopuram tiers (each narrower and taller as we go up)
+        let tiers: [(w: CGFloat, h: CGFloat)] = [
+            (52, 10), (44, 10), (36, 10), (28, 9), (20, 9), (13, 9), (8, 10)
+        ]
+        var curY = groundY
+        for tier in tiers {
+            let rect = CGRect(x: cx - tier.w / 2, y: curY - tier.h, width: tier.w, height: tier.h)
+            ctx.fill(Path(rect), with: .color(Color(hex: 0x457B9D).opacity(0.80)))
+            // Decorative line at base of each tier
+            ctx.stroke(Path(CGRect(x: cx - tier.w / 2, y: curY - tier.h,
+                                   width: tier.w, height: 1.5)),
+                       with: .color(Color(hex: 0xA8DADC).opacity(0.4)), lineWidth: 1)
+            curY -= tier.h
+        }
+        // Kalasha finial
+        ctx.fill(Path(ellipseIn: CGRect(x: cx - 5, y: curY - 10, width: 10, height: 10)),
+                 with: .color(Color(hex: 0x457B9D).opacity(0.9)))
+        // Base plinth
+        ctx.fill(Path(CGRect(x: cx - 28, y: groundY, width: 56, height: 6)),
+                 with: .color(Color(hex: 0x1D3557).opacity(0.5)))
+    }
+
+    private func drawGlassTowers(ctx: GraphicsContext, startX: CGFloat, groundY: CGFloat, h: CGFloat) {
+        let towers: [(x: CGFloat, w: CGFloat, h: CGFloat)] = [
+            (startX,       28, 0.52),
+            (startX + 32,  22, 0.44),
+            (startX + 58,  32, 0.60),
+            (startX + 94,  24, 0.48)
+        ]
+        for t in towers {
+            let bh = t.h * h
+            let rect = CGRect(x: t.x, y: groundY - bh, width: t.w, height: bh)
+            ctx.fill(Path(rect), with: .linearGradient(
+                Gradient(colors: [Color(hex: 0x4E8EA2).opacity(0.55), Color(hex: 0x1D3557).opacity(0.65)]),
+                startPoint: CGPoint(x: t.x, y: groundY - bh),
+                endPoint: CGPoint(x: t.x, y: groundY)
+            ))
+            // Glass reflection stripe
+            let refRect = CGRect(x: t.x + 3, y: groundY - bh + 4, width: 6, height: bh - 8)
+            ctx.fill(Path(refRect), with: .color(Color(hex: 0xEAF4FB).opacity(0.18)))
+        }
+    }
+
+    private func drawTreeBand(ctx: GraphicsContext, w: CGFloat, h: CGFloat, bandY: CGFloat) {
+        let treeXs: [CGFloat] = [0.03, 0.09, 0.19, 0.28, 0.35, 0.47, 0.56, 0.68, 0.76, 0.85, 0.93, 0.98]
+        for xFrac in treeXs {
+            let tx = xFrac * w
+            // Trunk
+            ctx.fill(Path(CGRect(x: tx - 2, y: bandY - 2, width: 4, height: 14)),
+                     with: .color(Color(hex: 0x1D3557).opacity(0.5)))
+            // Canopy (layered circles for depth)
+            ctx.fill(Path(ellipseIn: CGRect(x: tx - 12, y: bandY - 24, width: 24, height: 22)),
+                     with: .color(Color(hex: 0x299D8F).opacity(0.70)))
+            ctx.fill(Path(ellipseIn: CGRect(x: tx - 8, y: bandY - 28, width: 16, height: 16)),
+                     with: .color(Color(hex: 0x4E8EA2).opacity(0.55)))
+        }
+    }
+}
+
+// MARK: - Animated Clouds
+
+private struct AnimatedCloudsLayer: View {
+    let c1x, c2x, c3x, h: CGFloat
+    var body: some View {
+        ZStack {
+            cloud(w: 100, opacity: 0.65).position(x: c1x, y: h * 0.12)
+            cloud(w: 72, opacity: 0.48).position(x: c2x, y: h * 0.08)
+            cloud(w: 56, opacity: 0.38).position(x: c3x, y: h * 0.16)
+        }
+        .allowsHitTesting(false)
+    }
+    private func cloud(w: CGFloat, opacity: Double) -> some View {
+        SplashCloudShape()
+            .fill(Color.white.opacity(opacity))
+            .frame(width: w, height: w * 0.38)
+            .blur(radius: 2.5)
+    }
+}
+
+// MARK: - Birds
+
+private struct BirdsLayer: View {
+    let cityT: Double
+    let h, w: CGFloat
+    @State private var flapOffset: CGFloat = 0
+    var body: some View {
+        let bx = -40 + CGFloat(cityT / 2.0) * (w + 100)
+        HStack(spacing: 11) {
+            ForEach(0..<5, id: \.self) { i in
+                SplashBirdShape()
+                    .stroke(Color(hex: 0x0A4174).opacity(0.55), lineWidth: 1.1)
+                    .frame(width: 13, height: 6)
+                    .offset(y: i % 2 == 0 ? flapOffset : -flapOffset)
+            }
+        }
+        .position(x: bx, y: h * 0.18)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
+                flapOffset = 2.5
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - Metro Flyover Structure
+
+private struct MetroFlyoverView: View {
+    let w: CGFloat
+    var body: some View {
+        ZStack {
+            // Deck (concrete)
+            Rectangle()
+                .fill(LinearGradient(
+                    colors: [Color(hex: 0x457B9D).opacity(0.80), Color(hex: 0x1D3557).opacity(0.60)],
+                    startPoint: .top, endPoint: .bottom
+                ))
+                .frame(width: w, height: 14)
+            // Rails
+            VStack(spacing: 11) {
+                ForEach(0..<2, id: \.self) { _ in
+                    Rectangle()
+                        .fill(Color(hex: 0xA8DADC).opacity(0.88))
+                        .frame(width: w, height: 2.5)
+                }
+            }
+            .offset(y: -6)
+            // Pillars
+            HStack(spacing: 0) {
+                ForEach(0..<Int(w / 55), id: \.self) { _ in
+                    Rectangle()
+                        .fill(Color(hex: 0x1D3557).opacity(0.55))
+                        .frame(width: 9, height: 34)
+                        .offset(y: 24)
+                    Spacer().frame(width: 46)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - Ground Rail Track
+
+private struct GroundRailView: View {
+    let w: CGFloat
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(Color(hex: 0x49769F).opacity(0.30))
+                .frame(width: w, height: 20)
+            VStack(spacing: 13) {
+                ForEach(0..<2, id: \.self) { _ in
+                    Rectangle()
+                        .fill(Color(hex: 0x457B9D).opacity(0.82))
+                        .frame(width: w, height: 3)
+                }
+            }
+            HStack(spacing: 0) {
+                ForEach(0..<Int(w / 18), id: \.self) { _ in
+                    Rectangle()
+                        .fill(Color(hex: 0x1D3557).opacity(0.52))
+                        .frame(width: 9, height: 18)
+                    Spacer().frame(width: 9)
+                }
+            }
+        }
+        .allowsHitTesting(false)
     }
 }
 
 // MARK: - Road Surface
 
-private struct RoadSurface: View {
-    let width: CGFloat
+private struct RoadSurfaceView: View {
+    let w: CGFloat
     var body: some View {
         ZStack {
-            // Main road asphalt
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(hex: 0x1D3557).opacity(0.55))
-                .frame(width: width, height: 48)
-
-            // Center dashed divider
+            Rectangle()
+                .fill(LinearGradient(
+                    colors: [Color(hex: 0x1D3557).opacity(0.58), Color(hex: 0x0A4174).opacity(0.45)],
+                    startPoint: .top, endPoint: .bottom
+                ))
+                .frame(width: w, height: 50)
+            // Centre white dashes
             HStack(spacing: 0) {
                 ForEach(0..<12, id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color.white.opacity(0.55))
-                        .frame(width: 20, height: 3)
-                    Rectangle()
-                        .fill(Color.clear)
-                        .frame(width: 16, height: 3)
+                    Rectangle().fill(Color.white.opacity(0.52)).frame(width: 22, height: 3)
+                    Rectangle().fill(Color.clear).frame(width: 18, height: 3)
                 }
             }
-
-            // Kerb lines (top & bottom)
-            VStack(spacing: 40) {
-                Rectangle().fill(Color(hex: 0xA8DADC).opacity(0.4)).frame(height: 2)
-                Rectangle().fill(Color(hex: 0xA8DADC).opacity(0.4)).frame(height: 2)
+            // Kerb lines
+            VStack(spacing: 42) {
+                Rectangle().fill(Color(hex: 0xA8DADC).opacity(0.38)).frame(height: 1.5)
+                Rectangle().fill(Color(hex: 0xA8DADC).opacity(0.38)).frame(height: 1.5)
             }
-            .frame(width: width)
+            .frame(width: w)
         }
+        .allowsHitTesting(false)
     }
 }
 
-// MARK: - Rail Track (Ground)
+// MARK: - METRO TRAIN (sleek, elevated)
 
-private struct RailTrack: View {
-    let width: CGFloat
+private struct MetroTrainView: View {
     var body: some View {
+        HStack(spacing: 2) {
+            metroCarView(isNose: true)
+            metroCarView(isNose: false)
+        }
+        .overlay(alignment: .topLeading) {
+            // Pantograph
+            Path { p in
+                p.move(to: CGPoint(x: 60, y: 4))
+                p.addLine(to: CGPoint(x: 68, y: -12))
+                p.addLine(to: CGPoint(x: 76, y: 4))
+            }
+            .stroke(Color(hex: 0xA8DADC).opacity(0.8), lineWidth: 1.4)
+        }
+    }
+
+    private func metroCarView(isNose: Bool) -> some View {
         ZStack {
-            // Ballast bed
+            // Body
+            UnevenRoundedRectangle(
+                topLeadingRadius: isNose ? 14 : 4,
+                bottomLeadingRadius: isNose ? 10 : 4,
+                bottomTrailingRadius: 4,
+                topTrailingRadius: 4
+            )
+            .fill(LinearGradient(
+                colors: [Color(hex: 0xEAF4FB).opacity(0.95), Color(hex: 0xA8DADC).opacity(0.88)],
+                startPoint: .top, endPoint: .bottom
+            ))
+            .frame(width: 102, height: 32)
+            .shadow(color: Color(hex: 0x7BBDE8).opacity(0.5), radius: 8)
+            // Blue accent stripe
             Rectangle()
-                .fill(Color(hex: 0x49769F).opacity(0.35))
-                .frame(width: width, height: 22)
-
-            // Rails
-            VStack(spacing: 14) {
-                ForEach(0..<2, id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color(hex: 0x457B9D).opacity(0.80))
-                        .frame(width: width, height: 3)
+                .fill(LinearGradient(
+                    colors: [Color(hex: 0x0A4174), Color(hex: 0x4E8EA2)],
+                    startPoint: .leading, endPoint: .trailing
+                ))
+                .frame(width: 102, height: 7)
+                .offset(y: 8)
+            // Windows
+            HStack(spacing: 5) {
+                ForEach(0..<4, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color(hex: 0x7BBDE8).opacity(0.68))
+                        .frame(width: 15, height: 10)
                 }
             }
-
-            // Sleepers (cross-ties)
-            HStack(spacing: 0) {
-                ForEach(0..<Int(width / 18), id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color(hex: 0x1D3557).opacity(0.55))
-                        .frame(width: 10, height: 18)
-                    Spacer().frame(width: 8)
-                }
+            .offset(y: -5)
+            // Bogies
+            HStack {
+                bogieShape
+                Spacer()
+                bogieShape
             }
+            .padding(.horizontal, 10)
+            .offset(y: 18)
         }
+        .frame(width: 102, height: 44)
+    }
+
+    private var bogieShape: some View {
+        Rectangle()
+            .fill(Color(hex: 0x1D3557).opacity(0.8))
+            .frame(width: 22, height: 6)
     }
 }
 
-// MARK: - Elevated Flyover / Metro Track
+// MARK: - LOCAL TRAIN
 
-private struct FlyoverTrack: View {
-    let width: CGFloat
+private struct LocalTrainView: View {
+    let wheelAngle: Angle
     var body: some View {
+        HStack(spacing: 3) {
+            trainCarView(isLead: true)
+            trainCarView(isLead: false)
+        }
+        .overlay(alignment: .topTrailing) {
+            Path { p in
+                p.move(to: CGPoint(x: 160, y: 4))
+                p.addLine(to: CGPoint(x: 168, y: -10))
+                p.addLine(to: CGPoint(x: 176, y: 4))
+            }
+            .stroke(Color(hex: 0xA8DADC).opacity(0.75), lineWidth: 1.3)
+        }
+    }
+
+    private func trainCarView(isLead: Bool) -> some View {
         ZStack {
-            // Flyover deck (concrete slab)
+            RoundedRectangle(cornerRadius: isLead ? 10 : 5, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [Color(hex: 0x457B9D).opacity(0.9), Color(hex: 0x4E8EA2).opacity(0.75)],
+                    startPoint: .top, endPoint: .bottom
+                ))
+                .frame(width: 110, height: 34)
+            // Windows
+            HStack(spacing: 5) {
+                ForEach(0..<4, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color(hex: 0xEAF4FB).opacity(0.72))
+                        .frame(width: 16, height: 11)
+                }
+            }
+            .offset(y: -5)
+            // Blue underline stripe
             Rectangle()
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: 0x457B9D).opacity(0.75), Color(hex: 0x1D3557).opacity(0.5)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(width: width, height: 14)
-
-            // Metro rails (top of deck)
-            VStack(spacing: 10) {
-                ForEach(0..<2, id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color(hex: 0xA8DADC).opacity(0.90))
-                        .frame(width: width, height: 3)
-                }
+                .fill(Color(hex: 0x0A4174).opacity(0.8))
+                .frame(width: 110, height: 5)
+                .offset(y: 10)
+            if isLead {
+                Circle()
+                    .fill(Color(hex: 0xEAF4FB))
+                    .frame(width: 7, height: 7)
+                    .offset(x: 50, y: 2)
             }
-            .offset(y: -6)
-
-            // Support pillars (below deck)
-            HStack(spacing: 0) {
-                ForEach(0..<Int(width / 60), id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color(hex: 0x1D3557).opacity(0.55))
-                        .frame(width: 10, height: 36)
-                        .offset(y: 25)
-                    Spacer().frame(width: 50)
-                }
+            // Wheels
+            HStack {
+                SplashWheelView(d: 14, angle: wheelAngle)
+                Spacer()
+                SplashWheelView(d: 14, angle: wheelAngle)
             }
+            .padding(.horizontal, 12)
+            .offset(y: 18)
         }
+        .frame(width: 110, height: 52)
     }
 }
 
-// MARK: - Vehicle: Motorcycle with Rider
+// MARK: - CITY BUS
 
-private struct BikeVehicle: View {
-    let wheelAngle: Double
-
+private struct CityBusView: View {
+    let wheelAngle: Angle
     var body: some View {
         ZStack {
-            // Body frame
-            Capsule()
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: 0x457B9D), Color(hex: 0x1D3557)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 58, height: 20)
+            // Body
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [Color(hex: 0x4E8EA2).opacity(0.90), Color(hex: 0x1D3557).opacity(0.80)],
+                    startPoint: .top, endPoint: .bottom
+                ))
+                .frame(width: 120, height: 44)
+                .offset(y: -6)
+            // White accent band
+            Rectangle()
+                .fill(Color.white.opacity(0.22))
+                .frame(width: 120, height: 8)
+                .offset(y: -16)
+            // Windows row
+            HStack(spacing: 4) {
+                ForEach(0..<5, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color(hex: 0xA8DADC).opacity(0.70))
+                        .frame(width: 14, height: 11)
+                }
+            }
+            .offset(y: -10)
+            // Door
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color(hex: 0xA8DADC).opacity(0.5))
+                .frame(width: 10, height: 18)
+                .offset(x: -44, y: -2)
+            // Destination board
+            ZStack {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color(hex: 0xEAF4FB).opacity(0.9))
+                    .frame(width: 44, height: 8)
+                Text("CHENNAI")
+                    .font(.system(size: 4.5, weight: .black))
+                    .foregroundStyle(Color(hex: 0x1D3557))
+            }
+            .offset(x: -5, y: -24)
+            // Front light
+            Circle()
+                .fill(Color(hex: 0xEAF4FB).opacity(0.8))
+                .frame(width: 7, height: 7)
+                .offset(x: 58, y: -4)
+            // Wheels
+            HStack(spacing: 60) {
+                SplashWheelView(d: 20, angle: wheelAngle)
+                SplashWheelView(d: 20, angle: wheelAngle)
+            }
+            .offset(y: 14)
+        }
+        .frame(width: 148, height: 66)
+    }
+}
+
+// MARK: - CAB / TAXI
+
+private struct CabCarView: View {
+    let wheelAngle: Angle
+    var body: some View {
+        ZStack {
+            // Car body (lower)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [Color.white.opacity(0.94), Color(hex: 0xBDD8E9).opacity(0.85)],
+                    startPoint: .top, endPoint: .bottom
+                ))
+                .frame(width: 90, height: 28)
+                .offset(y: 2)
+            // Cabin (upper)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.88))
+                .frame(width: 64, height: 26)
+                .offset(x: -4, y: -15)
+            // Windshield
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(hex: 0x7BBDE8).opacity(0.65))
+                .frame(width: 22, height: 18)
+                .offset(x: 18, y: -16)
+            // Rear window
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color(hex: 0x7BBDE8).opacity(0.5))
+                .frame(width: 16, height: 14)
+                .offset(x: -20, y: -17)
+            // TAXI badge
+            ZStack {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color(hex: 0xF59E0B))
+                    .frame(width: 30, height: 10)
+                Text("TAXI")
+                    .font(.system(size: 5, weight: .black, design: .rounded))
+                    .foregroundStyle(Color(hex: 0x1D3557))
+            }
+            .offset(y: -32)
+            // Headlight
+            Ellipse()
+                .fill(Color(hex: 0xF59E0B).opacity(0.85))
+                .frame(width: 10, height: 7)
+                .offset(x: 44, y: 2)
+            // Wheels
+            HStack(spacing: 50) {
+                SplashWheelView(d: 18, angle: wheelAngle)
+                SplashWheelView(d: 18, angle: wheelAngle)
+            }
+            .offset(y: 12)
+        }
+        .frame(width: 112, height: 50)
+    }
+}
+
+// MARK: - AUTO RICKSHAW
+
+private struct AutoRickshawView: View {
+    let wheelAngle: Angle
+    var body: some View {
+        ZStack {
+            // Main body
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [Color(hex: 0x9EE600).opacity(0.92), Color(hex: 0x299D8F).opacity(0.85)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing
+                ))
+                .frame(width: 58, height: 36)
                 .offset(x: 2, y: -6)
+            // Canopy
+            Capsule()
+                .fill(Color(hex: 0x1D3557).opacity(0.72))
+                .frame(width: 55, height: 11)
+                .offset(x: 2, y: -24)
+            // Windshield
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(hex: 0xA8DADC).opacity(0.62))
+                .frame(width: 18, height: 18)
+                .offset(x: -20, y: -10)
+            // Front light
+            Circle()
+                .fill(Color(hex: 0xEAF4FB).opacity(0.8))
+                .frame(width: 6, height: 6)
+                .offset(x: -32, y: -4)
+            // Wheels (auto has 3: 2 rear, 1 front)
+            HStack(spacing: 36) {
+                SplashWheelView(d: 16, angle: wheelAngle)
+                SplashWheelView(d: 16, angle: wheelAngle)
+            }
+            .offset(y: 10)
+        }
+        .frame(width: 90, height: 56)
+    }
+}
 
-            // Rider silhouette
+// MARK: - MOTORBIKE with two riders
+
+private struct MotorbikeView: View {
+    let wheelAngle: Angle
+    @State private var exhaustScale: CGFloat = 0.4
+    @State private var exhaustOpacity: Double = 0.5
+
+    var body: some View {
+        ZStack {
+            // Bike frame
+            Capsule()
+                .fill(LinearGradient(
+                    colors: [Color(hex: 0x457B9D), Color(hex: 0x1D3557)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing
+                ))
+                .frame(width: 62, height: 18)
+                .offset(x: 2, y: -4)
+            // Fuel tank hump
+            Ellipse()
+                .fill(Color(hex: 0x0A4174))
+                .frame(width: 22, height: 12)
+                .offset(x: 6, y: -11)
+            // Pillion rider (rear)
             Capsule()
                 .fill(Color(hex: 0x1D3557).opacity(0.85))
-                .frame(width: 16, height: 24)
-                .offset(x: 4, y: -20)
-
+                .frame(width: 14, height: 22)
+                .offset(x: -8, y: -20)
+            Circle()
+                .fill(Color(hex: 0x0A4174))
+                .frame(width: 13, height: 13)
+                .offset(x: -8, y: -30)
+            // Main rider
+            Capsule()
+                .fill(Color(hex: 0x1D3557).opacity(0.90))
+                .frame(width: 14, height: 24)
+                .offset(x: 8, y: -20)
             // Helmet
             Circle()
                 .fill(Color(hex: 0x0A4174))
                 .frame(width: 14, height: 14)
-                .offset(x: 4, y: -30)
-
+                .overlay(
+                    Ellipse()
+                        .fill(Color(hex: 0xA8DADC).opacity(0.5))
+                        .frame(width: 8, height: 5)
+                        .offset(x: 2, y: -1)
+                )
+                .offset(x: 8, y: -31)
             // Handlebars
             Rectangle()
-                .fill(Color(hex: 0xA8DADC).opacity(0.8))
-                .frame(width: 14, height: 3)
-                .offset(x: 18, y: -20)
-
-            // Front wheel
-            WheelView(diameter: 20, angle: wheelAngle, color: Color(hex: 0x1D3557))
-                .offset(x: 28, y: 4)
-
-            // Rear wheel
-            WheelView(diameter: 20, angle: wheelAngle, color: Color(hex: 0x1D3557))
-                .offset(x: -20, y: 4)
-
+                .fill(Color(hex: 0xA8DADC).opacity(0.75))
+                .frame(width: 14, height: 2.5)
+                .rotationEffect(.degrees(-15))
+                .offset(x: 24, y: -18)
+            // Front fork
+            Rectangle()
+                .fill(Color(hex: 0x457B9D))
+                .frame(width: 3, height: 16)
+                .rotationEffect(.degrees(10))
+                .offset(x: 30, y: -4)
+            // Wheels
+            SplashWheelView(d: 20, angle: wheelAngle).offset(x: 30, y: 7)
+            SplashWheelView(d: 20, angle: wheelAngle).offset(x: -24, y: 7)
             // Exhaust puff
-            ExhaustPuffView()
-                .offset(x: -38, y: 2)
-        }
-    }
-}
-
-// MARK: - Vehicle: Auto-Rickshaw (facing left)
-
-private struct AutoVehicle: View {
-    let wheelAngle: Double
-
-    var body: some View {
-        ZStack {
-            // Body (yellow-green auto style)
-            RoundedRectangle(cornerRadius: 8)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: 0x9EE600), Color(hex: 0x299D8F)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 54, height: 34)
-                .offset(x: -2, y: -8)
-
-            // Windshield
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(hex: 0xA8DADC).opacity(0.6))
-                .frame(width: 16, height: 16)
-                .offset(x: -20, y: -12)
-
-            // Top canopy
-            Capsule()
-                .fill(Color(hex: 0x1D3557).opacity(0.7))
-                .frame(width: 50, height: 10)
-                .offset(x: -2, y: -24)
-
-            // Rear wheel
-            WheelView(diameter: 18, angle: -wheelAngle, color: Color(hex: 0x1D3557))
-                .offset(x: 18, y: 4)
-
-            // Front wheel
-            WheelView(diameter: 18, angle: -wheelAngle, color: Color(hex: 0x1D3557))
-                .offset(x: -20, y: 6)
-        }
-    }
-}
-
-// MARK: - Vehicle: Cab (white taxi facing right)
-
-private struct CabVehicle: View {
-    let wheelAngle: Double
-
-    var body: some View {
-        ZStack {
-            // Car body lower
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.white.opacity(0.92))
-                .frame(width: 76, height: 28)
-                .offset(y: 2)
-
-            // Car cabin
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.white.opacity(0.85))
-                .frame(width: 52, height: 24)
-                .offset(x: -4, y: -16)
-
-            // Windshield
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(hex: 0x7BBDE8).opacity(0.65))
-                .frame(width: 20, height: 16)
-                .offset(x: 14, y: -16)
-
-            // TAXI label
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Color(hex: 0xF59E0B))
-                .frame(width: 28, height: 10)
-                .offset(y: -32)
-
-            Text("TAXI")
-                .font(.system(size: 5, weight: .black, design: .rounded))
-                .foregroundStyle(Color(hex: 0x1D3557))
-                .offset(y: -32)
-
-            // Front headlight
             Circle()
-                .fill(Color(hex: 0xF59E0B).opacity(0.8))
-                .frame(width: 7, height: 7)
-                .offset(x: 36, y: 2)
-
-            // Rear wheel
-            WheelView(diameter: 20, angle: wheelAngle, color: Color(hex: 0x1D3557))
-                .offset(x: -26, y: 10)
-
-            // Front wheel
-            WheelView(diameter: 20, angle: wheelAngle, color: Color(hex: 0x1D3557))
-                .offset(x: 24, y: 10)
-        }
-    }
-}
-
-// MARK: - Vehicle: City Bus (facing left)
-
-private struct BusVehicle: View {
-    let wheelAngle: Double
-
-    var body: some View {
-        ZStack {
-            // Bus body
-            RoundedRectangle(cornerRadius: 8)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: 0x4E8EA2), Color(hex: 0x1D3557)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(width: 100, height: 44)
-                .offset(y: -6)
-
-            // Windows row
-            HStack(spacing: 5) {
-                ForEach(0..<5, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color(hex: 0xA8DADC).opacity(0.70))
-                        .frame(width: 13, height: 10)
+                .fill(Color.white.opacity(exhaustOpacity))
+                .frame(width: 10, height: 10)
+                .scaleEffect(exhaustScale)
+                .blur(radius: 3)
+                .offset(x: -40, y: 2)
+                .onAppear {
+                    withAnimation(.easeOut(duration: 0.75).repeatForever(autoreverses: false)) {
+                        exhaustScale = 1.6; exhaustOpacity = 0
+                    }
                 }
-            }
-            .offset(x: -5, y: -10)
-
-            // Door
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Color(hex: 0xA8DADC).opacity(0.5))
-                .frame(width: 10, height: 18)
-                .offset(x: -38, y: -2)
-
-            // Destination board
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Color(hex: 0xEAF4FB).opacity(0.9))
-                .frame(width: 40, height: 8)
-                .offset(x: -5, y: -24)
-
-            Text("CHENNAI")
-                .font(.system(size: 4, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(hex: 0x1D3557))
-                .offset(x: -5, y: -24)
-
-            // Rear wheel
-            WheelView(diameter: 22, angle: -wheelAngle, color: Color(hex: 0x0A4174))
-                .offset(x: 32, y: 12)
-
-            // Front wheel
-            WheelView(diameter: 22, angle: -wheelAngle, color: Color(hex: 0x0A4174))
-                .offset(x: -32, y: 12)
         }
+        .frame(width: 100, height: 54)
     }
 }
 
-// MARK: - Vehicle: Local Train (facing right)
+// MARK: - Wheel
 
-private struct LocalTrainVehicle: View {
-    let wheelAngle: Double
-
-    var body: some View {
-        ZStack {
-            // 2-car body
-            HStack(spacing: 3) {
-                TrainCarShape(isLeading: false, color: Color(hex: 0x457B9D))
-                TrainCarShape(isLeading: true, color: Color(hex: 0x4E8EA2))
-            }
-
-            // Pantograph (wire collector arm) on first car
-            Path { p in
-                p.move(to: CGPoint(x: 60, y: -18))
-                p.addLine(to: CGPoint(x: 70, y: -32))
-                p.addLine(to: CGPoint(x: 80, y: -18))
-            }
-            .stroke(Color(hex: 0xA8DADC).opacity(0.8), lineWidth: 1.5)
-
-            // Bogies (wheel sets)
-            ForEach([-70, -30, 30, 70] as [CGFloat], id: \.self) { xOff in
-                WheelView(diameter: 14, angle: wheelAngle, color: Color(hex: 0x1D3557))
-                    .offset(x: xOff, y: 20)
-            }
-        }
-    }
-}
-
-private struct TrainCarShape: View {
-    let isLeading: Bool
-    let color: Color
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: isLeading ? 10 : 6)
-                .fill(
-                    LinearGradient(
-                        colors: [color.opacity(0.9), color.opacity(0.7)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(width: 92, height: 36)
-
-            // Windows
-            HStack(spacing: 5) {
-                ForEach(0..<4, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color(hex: 0xEAF4FB).opacity(0.75))
-                        .frame(width: 14, height: 10)
-                }
-            }
-            .offset(y: -4)
-
-            // Blue accent stripe
-            Rectangle()
-                .fill(Color(hex: 0x0A4174))
-                .frame(width: 92, height: 5)
-                .offset(y: 10)
-
-            if isLeading {
-                // Front headlight
-                Circle()
-                    .fill(Color(hex: 0xEAF4FB))
-                    .frame(width: 6, height: 6)
-                    .offset(x: 42, y: 4)
-            }
-        }
-    }
-}
-
-// MARK: - Vehicle: Metro (facing left, elevated)
-
-private struct MetroVehicle: View {
-    let glow: Bool
-
-    var body: some View {
-        ZStack {
-            // 2-car aerodynamic metro body
-            HStack(spacing: 2) {
-                MetroCarShape(isLeading: false, glow: glow)
-                MetroCarShape(isLeading: true, glow: glow)
-            }
-
-            // Pantograph on rear car
-            Path { p in
-                p.move(to: CGPoint(x: -50, y: -16))
-                p.addLine(to: CGPoint(x: -60, y: -28))
-                p.addLine(to: CGPoint(x: -70, y: -16))
-            }
-            .stroke(Color(hex: 0xA8DADC).opacity(0.9), lineWidth: 1.5)
-
-            // Bogies at bottom
-            ForEach([-70, -30, 30, 70] as [CGFloat], id: \.self) { xOff in
-                Rectangle()
-                    .fill(Color(hex: 0x1D3557).opacity(0.8))
-                    .frame(width: 24, height: 6)
-                    .offset(x: xOff, y: 20)
-            }
-        }
-    }
-}
-
-private struct MetroCarShape: View {
-    let isLeading: Bool
-    let glow: Bool
-
-    var body: some View {
-        ZStack {
-            // Aerodynamic body
-            RoundedRectangle(cornerRadius: isLeading ? 14 : 6)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(hex: 0xEAF4FB).opacity(0.95),
-                            Color(hex: 0xA8DADC).opacity(0.85)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(width: 90, height: 32)
-                .shadow(
-                    color: Color(hex: 0x7BBDE8).opacity(glow ? 0.80 : 0.30),
-                    radius: glow ? 12 : 4
-                )
-
-            // Blue accent stripe
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: 0x0A4174), Color(hex: 0x4E8EA2)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .frame(width: 90, height: 7)
-                .offset(y: 8)
-
-            // Windows
-            HStack(spacing: 5) {
-                ForEach(0..<4, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color(hex: 0x7BBDE8).opacity(0.65))
-                        .frame(width: 14, height: 9)
-                }
-            }
-            .offset(y: -5)
-
-            // "METRO" text
-            if isLeading {
-                Text("METRO")
-                    .font(.system(size: 4.5, weight: .black, design: .rounded))
-                    .foregroundStyle(Color(hex: 0x1D3557).opacity(0.85))
-                    .offset(x: -30, y: 8)
-            }
-        }
-    }
-}
-
-// MARK: - Wheel Helper
-
-private struct WheelView: View {
-    let diameter: CGFloat
-    let angle: Double
-    let color: Color
-
+private struct SplashWheelView: View {
+    let d: CGFloat
+    let angle: Angle
     var body: some View {
         ZStack {
             Circle()
-                .fill(color)
-                .frame(width: diameter, height: diameter)
+                .fill(Color(hex: 0x1D3557))
+                .frame(width: d, height: d)
             Circle()
-                .fill(Color(hex: 0xA8DADC).opacity(0.4))
-                .frame(width: diameter * 0.5, height: diameter * 0.5)
+                .fill(Color(hex: 0xA8DADC).opacity(0.35))
+                .frame(width: d * 0.48, height: d * 0.48)
             // Spokes
             ForEach(0..<4, id: \.self) { i in
                 Rectangle()
-                    .fill(Color(hex: 0xA8DADC).opacity(0.6))
-                    .frame(width: diameter * 0.42, height: 1.5)
+                    .fill(Color(hex: 0xA8DADC).opacity(0.55))
+                    .frame(width: d * 0.44, height: 1.5)
                     .rotationEffect(.degrees(Double(i) * 45))
             }
         }
-        .rotationEffect(.degrees(angle))
+        .rotationEffect(angle)
     }
 }
 
-// MARK: - Exhaust Puff
+// MARK: - Phone Transition (Scene 2)
 
-private struct ExhaustPuffView: View {
-    @State private var puffScale: CGFloat = 0.3
-    @State private var puffOpacity: Double = 0.5
+private struct PhoneTransitionView: View {
+    let transP: Double   // 0→1  (2.0s – 3.2s)
+    let brandP: Double
+    let size: CGSize
+
+    // The phone starts small in the city scene and zooms to fill the frame
+    private var phoneScale: CGFloat {
+        // Spring-like: overshoot slightly then settle
+        let p = easeIO(transP)
+        return 0.22 + CGFloat(p) * 0.90
+    }
+    private var phoneOpacity: Double { clamp01(transP / 0.15) }
+    // Phone y-position: starts centred in city scene (bottom half), zooms to screen centre
+    private var phoneY: CGFloat {
+        let start = size.height * 0.60
+        let end = size.height * 0.50
+        return start + CGFloat(easeIO(transP)) * (end - start)
+    }
+
+    private var phoneW: CGFloat { size.width * 0.72 }
+    private var phoneH: CGFloat { phoneW * 2.165 } // iPhone 16 Pro aspect ratio
 
     var body: some View {
-        Circle()
-            .fill(Color.white.opacity(puffOpacity))
-            .frame(width: 10, height: 10)
-            .blur(radius: 3)
-            .scaleEffect(puffScale)
-            .onAppear {
-                withAnimation(.easeOut(duration: 0.8).repeatForever(autoreverses: false)) {
-                    puffScale = 1.4
-                    puffOpacity = 0
+        ZStack {
+            // ── Phone chassis (titanium frame)
+            RoundedRectangle(cornerRadius: 42, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(hex: 0x2a2a2e),
+                            Color(hex: 0x1a1a1e),
+                            Color(hex: 0x2e2e34)
+                        ],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: phoneW, height: phoneH)
+                .shadow(color: Color.black.opacity(0.55), radius: 32, y: 16)
+
+            // ── Titanium rim highlight
+            RoundedRectangle(cornerRadius: 42, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.3),
+                            Color(hex: 0x9E9EA6).opacity(0.2),
+                            Color.white.opacity(0.15)
+                        ],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 2
+                )
+                .frame(width: phoneW, height: phoneH)
+
+            // ── Screen area (inset from chassis)
+            RoundedRectangle(cornerRadius: 36, style: .continuous)
+                .fill(Color(hex: 0x1D3557))
+                .frame(width: phoneW - 12, height: phoneH - 12)
+                .overlay {
+                    // Screen shows brand background
+                    if brandP > 0 {
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color(hex: 0xEAF4FB), location: 0.0),
+                                .init(color: Color(hex: 0xBDD8E9), location: 0.18),
+                                .init(color: Color(hex: 0x7BBDE8), location: 0.42),
+                                .init(color: Color(hex: 0x4E8EA2), location: 0.72),
+                                .init(color: Color(hex: 0x1D3557), location: 1.0)
+                            ],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                        .opacity(easeOut(brandP))
+                    }
                 }
+                .clipShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
+
+            // ── Dynamic Island
+            Capsule()
+                .fill(Color(hex: 0x0a0a0c))
+                .frame(width: 100, height: 32)
+                .offset(y: -(phoneH / 2 - 28))
+
+            // ── Side buttons (volume left)
+            Group {
+                ForEach([phoneH * -0.22, phoneH * -0.10] as [CGFloat], id: \.self) { yOff in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color(hex: 0x2a2a2e))
+                        .frame(width: 4, height: 36)
+                        .offset(x: -(phoneW / 2 + 2), y: yOff)
+                }
+                // Power button (right)
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color(hex: 0x2a2a2e))
+                    .frame(width: 4, height: 48)
+                    .offset(x: phoneW / 2 + 2, y: phoneH * -0.08)
             }
+        }
+        .frame(width: phoneW, height: phoneH)
+        .scaleEffect(phoneScale)
+        .position(x: size.width / 2, y: phoneY)
+        .opacity(phoneOpacity)
     }
 }
 
-// MARK: - Cloud Shape
+// MARK: - Brand Reveal (Scene 3)
 
-private struct CloudShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        p.addEllipse(in: CGRect(x: rect.width * 0.1, y: rect.height * 0.3,
-                                width: rect.width * 0.5, height: rect.height * 0.65))
-        p.addEllipse(in: CGRect(x: rect.width * 0.3, y: rect.height * 0.1,
-                                width: rect.width * 0.42, height: rect.height * 0.70))
-        p.addEllipse(in: CGRect(x: rect.width * 0.55, y: rect.height * 0.3,
-                                width: rect.width * 0.4, height: rect.height * 0.60))
-        p.addRect(CGRect(x: rect.width * 0.1, y: rect.height * 0.55,
-                         width: rect.width * 0.86, height: rect.height * 0.45))
-        return p
+struct BrandRevealView: View {
+    let t: Double      // 0…1
+    let size: CGSize
+
+    // Individual element timings
+    private var logoT:    Double { clamp01(t / 0.35) }
+    private var pinT:     Double { clamp01((t - 0.25) / 0.30) }
+    private var swooshT:  Double { clamp01((t - 0.35) / 0.30) }
+    private var taglineT: Double { clamp01((t - 0.55) / 0.40) }
+    private var pillsT:   Double { clamp01((t - 0.70) / 0.30) }
+    private var glowT:    Double { clamp01((t - 0.60) / 0.40) }
+
+    // Logo spring scale
+    private var logoScale: CGFloat {
+        let raw = easeOut(logoT)
+        // Slight overshoot
+        if logoT < 0.75 { return CGFloat(raw) * 1.08 }
+        return CGFloat(raw)
+    }
+
+    // Pin drop (bounces in from above)
+    private var pinOffset: CGFloat { -20 + CGFloat(easeOut(pinT)) * 20 }
+
+    var body: some View {
+        // Full-screen brand background
+        ZStack {
+            RaahaScreenBackground()
+
+            VStack(spacing: 0) {
+                Spacer()
+
+                VStack(spacing: 0) {
+                    // ── RAAHA Wordmark
+                    ZStack(alignment: .topTrailing) {
+                        Text("RAAHA")
+                            .font(.system(size: 56, weight: .black, design: .rounded))
+                            .tracking(3.5)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color.white, Color(hex: 0xBDD8E9)],
+                                    startPoint: .topLeading, endPoint: .bottomTrailing
+                                )
+                            )
+                            .shadow(color: Color(hex: 0x0A4174).opacity(0.3 + 0.4 * glowT),
+                                    radius: 16 + 12 * glowT, x: 0, y: 4)
+
+                        // Location pin
+                        SplashPinView()
+                            .offset(x: 14, y: -10 + pinOffset)
+                            .opacity(easeOut(pinT))
+                            .scaleEffect(0.5 + CGFloat(easeOut(pinT)) * 0.5)
+                    }
+                    .scaleEffect(max(0.01, logoScale))
+                    .opacity(easeOut(logoT))
+                    .padding(.bottom, 10)
+
+                    // ── Motion swoosh line
+                    SwooshLineView()
+                        .opacity(easeOut(swooshT))
+                        .scaleEffect(x: CGFloat(easeOut(swooshT)), anchor: .leading)
+                        .padding(.bottom, 18)
+
+                    // ── Tagline
+                    Text("Every Path Leads to You")
+                        .font(.system(size: 17, weight: .medium, design: .serif).italic())
+                        .foregroundStyle(Color.white.opacity(0.92))
+                        .tracking(0.5)
+                        .opacity(easeOut(taglineT))
+                        .padding(.bottom, 24)
+
+                    // ── Mode pills
+                    HStack(spacing: 10) {
+                        ForEach(Array(modePills.enumerated()), id: \.offset) { idx, pill in
+                            pillView(icon: pill, delay: Double(idx) * 0.08)
+                        }
+                    }
+                    .opacity(easeOut(pillsT))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 90)
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    private let modePills = ["bicycle", "car.fill", "bus.fill", "tram.fill", "train.side.front.car"]
+
+    private func pillView(icon: String, delay: Double) -> some View {
+        let localT = max(0, pillsT - delay / 0.3)
+        return Image(systemName: icon)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(Color(hex: 0x0A4174))
+            .frame(width: 32, height: 32)
+            .background(
+                Circle()
+                    .fill(Color.white.opacity(0.82))
+                    .background(.ultraThinMaterial, in: Circle())
+            )
+            .overlay(Circle().stroke(Color(hex: 0xA8DADC).opacity(0.6), lineWidth: 1))
+            .scaleEffect(max(0.01, CGFloat(easeOut(clamp01(localT * 3)))))
+            .opacity(easeOut(clamp01(localT * 3)))
     }
 }
 
-// MARK: - Bird Shape (M-curve)
+// MARK: - Swoosh Line
 
-private struct BirdShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        let w = rect.width, h = rect.height
-        p.move(to: CGPoint(x: 0, y: h * 0.5))
-        p.addQuadCurve(to: CGPoint(x: w * 0.5, y: 0),
-                       control: CGPoint(x: w * 0.25, y: h * 0.4))
-        p.addQuadCurve(to: CGPoint(x: w, y: h * 0.5),
-                       control: CGPoint(x: w * 0.75, y: h * 0.4))
-        return p
+private struct SwooshLineView: View {
+    var body: some View {
+        Path { p in
+            p.move(to: CGPoint(x: 10, y: 4))
+            p.addQuadCurve(to: CGPoint(x: 164, y: 4), control: CGPoint(x: 87, y: -5))
+        }
+        .stroke(
+            LinearGradient(
+                colors: [Color(hex: 0x7BBDE8).opacity(0.9), Color(hex: 0xA8DADC).opacity(0.4)],
+                startPoint: .leading, endPoint: .trailing
+            ),
+            style: StrokeStyle(lineWidth: 2.8, lineCap: .round)
+        )
+        .frame(width: 174, height: 10)
     }
 }
 
-// MARK: - Splash Location Pin (larger, animated)
+// MARK: - Splash Location Pin
 
-private struct SplashLocationPin: View {
+private struct SplashPinView: View {
     var body: some View {
         ZStack {
             PinTeardropShape()
                 .fill(Color(hex: 0xE63946))
                 .frame(width: 22, height: 30)
-                .shadow(color: Color(hex: 0xE63946).opacity(0.5), radius: 8, x: 0, y: 3)
-
+                .shadow(color: Color(hex: 0xE63946).opacity(0.55), radius: 8, x: 0, y: 3)
             Circle()
                 .fill(Color.white)
                 .frame(width: 7, height: 7)
                 .offset(y: -5)
         }
+    }
+}
+
+// MARK: - Shared Shapes
+
+private struct SplashCloudShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        p.addEllipse(in: CGRect(x: rect.width*0.08, y: rect.height*0.28,
+                                width: rect.width*0.50, height: rect.height*0.68))
+        p.addEllipse(in: CGRect(x: rect.width*0.28, y: rect.height*0.08,
+                                width: rect.width*0.44, height: rect.height*0.70))
+        p.addEllipse(in: CGRect(x: rect.width*0.54, y: rect.height*0.28,
+                                width: rect.width*0.40, height: rect.height*0.62))
+        p.addRect(CGRect(x: rect.width*0.08, y: rect.height*0.55,
+                         width: rect.width*0.86, height: rect.height*0.45))
+        return p
+    }
+}
+
+private struct SplashBirdShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let w = rect.width, h = rect.height
+        p.move(to: CGPoint(x: 0, y: h * 0.5))
+        p.addQuadCurve(to: CGPoint(x: w*0.5, y: 0), control: CGPoint(x: w*0.25, y: h*0.3))
+        p.addQuadCurve(to: CGPoint(x: w, y: h*0.5), control: CGPoint(x: w*0.75, y: h*0.3))
+        return p
     }
 }
