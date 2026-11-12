@@ -414,7 +414,6 @@ struct SlideToStartJourneyButton: View {
                                 withAnimation(.spring(response: 0.22, dampingFraction: 0.75)) {
                                     dragOffset = maxDrag
                                 }
-                                triggerHapticSuccess()
                                 action()
 
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
@@ -434,16 +433,12 @@ struct SlideToStartJourneyButton: View {
             .frame(height: height)
         }
         .frame(height: height)
+        .sensoryFeedback(.success, trigger: hasTriggered) { _, newValue in newValue == true }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
         .accessibilityHint("Slide right or double-tap to start live journey")
         .accessibilityAction {
             action()
         }
-    }
-
-    private func triggerHapticSuccess() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.success)
     }
 }

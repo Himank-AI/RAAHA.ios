@@ -68,72 +68,65 @@ struct BackButton: View {
     }
 }
 
-// MARK: - Navigation chrome
+// MARK: - Navigation chrome (100% Pure SwiftUI)
 
 extension View {
     /// Tab-root screens: light status bar over the navy header, transparent empty nav bar.
     func navyHeaderChrome() -> some View {
         self
-            .toolbarTitleDisplayMode(.inline)
-            .hideToolbarBackground()
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar(.hidden, for: .navigationBar)
     }
 
     /// Tab-root screens with light header: dark status bar over light background.
     func lightHeaderChrome() -> some View {
         self
-            .toolbarTitleDisplayMode(.inline)
-            .hideToolbarBackground()
-            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbar(.hidden, for: .navigationBar)
     }
 
-    /// Pushed screens: transparent bar, custom circular back button, optional centred title.
+    /// Pushed screens: completely transparent header in pure SwiftUI, custom circular back button, optional centred title.
     func pushedChrome(title: String? = nil) -> some View {
         self
-            .toolbarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
-            .hideToolbarBackground()
-            .toolbarColorScheme(.light, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+            .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top) {
+                HStack(spacing: 0) {
                     BackButton()
+
+                    Spacer(minLength: 8)
+
+                    if let title, !title.isEmpty {
+                        Text(title)
+                            .font(.raahaHeadline)
+                            .foregroundStyle(Color.midnightBlue)
+                            .lineLimit(1)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    // Symmetrical invisible spacer to balance the back button width
+                    Color.clear
+                        .frame(width: 38, height: 38)
                 }
-                ToolbarItem(placement: .principal) {
-                    Text(title ?? "")
-                        .font(.raahaHeadline)
-                        .foregroundStyle(Color.midnightBlue)
-                }
+                .padding(.horizontal, 16)
+                .padding(.top, 4)
+                .padding(.bottom, 4)
             }
     }
 
     /// Pushed screens whose title sits left-aligned beside the back button (Trip Preview).
     func pushedChrome(leadingTitle: String) -> some View {
         self
-            .toolbarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
-            .hideToolbarBackground()
-            .toolbarColorScheme(.light, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: 12) {
-                        BackButton()
-                        Text(leadingTitle)
-                            .font(.raahaTitle3)
-                            .foregroundStyle(Color.midnightBlue)
-                    }
+            .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top) {
+                HStack(spacing: 12) {
+                    BackButton()
+                    Text(leadingTitle)
+                        .font(.raahaTitle3)
+                        .foregroundStyle(Color.midnightBlue)
+                    Spacer()
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 4)
+                .padding(.bottom, 4)
             }
-    }
-
-    @ViewBuilder
-    func hideToolbarBackground() -> some View {
-        if #available(iOS 18.0, *) {
-            self
-                .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
-                .toolbarBackground(.hidden, for: .navigationBar)
-        } else {
-            self
-                .toolbarBackground(.hidden, for: .navigationBar)
-        }
     }
 }
