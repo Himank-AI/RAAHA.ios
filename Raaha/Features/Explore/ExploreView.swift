@@ -1332,3 +1332,8 @@ private struct PickerSheet<Content: View>: View {
         .presentationDetents([.medium])
     }
 }
+
+#Preview {
+    ExploreView()
+        .environment(AppRouter())
+}

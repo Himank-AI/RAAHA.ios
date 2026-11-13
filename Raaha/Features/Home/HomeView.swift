@@ -618,3 +618,8 @@ private struct SmartRouteBackground: View {
         }
     }
 }
+
+#Preview {
+    HomeView()
+        .environment(AppRouter())
+}

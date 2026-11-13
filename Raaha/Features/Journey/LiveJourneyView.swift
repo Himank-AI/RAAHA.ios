@@ -69,7 +69,7 @@ private struct CurrentlyOnCard: View {
                 Spacer().frame(width: 122)
 
                 // "• Currently On"
-                HStack(spacing: 5) {
+                HStack(spacing: 6) {
                     Circle()
                         .fill(Color.transportWalk)
                         .frame(width: 7, height: 7)
@@ -79,70 +79,97 @@ private struct CurrentlyOnCard: View {
                         .onAppear { isPulsing = true }
 
                     Text("Currently On")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Color.transportWalk)
                 }
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 11)
                 .padding(.vertical, 5)
-                .background(Color.transportWalk.opacity(0.14), in: Capsule())
+                .background(
+                    Capsule()
+                        .fill(Color.transportWalk.opacity(0.12))
+                        .background(.ultraThinMaterial, in: Capsule())
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(Color.transportWalk.opacity(0.25), lineWidth: 0.8)
+                )
+                .shadow(color: Color.transportWalk.opacity(0.08), radius: 6, x: 0, y: 2)
 
                 Spacer()
 
                 // "20 min" Clock Chip
                 HStack(spacing: 5) {
                     Image(systemName: "clock")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Color.transportWalk)
                     if let chip = content.chips.first {
                         Text(chip)
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(Color.deepSpace)
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(Color.transportWalk.opacity(0.14), in: Capsule())
+                .padding(.horizontal, 11)
+                .padding(.vertical, 5)
+                .background(
+                    Capsule()
+                        .fill(Color.white.opacity(0.70))
+                        .background(.ultraThinMaterial, in: Capsule())
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(LinearGradient.glassRim, lineWidth: 1.0)
+                )
+                .shadow(color: Color(hex: 0x49769F).opacity(0.12), radius: 6, x: 0, y: 2)
             }
 
             // ── Title & Subtitle ──
             VStack(alignment: .leading, spacing: 3) {
                 Text("Walking")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 23, weight: .bold))
                     .foregroundStyle(Color.deepSpace)
 
                 Text(content.subtitle)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Color.deepSpace.opacity(0.85))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Color.deepSpace.opacity(0.80))
             }
             .padding(.leading, 122)
             .padding(.top, 8)
 
             // ── Progress Bar & Caption ──
-            VStack(spacing: 6) {
+            VStack(spacing: 7) {
                 HStack(spacing: 6) {
                     Circle()
                         .fill(Color.transportWalk)
                         .frame(width: 10, height: 10)
+                        .shadow(color: Color.transportWalk.opacity(0.4), radius: 4, x: 0, y: 1)
 
                     GeometryReader { lineGeo in
                         ZStack(alignment: .leading) {
                             Capsule()
-                                .fill(Color.deepSpace.opacity(0.75))
-                                .frame(height: 2)
+                                .fill(Color.deepSpace.opacity(0.18))
+                                .frame(height: 2.5)
                             Capsule()
-                                .fill(Color.transportWalk)
-                                .frame(width: lineGeo.size.width * 0.35, height: 2)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.transportWalk, Color.transportWalk.opacity(0.85)],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: lineGeo.size.width * 0.35, height: 2.5)
+                                .shadow(color: Color.transportWalk.opacity(0.3), radius: 3, x: 0, y: 1)
                         }
                     }
-                    .frame(height: 2)
+                    .frame(height: 2.5)
 
                     Image(systemName: "mappin.fill")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(Color.deepSpace)
+                        .shadow(color: Color.deepSpace.opacity(0.2), radius: 3, x: 0, y: 1)
                 }
 
-                Text("0.8 km • 20 min left")
-                    .font(.system(size: 13, weight: .bold))
+                Text("300 m")
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(Color.deepSpace)
             }
             .padding(.leading, 122)
@@ -153,19 +180,28 @@ private struct CurrentlyOnCard: View {
             Image("walk_illustration")
                 .resizable()
                 .scaledToFit()
-                .frame(height: 155)
-                .offset(x: -8, y: 4)
+                .frame(height: 132)
+                .offset(x: -8, y: -6)
         }
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white.opacity(0.92))
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.88),
+                            Color.white.opacity(0.72)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(LinearGradient.glassRim, lineWidth: 1.2)
         )
-        .shadow(color: Color(hex: 0x49769F).opacity(0.18), radius: 14, x: 0, y: 5)
+        .shadow(color: Color(hex: 0x49769F).opacity(0.16), radius: 14, x: 0, y: 6)
         .accessibilityElement(children: .combine)
     }
 
@@ -207,7 +243,25 @@ private struct CurrentlyOnCard: View {
             }
         }
         .padding(14)
-        .navyCard(radius: 24)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.88),
+                            Color.white.opacity(0.72)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(LinearGradient.glassRim, lineWidth: 1.2)
+        )
+        .shadow(color: Color(hex: 0x49769F).opacity(0.16), radius: 14, x: 0, y: 6)
         .accessibilityElement(children: .combine)
     }
 }
@@ -226,10 +280,10 @@ private struct WalkTimelineCard: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(info.startTitle)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Color.deepSpace)
                     Text(info.startCaption)
-                        .font(.system(size: 13, weight: .regular))
+                        .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(Color.deepSpace.opacity(0.75))
                 }
                 Spacer()
@@ -256,22 +310,27 @@ private struct WalkTimelineCard: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(info.walkTitle)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Color.deepSpace)
                     Text(info.walkCaption)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(Color.deepSpace.opacity(0.75))
                 }
 
                 Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.deepSpace.opacity(0.70))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(Color.transportWalk.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.transportWalk.opacity(0.10))
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.transportWalk.opacity(0.20), lineWidth: 0.8)
+            )
+            .shadow(color: Color.transportWalk.opacity(0.06), radius: 6, x: 0, y: 2)
             .padding(.horizontal, 6)
 
             // Vertical Connector 2
@@ -293,10 +352,10 @@ private struct WalkTimelineCard: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(info.endTitle)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Color.deepSpace)
                     Text(info.endCaption)
-                        .font(.system(size: 13, weight: .regular))
+                        .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(Color.deepSpace.opacity(0.75))
                 }
                 Spacer()
@@ -304,7 +363,25 @@ private struct WalkTimelineCard: View {
             .padding(.horizontal, 14)
             .padding(.bottom, 14)
         }
-        .navyCard(radius: 24)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.88),
+                            Color.white.opacity(0.72)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(LinearGradient.glassRim, lineWidth: 1.2)
+        )
+        .shadow(color: Color(hex: 0x49769F).opacity(0.16), radius: 14, x: 0, y: 6)
         .accessibilityElement(children: .combine)
     }
 }
@@ -532,26 +609,27 @@ private struct NextTransferCard: View {
         Button(action: action) {
             ZStack(alignment: .bottomTrailing) {
 
-                // ── BACKGROUND GRADIENT: white → sky-blue horizontal gradient ──
+                // ── BACKGROUND GRADIENT: white → sky-blue horizontal gradient with glassmorphism ──
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(
                         LinearGradient(
                             stops: [
-                                .init(color: .white, location: 0.0),
-                                .init(color: .white, location: 0.35),
-                                .init(color: Color(hex: 0xE2F5FD), location: 0.60),
-                                .init(color: Color(hex: 0xB6E6F8), location: 1.0)
+                                .init(color: Color.white.opacity(0.92), location: 0.0),
+                                .init(color: Color.white.opacity(0.85), location: 0.35),
+                                .init(color: Color(hex: 0xE2F5FD).opacity(0.85), location: 0.65),
+                                .init(color: Color(hex: 0xB6E6F8).opacity(0.95), location: 1.0)
                             ],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 
                 // ── TRAIN ILLUSTRATION: starting from right to left with decreasing opacity ──
                 Image("train_illustration")
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 125)
+                    .frame(height: 100)
                     .mask(
                         LinearGradient(
                             stops: [
@@ -565,7 +643,7 @@ private struct NextTransferCard: View {
                             endPoint: .trailing
                         )
                     )
-                    .offset(x: 10, y: 14)
+                    .offset(x: 10, y: 10)
 
                 // ── FOREGROUND CONTENT ──
                 VStack(alignment: .leading, spacing: 0) {
@@ -573,13 +651,13 @@ private struct NextTransferCard: View {
                     // Top row: [Mode + Next Transfer] badge & [Clock + 12 min] chip
                     HStack(alignment: .center) {
                         // Combined capsule badge
-                        HStack(spacing: 8) {
+                        HStack(spacing: 7) {
                             ZStack {
                                 Circle()
                                     .fill(Color(hex: 0x38A8D8).opacity(0.18))
-                                    .frame(width: 30, height: 30)
+                                    .frame(width: 26, height: 26)
                                 Image(systemName: "bus.fill")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(Color(hex: 0x38A8D8))
                             }
 
@@ -588,10 +666,14 @@ private struct NextTransferCard: View {
                                 .foregroundStyle(Color.deepSpace)
                         }
                         .padding(.leading, 3)
-                        .padding(.trailing, 12)
+                        .padding(.trailing, 10)
                         .padding(.vertical, 3)
-                        .background(Color.white.opacity(0.85), in: Capsule())
-                        .overlay(Capsule().stroke(Color.white, lineWidth: 1.2))
+                        .background(
+                            Capsule()
+                                .fill(Color.white.opacity(0.80))
+                                .background(.ultraThinMaterial, in: Capsule())
+                        )
+                        .overlay(Capsule().stroke(Color.white.opacity(0.9), lineWidth: 1.0))
                         .shadow(color: Color(hex: 0x49769F).opacity(0.12), radius: 6, x: 0, y: 2)
 
                         Spacer()
@@ -599,40 +681,42 @@ private struct NextTransferCard: View {
                         // Time chip
                         HStack(spacing: 5) {
                             Image(systemName: "clock")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(Color.deepSpace)
                             Text(next.chip)
-                                .font(.system(size: 13, weight: .bold))
+                                .font(.system(size: 12, weight: .bold))
                                 .foregroundStyle(Color.deepSpace)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(Color.white.opacity(0.85), in: Capsule())
-                        .overlay(Capsule().stroke(Color.white, lineWidth: 1.2))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule()
+                                .fill(Color.white.opacity(0.80))
+                                .background(.ultraThinMaterial, in: Capsule())
+                        )
+                        .overlay(Capsule().stroke(Color.white.opacity(0.9), lineWidth: 1.0))
                         .shadow(color: Color(hex: 0x49769F).opacity(0.12), radius: 6, x: 0, y: 2)
                     }
 
                     // "Train" headline
                     Text(next.headline)
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Color.deepSpace)
-                        .padding(.top, 12)
+                        .padding(.top, 8)
 
                     // Detail lines
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 2) {
                         ForEach(next.lines) { line in
                             Text(line.text)
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(Color.deepSpace.opacity(0.80))
                                 .multilineTextAlignment(.leading)
                         }
                     }
-                    .padding(.top, 3)
-
-                    // Clearance space for train illustration
-                    Spacer().frame(height: 18)
+                    .padding(.top, 2)
                 }
-                .padding(16)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -640,7 +724,7 @@ private struct NextTransferCard: View {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(LinearGradient.glassRim, lineWidth: 1.2)
             )
-            .shadow(color: Color(hex: 0x49769F).opacity(0.18), radius: 14, x: 0, y: 5)
+            .shadow(color: Color(hex: 0x49769F).opacity(0.16), radius: 14, x: 0, y: 6)
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.impact(weight: .medium), trigger: next.headline)
@@ -648,3 +732,9 @@ private struct NextTransferCard: View {
         .accessibilityHint("Continues to the next leg of the journey")
     }
 }
+
+#Preview {
+    LiveJourneyView(kind: .fastest, step: 0)
+        .environment(AppRouter())
+}
+

@@ -220,4 +220,9 @@ private struct PlaceMapPin: View {
     }
 }
 
+#Preview {
+    PlaceDetailView(place: ExploreMockData.marinaBeach)
+        .environment(AppRouter())
+}
+
 

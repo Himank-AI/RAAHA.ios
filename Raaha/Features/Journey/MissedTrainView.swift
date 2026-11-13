@@ -323,3 +323,8 @@ private struct OtherTrainCard: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+#Preview {
+    MissedTrainView()
+        .environment(AppRouter())
+}

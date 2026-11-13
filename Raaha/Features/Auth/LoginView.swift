@@ -479,3 +479,8 @@ struct GoogleLogoView: View {
     }
 }
 
+#Preview {
+    LoginView()
+        .environment(AppRouter())
+}
+

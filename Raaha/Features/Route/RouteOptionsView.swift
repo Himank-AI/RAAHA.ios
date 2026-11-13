@@ -269,3 +269,8 @@ private struct RouteOptionRow: View {
         .foregroundStyle(mode.color)
     }
 }
+
+#Preview {
+    RouteOptionsView()
+        .environment(AppRouter())
+}

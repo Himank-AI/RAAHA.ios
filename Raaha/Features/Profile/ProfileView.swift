@@ -444,3 +444,8 @@ struct ProfileView: View {
         .padding(.bottom, 12)
     }
 }
+
+#Preview {
+    ProfileView()
+        .environment(AppRouter())
+}
