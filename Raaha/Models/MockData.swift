@@ -155,7 +155,7 @@ enum MockData {
                 timeline: .stops(fullStops),
                 showsMissedAlert: false,
                 next: NextTransfer(
-                    icon: .bus,
+                    icon: .train,
                     chip: "12 min",
                     headline: "Train",
                     lines: [
@@ -197,7 +197,7 @@ enum MockData {
     ]
 
     private static let trainNext = NextTransfer(
-        icon: .bus,
+        icon: .train,
         chip: "12 min",
         headline: "Train",
         lines: [

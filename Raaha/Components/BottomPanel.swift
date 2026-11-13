@@ -47,6 +47,7 @@ struct BottomPanel<Content: View>: View {
 
     @State private var _expanded = true
     @State private var panelHeight: CGFloat = 0
+    @State private var peekHeight: CGFloat?
     @GestureState private var drag: CGFloat = 0
 
     private var expanded: Bool {
@@ -62,9 +63,16 @@ struct BottomPanel<Content: View>: View {
     }
 
     var body: some View {
+        GeometryReader { safeProxy in
+            panel(bottomInset: safeProxy.safeAreaInsets.bottom)
+        }
+    }
+
+    private func panel(bottomInset: CGFloat) -> some View {
         GeometryReader { proxy in
             if fitsContent {
-                let hidden = max(panelHeight - 48, 0)
+                let collapsedVisible = peekHeight.map { $0 + max(bottomInset, 16) } ?? 48
+                let hidden = max(panelHeight - collapsedVisible, 0)
                 let base = expanded ? 0 : hidden
                 let offset = min(max(base + drag, 0), hidden)
 
@@ -95,6 +103,10 @@ struct BottomPanel<Content: View>: View {
                 .onPreferenceChange(PanelHeightPreferenceKey.self) { height in
                     panelHeight = height
                 }
+                .onPreferenceChange(PanelPeekPreferenceKey.self) { maxY in
+                    peekHeight = maxY
+                }
+                .coordinateSpace(name: PanelPeekPreferenceKey.coordinateSpace)
                 .background(panelBackground)
                 .frame(width: proxy.size.width)
                 .offset(y: offset)
@@ -165,6 +177,29 @@ struct BottomPanel<Content: View>: View {
             .accessibilityLabel(expanded ? "Collapse panel" : "Expand panel")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { setExpanded(!expanded) }
+    }
+}
+
+extension View {
+    /// Marks this view as the part of a `fitsContent` `BottomPanel` that stays visible when collapsed.
+    /// The panel collapses down to the bottom edge of the marked view instead of just the grabber.
+    func bottomPanelPeek() -> some View {
+        background(
+            GeometryReader { geo in
+                Color.clear.preference(
+                    key: PanelPeekPreferenceKey.self,
+                    value: geo.frame(in: .named(PanelPeekPreferenceKey.coordinateSpace)).maxY
+                )
+            }
+        )
+    }
+}
+
+private struct PanelPeekPreferenceKey: PreferenceKey {
+    static let coordinateSpace = "BottomPanelPeek"
+    static var defaultValue: CGFloat? = nil
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) {
+        value = value ?? nextValue()
     }
 }
 
