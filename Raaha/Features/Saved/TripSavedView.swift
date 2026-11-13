@@ -114,3 +114,8 @@ struct TripSavedView: View {
             .frame(width: 10, height: 30)
     }
 }
+
+#Preview {
+    TripSavedView()
+        .environment(AppRouter())
+}

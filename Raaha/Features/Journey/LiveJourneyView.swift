@@ -111,7 +111,7 @@ private struct CurrentlyOnCard: View {
                     .foregroundStyle(Color.deepSpace)
 
                 Text(content.subtitle)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Color.deepSpace.opacity(0.85))
             }
             .padding(.leading, 122)
@@ -153,7 +153,7 @@ private struct CurrentlyOnCard: View {
             Image("walk_illustration")
                 .resizable()
                 .scaledToFit()
-                .frame(height: 155)
+                .frame(height: 140)
                 .offset(x: -8, y: 4)
         }
         .background(
@@ -265,9 +265,9 @@ private struct WalkTimelineCard: View {
 
                 Spacer()
 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.deepSpace.opacity(0.70))
+//                Image(systemName: "chevron.right")
+//                    .font(.system(size: 14, weight: .semibold))
+//                    .foregroundStyle(Color.deepSpace.opacity(0.70))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
@@ -565,7 +565,7 @@ private struct NextTransferCard: View {
                             endPoint: .trailing
                         )
                     )
-                    .offset(x: 10, y: 14)
+                    .offset(x: 10, y: 6)
 
                 // ── FOREGROUND CONTENT ──
                 VStack(alignment: .leading, spacing: 0) {
@@ -648,3 +648,9 @@ private struct NextTransferCard: View {
         .accessibilityHint("Continues to the next leg of the journey")
     }
 }
+
+#Preview {
+    LiveJourneyView(kind: .fastest, step: 0)
+        .environment(AppRouter())
+}
+

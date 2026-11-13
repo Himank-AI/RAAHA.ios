@@ -97,3 +97,8 @@ struct RouteDestination: View {
         }
     }
 }
+
+#Preview {
+    RootView()
+        .environment(AppRouter())
+}

@@ -587,3 +587,8 @@ private struct RecentTripRow: View {
         .accessibilityLabel("Trip: \(trip.route) via \(trip.mode) on \(trip.day). Tap to repeat.")
     }
 }
+
+#Preview {
+    TripsView()
+        .environment(AppRouter())
+}

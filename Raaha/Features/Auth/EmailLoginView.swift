@@ -327,3 +327,7 @@ struct EmailLoginView: View {
         }
     }
 }
+
+#Preview {
+    EmailLoginView(onSuccess: {}, onNavigateToSignUp: {})
+}

@@ -193,3 +193,8 @@ struct ArrivedView: View {
         .overlay(Capsule().stroke(mode.strokeColor, lineWidth: 1))
     }
 }
+
+#Preview {
+    ArrivedView()
+        .environment(AppRouter())
+}

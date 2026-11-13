@@ -388,3 +388,8 @@ private struct FareChip: View {
         )
     }
 }
+
+#Preview {
+    RouteDetailView(kind: .fastest)
+        .environment(AppRouter())
+}

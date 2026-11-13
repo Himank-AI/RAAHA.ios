@@ -220,4 +220,9 @@ private struct PlaceMapPin: View {
     }
 }
 
+#Preview {
+    PlaceDetailView(place: ExploreMockData.curatedPlaces[0])
+        .environment(AppRouter())
+}
+
 

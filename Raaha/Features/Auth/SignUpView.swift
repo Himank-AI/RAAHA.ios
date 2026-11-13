@@ -439,3 +439,7 @@ struct SignUpView: View {
         }
     }
 }
+
+#Preview {
+    SignUpView(onSuccess: {}, onNavigateToSignIn: {})
+}

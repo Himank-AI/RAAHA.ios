@@ -165,3 +165,8 @@ struct TripPreviewView: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+#Preview {
+    TripPreviewView()
+        .environment(AppRouter())
+}
