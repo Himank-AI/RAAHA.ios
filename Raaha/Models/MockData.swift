@@ -88,7 +88,7 @@ enum MockData {
                 mode: .walk,
                 title: "Walk",
                 subtitle: "Chennai Central → Egmore",
-                chips: ["20 min"],
+                chips: ["8 min"],
                 timeline: .walk(walkTimeline),
                 showsMissedAlert: false,
                 next: trainNext,

@@ -97,7 +97,7 @@ private struct CurrentlyOnCard: View {
 
                 Spacer()
 
-                // "20 min" Clock Chip
+                // "8 min" Clock Chip
                 HStack(spacing: 5) {
                     Image(systemName: "clock")
                         .font(.system(size: 12, weight: .semibold))
