@@ -1,6 +1,7 @@
+
 import SwiftUI
 
-// MARK: - Colour palette (Exact 7-Color Oceanic Gradient & Premium Glassmorphism)
+// MARK: - Colour Palette
 
 extension Color {
     init(hex: UInt32, opacity: Double = 1) {
@@ -13,55 +14,61 @@ extension Color {
         )
     }
 
-    // MARK: - Exact User Reference Gradient (7 Oceanic Blue Tones)
-    /// #001D39 – Deep Abyssal Navy (Tone 1)
+    // MARK: - Oceanic Gradient (7 Colours)
+
     static let oceanic001D39 = Color(hex: 0x001D39)
-    /// #0A4174 – Prussian Blue / Deep Cerulean (Tone 2)
     static let oceanic0A4174 = Color(hex: 0x0A4174)
-    /// #49769F – Muted Slate Blue (Tone 3)
     static let oceanic49769F = Color(hex: 0x49769F)
-    /// #4E8EA2 – Oceanic Teal / Deep Steel (Tone 4)
     static let oceanic4E8EA2 = Color(hex: 0x4E8EA2)
-    /// #6EA2B3 – Soft Mineral Blue / Aqua Slate (Tone 5)
     static let oceanic6EA2B3 = Color(hex: 0x6EA2B3)
-    /// #7BBDE8 – Vibrant Sky Blue / Cornflower (Tone 6)
     static let oceanic7BBDE8 = Color(hex: 0x7BBDE8)
-    /// #BDD8E9 – Pale Ice / Frosted Powder (Tone 7)
     static let oceanicBDD8E9 = Color(hex: 0xBDD8E9)
 
-    // MARK: - Semantic Aliases Mapped to the 7-Color Gradient
+    // MARK: - Semantic Brand Colours
+
     static let midnightBlue = Color(hex: 0x001D39)
     static let royalBlue = Color(hex: 0x0A4174)
     static let electricBlue = Color(hex: 0x4E8EA2)
     static let brightBlue = Color(hex: 0x7BBDE8)
-    /// Light-mode secondary text — Muted Slate Blue for readability on pale backgrounds
     static let lightSkyBlue = Color(hex: 0x49769F)
-    /// Light-mode tertiary / caption text — Oceanic Teal
     static let icyBlue = Color(hex: 0x4E8EA2)
 
-    // MARK: - Reference Accent: Neon Lime Green
-    /// Neon Lime Green #C6FF00 – high-contrast accent for key numbers, active states, indicators
     static let neonLime = Color(hex: 0xC6FF00)
 
-    // MARK: - Semantic Brand Color Aliases (light-mode oceanic glassmorphism)
-    /// Primary alert / accent
     static let strawberry = Color(hex: 0xFF4D5E)
-    /// Primary text on light oceanic surfaces — Deep Abyssal Navy
     static let honeydew = Color(hex: 0x001D39)
-    /// Secondary text — Prussian Blue / Deep Cerulean
     static let frostedBlue = Color(hex: 0x0A4174)
-    /// Tertiary text & icon fills — Muted Slate Blue
     static let steelBlue = Color(hex: 0x49769F)
-    /// Deep dark tone — Deep Abyssal Navy #001D39
     static let deepSpace = Color(hex: 0x001D39)
 
-    /// Teal Green #2A9D8F
     static let tealGreen = Color(hex: 0x4E8EA2)
-    /// Status Green – Vibrant Neon Lime Green for arrival, live status, verified badges
     static let statusGreen = Color(hex: 0xC6FF00)
+
+    // MARK: - RAAHA Transport Colours
+
+    /// Local Train - Railway Blue
+    static let localTrain = Color(hex: 0x2878C7)
+
+    /// Metro - Metro Purple
+    static let metro = Color(hex: 0x8055B7)
+
+    /// Bus - Traffic Red
+    static let bus = Color(hex: 0xD94B45)
+
+    /// Auto - Indian Auto Yellow
+    static let auto = Color(hex: 0xE5A400)
+
+    /// Cab / Taxi - Charcoal
+    static let cab = Color(hex: 0x424B57)
+
+    /// Walking - Nature Green
+    static let walking = Color(hex: 0x29965C)
+
+    /// Bicycle - Cycle Orange
+    static let bicycle = Color(hex: 0xD97732)
 }
 
-// MARK: - Typography (SF Pro via the system font, Dynamic Type text styles)
+// MARK: - Typography
 
 extension Font {
     static let raahaLargeTitle = Font.system(.largeTitle, design: .rounded).weight(.bold)
@@ -78,24 +85,25 @@ extension Font {
     static let raahaCaption2 = Font.system(.caption2)
 }
 
-// MARK: - Gradients (Smooth 7-Step Oceanic Gradient Spectrum)
+// MARK: - Gradients
 
 extension LinearGradient {
-    /// Full screen background gradient — light oceanic, pale ice top to sky blue to teal bottom.
+
+    /// Full-screen oceanic gradient.
     static let raahaScreen = LinearGradient(
         stops: [
-            .init(color: Color(hex: 0xEAF4FB), location: 0.0),  // Near-white icy top
-            .init(color: Color(hex: 0xBDD8E9), location: 0.18), // Pale Ice
-            .init(color: Color(hex: 0x7BBDE8), location: 0.42), // Sky Blue
-            .init(color: Color(hex: 0x6EA2B3), location: 0.65), // Mineral Aqua
-            .init(color: Color(hex: 0x4E8EA2), location: 0.85), // Oceanic Teal
-            .init(color: Color(hex: 0x49769F), location: 1.0)   // Muted Slate
+            .init(color: Color(hex: 0xEAF4FB), location: 0.0),
+            .init(color: Color(hex: 0xBDD8E9), location: 0.18),
+            .init(color: Color(hex: 0x7BBDE8), location: 0.42),
+            .init(color: Color(hex: 0x6EA2B3), location: 0.65),
+            .init(color: Color(hex: 0x4E8EA2), location: 0.85),
+            .init(color: Color(hex: 0x49769F), location: 1.0)
         ],
         startPoint: .top,
         endPoint: .bottom
     )
 
-    /// Large "hero" card: rich oceanic from sky blue into teal/prussian.
+    /// Hero card gradient.
     static let raahaHero = LinearGradient(
         stops: [
             .init(color: Color(hex: 0x7BBDE8).opacity(0.85), location: 0),
@@ -106,7 +114,7 @@ extension LinearGradient {
         endPoint: .bottomTrailing
     )
 
-    /// Banner card: Sky blue leading into oceanic teal.
+    /// Banner gradient.
     static let raahaBanner = LinearGradient(
         stops: [
             .init(color: Color(hex: 0x7BBDE8), location: 0.0),
@@ -116,7 +124,7 @@ extension LinearGradient {
         endPoint: .trailing
     )
 
-    /// Frosted oceanic glass card — light teal/sky overlay.
+    /// Frosted glass gradient.
     static let raahaNavy = LinearGradient(
         colors: [
             Color(hex: 0x7BBDE8).opacity(0.30),
@@ -126,7 +134,7 @@ extension LinearGradient {
         endPoint: .bottomTrailing
     )
 
-    /// Glowing oceanic card with vibrant sky blue highlights.
+    /// Glowing oceanic card gradient.
     static let raahaNavyGlow = LinearGradient(
         stops: [
             .init(color: Color(hex: 0xBDD8E9).opacity(0.55), location: 0.0),
@@ -137,21 +145,27 @@ extension LinearGradient {
         endPoint: .trailing
     )
 
-    /// Rich Sky-to-Teal Oceanic pill button surface.
+    /// Oceanic pill gradient.
     static let raahaPill = LinearGradient(
-        colors: [Color(hex: 0x4E8EA2), Color(hex: 0x0A4174)],
+        colors: [
+            Color(hex: 0x4E8EA2),
+            Color(hex: 0x0A4174)
+        ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
-    /// Neon Lime accent pill surface.
+    /// Neon Lime pill gradient.
     static let raahaNeonPill = LinearGradient(
-        colors: [Color(hex: 0xD8FF33), Color.neonLime],
+        colors: [
+            Color(hex: 0xD8FF33),
+            Color.neonLime
+        ],
         startPoint: .top,
         endPoint: .bottom
     )
 
-    /// Glass specular edge highlight stroke.
+    /// Glass edge highlight.
     static let glassRim = LinearGradient(
         colors: [
             Color.white.opacity(0.80),
@@ -164,63 +178,92 @@ extension LinearGradient {
     )
 }
 
-// MARK: - Surfaces (Frosted Glassmorphism — Light Oceanic Mode)
+// MARK: - Surfaces (Frosted Glassmorphism)
 
 extension View {
-    /// Frosted glass card with white/ice glass surface and oceanic specular rim — light mode.
+
+    /// Frosted glass card.
     func navyCard(
         radius: CGFloat = 24,
         gradient: LinearGradient = .raahaNavy
     ) -> some View {
         self
             .background(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(Color.white.opacity(0.55))
-                    .background(
-                        .regularMaterial,
-                        in: RoundedRectangle(cornerRadius: radius, style: .continuous)
+                RoundedRectangle(
+                    cornerRadius: radius,
+                    style: .continuous
+                )
+                .fill(Color.white.opacity(0.55))
+                .background(
+                    .regularMaterial,
+                    in: RoundedRectangle(
+                        cornerRadius: radius,
+                        style: .continuous
                     )
+                )
             )
             .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(
-                        LinearGradient.glassRim,
-                        lineWidth: 1.2
-                    )
+                RoundedRectangle(
+                    cornerRadius: radius,
+                    style: .continuous
+                )
+                .stroke(
+                    LinearGradient.glassRim,
+                    lineWidth: 1.2
+                )
             )
-            .shadow(color: Color(hex: 0x49769F).opacity(0.22), radius: 16, x: 0, y: 6)
+            .shadow(
+                color: Color(hex: 0x49769F).opacity(0.22),
+                radius: 16,
+                x: 0,
+                y: 6
+            )
     }
 
-    /// Lighter frosted glass card — prominent white glass, light oceanic rim.
+    /// Lighter frosted glass card.
     func lightCard(radius: CGFloat = 22) -> some View {
         self
             .background(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(Color.white.opacity(0.65))
-                    .background(
-                        .regularMaterial,
-                        in: RoundedRectangle(cornerRadius: radius, style: .continuous)
+                RoundedRectangle(
+                    cornerRadius: radius,
+                    style: .continuous
+                )
+                .fill(Color.white.opacity(0.65))
+                .background(
+                    .regularMaterial,
+                    in: RoundedRectangle(
+                        cornerRadius: radius,
+                        style: .continuous
                     )
+                )
             )
             .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.90),
-                                Color(hex: 0x7BBDE8).opacity(0.45),
-                                Color(hex: 0xBDD8E9).opacity(0.20)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1.2
-                    )
+                RoundedRectangle(
+                    cornerRadius: radius,
+                    style: .continuous
+                )
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.90),
+                            Color(hex: 0x7BBDE8).opacity(0.45),
+                            Color(hex: 0xBDD8E9).opacity(0.20)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.2
+                )
             )
-            .shadow(color: Color(hex: 0x4E8EA2).opacity(0.18), radius: 12, x: 0, y: 5)
+            .shadow(
+                color: Color(hex: 0x4E8EA2).opacity(0.18),
+                radius: 12,
+                x: 0,
+                y: 5
+            )
     }
 
-    /// Floating glass capsule for tab bars and pill controls — light oceanic.
+    /// Floating glass capsule.
     @ViewBuilder
     func glassCapsule() -> some View {
         self
@@ -244,39 +287,46 @@ extension View {
                         lineWidth: 1.2
                     )
             )
-            .shadow(color: Color(hex: 0x49769F).opacity(0.30), radius: 18, x: 0, y: 8)
+            .shadow(
+                color: Color(hex: 0x49769F).opacity(0.30),
+                radius: 18,
+                x: 0,
+                y: 8
+            )
     }
 
-    /// RAAHA Light Oceanic Screen Background.
+    /// RAAHA screen background.
     func raahaScreenBackground() -> some View {
         self.background(RaahaScreenBackground())
     }
 }
 
-// MARK: - Light Oceanic Background with Atmospheric Depth
+// MARK: - Light Oceanic Background
 
 struct RaahaScreenBackground: View {
+
     var body: some View {
         GeometryReader { proxy in
             let w = proxy.size.width
             let h = proxy.size.height
 
             ZStack {
-                // 1. Base Gradient: Light Oceanic — icy white top to muted teal/slate bottom
+
+                // 1. Base gradient
                 LinearGradient(
                     stops: [
-                        .init(color: Color(hex: 0xEAF4FB), location: 0.0),  // Near-white icy
-                        .init(color: Color(hex: 0xBDD8E9), location: 0.20), // Pale Ice
-                        .init(color: Color(hex: 0x7BBDE8), location: 0.45), // Sky Blue
-                        .init(color: Color(hex: 0x6EA2B3), location: 0.68), // Mineral Aqua
-                        .init(color: Color(hex: 0x4E8EA2), location: 0.88), // Oceanic Teal
-                        .init(color: Color(hex: 0x49769F), location: 1.0)   // Muted Slate
+                        .init(color: Color(hex: 0xEAF4FB), location: 0.0),
+                        .init(color: Color(hex: 0xBDD8E9), location: 0.20),
+                        .init(color: Color(hex: 0x7BBDE8), location: 0.45),
+                        .init(color: Color(hex: 0x6EA2B3), location: 0.68),
+                        .init(color: Color(hex: 0x4E8EA2), location: 0.88),
+                        .init(color: Color(hex: 0x49769F), location: 1.0)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
 
-                // 2. Upper-left bright white/icy sunlight bloom
+                // 2. Upper-left sunlight bloom
                 Circle()
                     .fill(
                         RadialGradient(
@@ -294,7 +344,7 @@ struct RaahaScreenBackground: View {
                     .position(x: w * 0.15, y: h * 0.10)
                     .blur(radius: 60)
 
-                // 3. Mid-right Sky Blue (#7BBDE8) ambient bloom
+                // 3. Mid-right sky blue bloom
                 Circle()
                     .fill(
                         RadialGradient(
@@ -312,7 +362,7 @@ struct RaahaScreenBackground: View {
                     .position(x: w * 0.88, y: h * 0.38)
                     .blur(radius: 65)
 
-                // 4. Lower-left Teal (#4E8EA2) depth glow
+                // 4. Lower-left teal depth glow
                 Circle()
                     .fill(
                         RadialGradient(
@@ -330,7 +380,7 @@ struct RaahaScreenBackground: View {
                     .position(x: w * 0.18, y: h * 0.72)
                     .blur(radius: 70)
 
-                // 5. Frosted wave shape — upper band
+                // 5. Upper frosted wave
                 Path { p in
                     p.move(to: CGPoint(x: -20, y: h * 0.30))
                     p.addCurve(
@@ -359,7 +409,7 @@ struct RaahaScreenBackground: View {
                     )
                 )
 
-                // 6. Frosted wave shape — lower band
+                // 6. Lower frosted wave
                 Path { p in
                     p.move(to: CGPoint(x: -20, y: h * 0.62))
                     p.addCurve(

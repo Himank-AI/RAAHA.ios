@@ -1,3 +1,4 @@
+
 import SwiftUI
 
 // MARK: - Buttons
@@ -13,21 +14,22 @@ struct PillButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: 52)
             .background(surface)
             .overlay(
-                Capsule()
-                    .stroke(strokeColor, lineWidth: 1)
+                Capsule().stroke(strokeColor, lineWidth: 1)
             )
             .clipShape(Capsule())
             .shadow(color: shadowColor, radius: 12, x: 0, y: 6)
             .opacity(configuration.isPressed ? 0.92 : 1)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.spring(response: 0.22, dampingFraction: 0.72), value: configuration.isPressed)
+            .animation(
+                .spring(response: 0.22, dampingFraction: 0.72),
+                value: configuration.isPressed
+            )
     }
 
     private var textColor: Color {
         switch kind {
-        case .light: return Color.white
-        case .dark: return Color.white
-        case .accent: return Color(hex: 0x001D39) // High contrast dark text on Neon Lime
+        case .light, .dark: return .white
+        case .accent: return Color(hex: 0x001D39)
         }
     }
 
@@ -79,15 +81,19 @@ extension ButtonStyle where Self == PillButtonStyle {
 /// Tactile spring button style for cards and list items.
 struct TactileButtonStyle: ButtonStyle {
     var scale: CGFloat = 0.98
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? scale : 1.0)
             .opacity(configuration.isPressed ? 0.94 : 1.0)
-            .animation(.spring(response: 0.22, dampingFraction: 0.75), value: configuration.isPressed)
+            .animation(
+                .spring(response: 0.22, dampingFraction: 0.75),
+                value: configuration.isPressed
+            )
     }
 }
 
-/// Label for dark pills that carry a trailing chevron ("Save Trip ›").
+/// Label for dark pills that carry a trailing chevron.
 struct ChevronLabel: View {
     let title: String
 
@@ -101,7 +107,7 @@ struct ChevronLabel: View {
     }
 }
 
-// MARK: - Small building blocks
+// MARK: - Small Building Blocks
 
 /// A circular badge with a transport glyph.
 struct ModeBadge: View {
@@ -116,10 +122,17 @@ struct ModeBadge: View {
                 .fill(fill)
                 .background(.regularMaterial, in: Circle())
                 .overlay(
-                    Circle()
-                        .stroke(Color(hex: 0x7BBDE8).opacity(0.40), lineWidth: 1)
+                    Circle().stroke(
+                        Color(hex: 0x7BBDE8).opacity(0.40),
+                        lineWidth: 1
+                    )
                 )
-                .shadow(color: Color(hex: 0x49769F).opacity(0.20), radius: 6, x: 0, y: 3)
+                .shadow(
+                    color: Color(hex: 0x49769F).opacity(0.20),
+                    radius: 6,
+                    x: 0,
+                    y: 3
+                )
 
             glyph
                 .foregroundStyle(tint)
@@ -160,11 +173,18 @@ struct TimeChip: View {
                     .fill(fill)
                     .background(.regularMaterial, in: Capsule())
                     .overlay(
-                        Capsule()
-                            .stroke(Color(hex: 0x7BBDE8).opacity(0.40), lineWidth: 0.8)
+                        Capsule().stroke(
+                            Color(hex: 0x7BBDE8).opacity(0.40),
+                            lineWidth: 0.8
+                        )
                     )
             )
-            .shadow(color: Color(hex: 0x49769F).opacity(0.15), radius: 4, x: 0, y: 2)
+            .shadow(
+                color: Color(hex: 0x49769F).opacity(0.15),
+                radius: 4,
+                x: 0,
+                y: 2
+            )
     }
 }
 
@@ -179,14 +199,19 @@ struct SectionHeader: View {
             Text(title)
                 .font(.raahaHeadline)
                 .foregroundStyle(Color.midnightBlue)
+
             Spacer()
+
             if let action {
                 Button {
                     onAction?()
                 } label: {
                     HStack(spacing: 2) {
                         Text(action)
-                        if showsChevron { Image(systemName: "chevron.right").font(.raahaCaption2) }
+                        if showsChevron {
+                            Image(systemName: "chevron.right")
+                                .font(.raahaCaption2)
+                        }
                     }
                     .font(.raahaSubheadline)
                     .foregroundStyle(Color.royalBlue)
@@ -225,10 +250,14 @@ struct RouteBadge: View {
         HStack(spacing: 5) {
             Group {
                 switch kind {
-                case .fastest:     Image(systemName: "bolt.fill")
-                case .cheapest:    Text("₹")
-                case .comfortable: Image(systemName: "sparkles")
-                case .safest:      Image(systemName: "shield.fill")
+                case .fastest:
+                    Image(systemName: "bolt.fill")
+                case .cheapest:
+                    Text("₹")
+                case .comfortable:
+                    Image(systemName: "sparkles")
+                case .safest:
+                    Image(systemName: "shield.fill")
                 }
             }
             .font(.raahaCaption2)
@@ -243,16 +272,18 @@ struct RouteBadge: View {
         .background(
             Capsule()
                 .fill(badgeFill(for: kind))
-                .overlay(Capsule().stroke(Color.white.opacity(0.35), lineWidth: 0.8))
+                .overlay(
+                    Capsule().stroke(Color.white.opacity(0.35), lineWidth: 0.8)
+                )
         )
     }
 
     private func badgeFill(for kind: RouteKind) -> Color {
         switch kind {
-        case .fastest:     return Color.electricBlue
-        case .cheapest:    return Color.neonLime
+        case .fastest: return Color.electricBlue
+        case .cheapest: return Color.neonLime
         case .comfortable: return Color.brightBlue
-        case .safest:      return Color(hex: 0x10B981)
+        case .safest: return Color(hex: 0x10B981)
         }
     }
 }
@@ -262,6 +293,7 @@ struct LightingTag: View {
 
     var body: some View {
         let lit = lighting == .wellLit
+
         HStack(spacing: 4) {
             Image(systemName: lit ? "lightbulb.fill" : "lightbulb.slash")
             Text(lit ? "Well lit" : "Not well lit")
@@ -273,7 +305,9 @@ struct LightingTag: View {
         .background(
             Capsule()
                 .fill(lit ? Color.neonLime : Color.strawberry)
-                .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 0.8))
+                .overlay(
+                    Capsule().stroke(Color.white.opacity(0.3), lineWidth: 0.8)
+                )
         )
     }
 }
@@ -301,7 +335,7 @@ struct HairlineDivider: View {
     }
 }
 
-// MARK: - Slide to Start Live Journey Slider Button (Frosted Glassmorphism with Neon Lime Finish)
+// MARK: - Slide to Start Live Journey Slider
 
 struct SlideToStartJourneyButton: View {
     var title: String = "Start Live Journey"
@@ -323,6 +357,7 @@ struct SlideToStartJourneyButton: View {
             let textOpacity = max(0.0, 1.0 - Double(progress) * 1.6)
 
             ZStack(alignment: .leading) {
+
                 // 1. Frosted Glass Capsule Track
                 Capsule()
                     .fill(Color.white.opacity(0.55))
@@ -331,30 +366,43 @@ struct SlideToStartJourneyButton: View {
                         Capsule()
                             .stroke(
                                 LinearGradient(
-                                    colors: [Color.white.opacity(0.80), Color(hex: 0x7BBDE8).opacity(0.30)],
+                                    colors: [
+                                        Color.white.opacity(0.80),
+                                        Color(hex: 0x7BBDE8).opacity(0.30)
+                                    ],
                                     startPoint: .top,
                                     endPoint: .bottom
                                 ),
                                 lineWidth: 1.2
                             )
                     )
-                    .shadow(color: Color(hex: 0x49769F).opacity(0.25), radius: 14, x: 0, y: 6)
+                    .shadow(
+                        color: Color(hex: 0x49769F).opacity(0.25),
+                        radius: 14,
+                        x: 0,
+                        y: 6
+                    )
 
-                // 2. Active fill highlight behind the knob as it slides
+                // 2. Progressive Oceanic Colour Fill
                 Capsule()
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.brightBlue.opacity(0.55),
-                                Color.electricBlue.opacity(0.30)
+                                Color(hex: 0x7BBDE8).opacity(0.75),
+                                Color(hex: 0x4E8EA2).opacity(0.65)
                             ],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
-                    .frame(width: max(knobSize + padding * 2, dragOffset + knobSize + padding * 2))
+                    .frame(
+                        width: max(
+                            knobSize + padding * 2,
+                            dragOffset + knobSize + padding * 2
+                        )
+                    )
 
-                // 3. Center Label & Trailing Chevrons
+                // 3. Center Label and Trailing Chevrons
                 HStack {
                     Spacer(minLength: knobSize + padding + 8)
 
@@ -365,23 +413,24 @@ struct SlideToStartJourneyButton: View {
 
                     Spacer(minLength: 8)
 
-                    // Three progressive trailing chevrons (>>>) in bright sky tones
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.lightSkyBlue.opacity(0.40))
+                            .foregroundStyle(Color.electricBlue.opacity(0.45))
+
                         Image(systemName: "chevron.right")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
+                            .foregroundStyle(Color.electricBlue.opacity(0.70))
+
                         Image(systemName: "chevron.right")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.neonLime)
+                            .foregroundStyle(Color.electricBlue)
                     }
                     .padding(.trailing, 22)
                     .opacity(textOpacity)
                 }
 
-                // 4. Draggable Circular Knob with Chevron
+                // 4. Draggable Circular Knob
                 ZStack {
                     Circle()
                         .fill(
@@ -390,12 +439,31 @@ struct SlideToStartJourneyButton: View {
                                 : LinearGradient.raahaPill
                         )
                         .frame(width: knobSize, height: knobSize)
-                        .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 1.2))
-                        .shadow(color: Color.midnightBlue.opacity(0.5), radius: 8, x: 2, y: 3)
+                        .overlay(
+                            Circle().stroke(
+                                Color.white.opacity(0.65),
+                                lineWidth: 1.2
+                            )
+                        )
+                        .shadow(
+                            color: Color.electricBlue.opacity(
+                                isDragging ? 0.45 : 0.25
+                            ),
+                            radius: isDragging ? 14 : 8,
+                            x: 0,
+                            y: isDragging ? 5 : 3
+                        )
+                        .scaleEffect(isDragging ? 1.07 : 1.0)
+                        .animation(
+                            .spring(response: 0.25, dampingFraction: 0.65),
+                            value: isDragging
+                        )
 
                     Image(systemName: progress > 0.85 ? "checkmark" : "chevron.right")
                         .font(.system(size: 19, weight: .bold))
-                        .foregroundStyle(progress > 0.85 ? Color.midnightBlue : Color.white)
+                        .foregroundStyle(
+                            progress > 0.85 ? Color.midnightBlue : Color.white
+                        )
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .offset(x: padding + dragOffset)
@@ -403,28 +471,44 @@ struct SlideToStartJourneyButton: View {
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
                             guard !hasTriggered else { return }
+
                             isDragging = true
-                            dragOffset = min(max(0, value.translation.width), maxDrag)
+
+                            dragOffset = min(
+                                max(0, value.translation.width),
+                                maxDrag
+                            )
                         }
                         .onEnded { value in
                             guard !hasTriggered else { return }
+
                             isDragging = false
+
                             if dragOffset >= maxDrag * 0.70 {
                                 hasTriggered = true
-                                withAnimation(.spring(response: 0.22, dampingFraction: 0.75)) {
+
+                                withAnimation(
+                                    .spring(response: 0.22, dampingFraction: 0.75)
+                                ) {
                                     dragOffset = maxDrag
                                 }
+
                                 triggerHapticSuccess()
                                 action()
 
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                                     hasTriggered = false
-                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+
+                                    withAnimation(
+                                        .spring(response: 0.35, dampingFraction: 0.75)
+                                    ) {
                                         dragOffset = 0
                                     }
                                 }
                             } else {
-                                withAnimation(.spring(response: 0.35, dampingFraction: 0.72)) {
+                                withAnimation(
+                                    .spring(response: 0.35, dampingFraction: 0.72)
+                                ) {
                                     dragOffset = 0
                                 }
                             }
@@ -432,13 +516,24 @@ struct SlideToStartJourneyButton: View {
                 )
             }
             .frame(height: height)
+            .clipShape(Capsule())
         }
         .frame(height: height)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
         .accessibilityHint("Slide right or double-tap to start live journey")
         .accessibilityAction {
+            guard !hasTriggered else { return }
+            hasTriggered = true
+            triggerHapticSuccess()
             action()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                hasTriggered = false
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    dragOffset = 0
+                }
+            }
         }
     }
 
@@ -447,3 +542,270 @@ struct SlideToStartJourneyButton: View {
         generator.notificationOccurred(.success)
     }
 }
+
+import SwiftUI
+import UIKit
+
+// MARK: - RAAHA Journey Ignition Slider
+
+struct JourneyIgnitionSlider: View {
+
+    let action: () -> Void
+
+    @State private var dragOffset: CGFloat = 0
+    @State private var isDragging = false
+    @State private var hasTriggered = false
+    @State private var ignitionRotation: Double = 0
+
+    private let thumbSize: CGFloat = 52
+    private let sliderHeight: CGFloat = 68
+
+    private let navy = Color(hex: 0x001D39)
+    private let blue = Color(hex: 0x0A4174)
+    private let glow = Color(hex: 0x7BBDE8)
+
+    var body: some View {
+
+        GeometryReader { geometry in
+
+            let maxDrag = max(
+                geometry.size.width - thumbSize - 12,
+                0
+            )
+
+            let progress = maxDrag > 0
+                ? min(dragOffset / maxDrag, 1)
+                : 0
+
+            ZStack(alignment: .leading) {
+
+                // Background track
+                Capsule()
+                    .fill(Color.white.opacity(0.65))
+                    .overlay(
+                        Capsule()
+                            .stroke(
+                                Color.white.opacity(0.75),
+                                lineWidth: 1.2
+                            )
+                    )
+
+                // Glowing progress track
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                blue,
+                                glow,
+                                navy
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(
+                        width: min(
+                            dragOffset + thumbSize + 12,
+                            geometry.size.width
+                        )
+                    )
+                    .shadow(
+                        color: glow.opacity(isDragging ? 0.65 : 0.2),
+                        radius: isDragging ? 12 : 4
+                    )
+
+                // Slider label
+                HStack {
+                    Spacer()
+
+                    VStack(spacing: 2) {
+
+                        Text(
+                            hasTriggered
+                            ? "Journey Ignited!"
+                            : "Slide to start your journey"
+                        )
+                        .font(.system(
+                            size: 14,
+                            weight: .semibold,
+                            design: .rounded
+                        ))
+                        .foregroundStyle(
+                            hasTriggered || progress > 0.55
+                            ? .white
+                            : navy
+                        )
+
+//                        if !hasTriggered {
+//                            Text("Your next adventure awaits")
+//                                .font(.system(size: 10))
+//                                .foregroundStyle(
+//                                    progress > 0.55
+//                                    ? Color.white.opacity(0.8)
+//                                    : navy.opacity(0.55)
+//                                )
+//                        }
+                    }
+
+                    Spacer()
+                }
+                .opacity(isDragging ? 0.75 : 1)
+
+                // Ignition thumb
+                ZStack {
+
+                    // Outer glow
+                    Circle()
+                        .fill(glow.opacity(0.22))
+                        .frame(width: 66, height: 66)
+                        .blur(radius: 9)
+                        .opacity(isDragging || hasTriggered ? 1 : 0)
+
+                    // Rotating ignition ring
+                    Circle()
+                        .trim(from: 0, to: max(progress, 0.02))
+                        .stroke(
+                            AngularGradient(
+                                colors: [
+                                    glow,
+                                    .white,
+                                    blue,
+                                    glow
+                                ],
+                                center: .center
+                            ),
+                            style: StrokeStyle(
+                                lineWidth: 3,
+                                lineCap: .round
+                            )
+                        )
+                        .frame(width: 60, height: 60)
+                        .rotationEffect(
+                            .degrees(ignitionRotation)
+                        )
+
+                    // Thumb background
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    navy,
+                                    blue
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(
+                            width: thumbSize,
+                            height: thumbSize
+                        )
+                        .shadow(
+                            color: navy.opacity(0.3),
+                            radius: 7,
+                            x: 0,
+                            y: 3
+                        )
+
+                    // Arrow changes into checkmark
+                    Image(
+                        systemName: hasTriggered
+                        ? "checkmark"
+                        : "arrow.right"
+                    )
+                    .font(.system(size: 19, weight: .bold))
+                    .foregroundStyle(.white)
+                    .contentTransition(.symbolEffect(.replace))
+                }
+                .scaleEffect(
+                    hasTriggered ? 1.22 : (isDragging ? 1.10 : 1)
+                )
+                .offset(
+                    x: 6 + dragOffset,
+                    y: hasTriggered ? -5 : 0
+                )
+                .shadow(
+                    color: glow.opacity(isDragging ? 0.6 : 0),
+                    radius: 15
+                )
+                .gesture(
+
+                    DragGesture(minimumDistance: 0)
+
+                        .onChanged { value in
+
+                            guard !hasTriggered else { return }
+
+                            isDragging = true
+
+                            dragOffset = min(
+                                max(0, value.translation.width),
+                                maxDrag
+                            )
+
+                            ignitionRotation =
+                                Double(progress * 360)
+                        }
+
+                        .onEnded { _ in
+
+                            guard !hasTriggered else { return }
+
+                            isDragging = false
+
+                            if dragOffset >= maxDrag * 0.70 {
+
+                                hasTriggered = true
+
+                                withAnimation(
+                                    .spring(
+                                        response: 0.28,
+                                        dampingFraction: 0.55
+                                    )
+                                ) {
+                                    dragOffset = maxDrag
+                                }
+
+                                UINotificationFeedbackGenerator()
+                                    .notificationOccurred(.success)
+
+                                action()
+
+                                DispatchQueue.main.asyncAfter(
+                                    deadline: .now() + 0.8
+                                ) {
+
+                                    withAnimation(
+                                        .spring(
+                                            response: 0.4,
+                                            dampingFraction: 0.72
+                                        )
+                                    ) {
+
+                                        dragOffset = 0
+                                        hasTriggered = false
+                                        ignitionRotation = 0
+                                    }
+                                }
+
+                            } else {
+
+                                withAnimation(
+                                    .spring(
+                                        response: 0.4,
+                                        dampingFraction: 0.72
+                                    )
+                                ) {
+
+                                    dragOffset = 0
+                                    ignitionRotation = 0
+                                }
+                            }
+                        }
+                )
+            }
+        }
+        .frame(height: sliderHeight)
+    }
+}
+

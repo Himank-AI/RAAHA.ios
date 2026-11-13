@@ -1,18 +1,29 @@
 import SwiftUI
 
 struct RouteDetailView: View {
+
     let kind: RouteKind
+
     @EnvironmentObject private var router: AppRouter
+
     @State private var expandedLegIds: Set<String> = []
 
-    private var option: RouteOption { MockData.route(kind) }
+    private var option: RouteOption {
+        MockData.route(kind)
+    }
 
     var body: some View {
+
         ScrollView {
+
             VStack(alignment: .leading, spacing: 0) {
-                // Header info
+
+                // MARK: - Header Info
+
                 HStack(alignment: .top) {
+
                     VStack(alignment: .leading, spacing: 4) {
+
                         RouteBadge(kind: kind)
 
                         Text("\(option.minutes) min")
@@ -21,7 +32,8 @@ struct RouteDetailView: View {
                             .padding(.top, 4)
 
                         HStack(spacing: 6) {
-                            Text("\(option.modeCount) modes  ·")
+
+                            Text("\(option.modeCount) modes ·")
                                 .font(.raahaTitle3)
                                 .foregroundStyle(Color.lightSkyBlue)
 
@@ -35,11 +47,13 @@ struct RouteDetailView: View {
                 }
                 .padding(.top, 4)
 
-                // Journey Endpoints
+                // MARK: - Journey Endpoints
+
                 endpointsSection
                     .padding(.top, 16)
 
-                // Steps Card with expandable legs
+                // MARK: - Steps Card
+
                 stepsCard
                     .padding(.top, 18)
             }
@@ -47,14 +61,19 @@ struct RouteDetailView: View {
             .padding(.top, 4)
         }
         .contentMargins(.bottom, 28, for: .scrollContent)
+
+        // MARK: - Journey Ignition Slider
+
         .safeAreaInset(edge: .bottom) {
-            SlideToStartJourneyButton(title: "Start Live Journey") {
+
+            JourneyIgnitionSlider {
                 router.push(.live(kind, 0))
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
             .padding(.bottom, 8)
             .background(
+
                 LinearGradient(
                     colors: [
                         Color.midnightBlue.opacity(0.0),
@@ -67,21 +86,27 @@ struct RouteDetailView: View {
                 .ignoresSafeArea(edges: .bottom)
             )
         }
-        // Fixed background illustration — pinned to top-right, does NOT scroll
+
+        // MARK: - Fixed Background Illustration
+
         .background(alignment: .topTrailing) {
+
             transitIllustration
                 .ignoresSafeArea(edges: .top)
         }
+
         .raahaScreenBackground()
         .pushedChrome()
+
         .onAppear {
             expandedLegIds.removeAll()
         }
     }
 
     // MARK: - Transit Illustration Background
-    /// Fixed non-scrolling background illustration pinned to top-right corner.
+
     private var transitIllustration: some View {
+
         Image("transit_illustration")
             .resizable()
             .scaledToFill()
@@ -91,8 +116,11 @@ struct RouteDetailView: View {
                 height: UIScreen.main.bounds.height * 0.42
             )
             .clipped()
-            // Left-edge fade + bottom-edge fade combined via nested mask
+
+            // Left-edge and bottom-edge fade
+
             .mask(
+
                 LinearGradient(
                     stops: [
                         .init(color: .clear, location: 0.0),
@@ -103,7 +131,9 @@ struct RouteDetailView: View {
                     startPoint: .leading,
                     endPoint: .trailing
                 )
+
                 .mask(
+
                     LinearGradient(
                         stops: [
                             .init(color: .black, location: 0.0),
@@ -119,14 +149,18 @@ struct RouteDetailView: View {
             .allowsHitTesting(false)
     }
 
-    // MARK: - Endpoints Section (Matches 2nd Attached Image)
+    // MARK: - Endpoints Section
+
     private var endpointsSection: some View {
+
         VStack(alignment: .leading, spacing: 14) {
+
             endpointRow(
                 isDestination: false,
                 label: "FROM",
                 value: router.journeyFrom
             )
+
             endpointRow(
                 isDestination: true,
                 label: "TO",
@@ -136,24 +170,44 @@ struct RouteDetailView: View {
         .padding(.horizontal, 4)
     }
 
-    private func endpointRow(isDestination: Bool, label: String, value: String) -> some View {
+    // MARK: - Endpoint Row
+
+    private func endpointRow(
+        isDestination: Bool,
+        label: String,
+        value: String
+    ) -> some View {
+
         HStack(spacing: 12) {
+
             ZStack {
+
                 Circle()
                     .fill(Color.white.opacity(0.12))
                     .background(.ultraThinMaterial, in: Circle())
                     .frame(width: 36, height: 36)
-                    .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1))
-                    .shadow(color: Color.midnightBlue.opacity(0.25), radius: 4, x: 0, y: 2)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                    )
+                    .shadow(
+                        color: Color.midnightBlue.opacity(0.25),
+                        radius: 4,
+                        x: 0,
+                        y: 2
+                    )
 
                 if isDestination {
+
                     Image("icon_pin")
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 14, height: 14)
                         .foregroundStyle(Color.neonLime)
+
                 } else {
+
                     Circle()
                         .fill(Color.lightSkyBlue)
                         .frame(width: 10, height: 10)
@@ -161,6 +215,7 @@ struct RouteDetailView: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
+
                 Text(label)
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(Color.lightSkyBlue)
@@ -176,13 +231,19 @@ struct RouteDetailView: View {
     }
 
     // MARK: - Steps Card
+
     private var stepsCard: some View {
+
         VStack(spacing: 0) {
+
             HStack {
+
                 Text("Step-by-Step Directions")
                     .font(.raahaFootnoteSemibold)
                     .foregroundStyle(Color.honeydew)
+
                 Spacer()
+
                 Text("Tap step to expand")
                     .font(.raahaCaption2)
                     .foregroundStyle(Color.lightSkyBlue.opacity(0.7))
@@ -194,14 +255,27 @@ struct RouteDetailView: View {
             HairlineDivider(color: Color.white.opacity(0.15))
 
             VStack(spacing: 0) {
-                ForEach(Array(option.legs.enumerated()), id: \.element.id) { index, leg in
+
+                ForEach(
+                    Array(option.legs.enumerated()),
+                    id: \.element.id
+                ) { index, leg in
+
                     let isExpanded = expandedLegIds.contains(leg.id)
+
                     InteractiveLegRow(
                         leg: leg,
                         isLast: index == option.legs.count - 1,
                         isExpanded: isExpanded,
                         onToggleExpand: {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+
+                            withAnimation(
+                                .spring(
+                                    response: 0.3,
+                                    dampingFraction: 0.75
+                                )
+                            ) {
+
                                 if isExpanded {
                                     expandedLegIds.remove(leg.id)
                                 } else {
@@ -221,27 +295,46 @@ struct RouteDetailView: View {
 }
 
 // MARK: - Interactive Leg Row
+
 private struct InteractiveLegRow: View {
+
     let leg: RouteLeg
     let isLast: Bool
     let isExpanded: Bool
     let onToggleExpand: () -> Void
 
-    // Walk and Auto do not have dropdowns per user instructions
+    // Walk and Auto do not have dropdowns
+
     private var isExpandable: Bool {
-        leg.mode == .metro || leg.mode == .bus || leg.mode == .train
+
+        leg.mode == .metro ||
+        leg.mode == .bus ||
+        leg.mode == .train
     }
 
     var body: some View {
+
         Button {
+
             if isExpandable {
                 onToggleExpand()
             }
+
         } label: {
+
             HStack(alignment: .top, spacing: 14) {
+
                 VStack(spacing: 4) {
-                    ModeBadge(mode: leg.mode, size: 44, fill: Color.white.opacity(0.12), tint: Color.neonLime)
+
+                    ModeBadge(
+                        mode: leg.mode,
+                        size: 44,
+                        fill: Color.white.opacity(0.12),
+                        tint: Color.neonLime
+                    )
+
                     if !isLast {
+
                         DashedVLine()
                             .frame(maxHeight: .infinity)
                             .padding(.bottom, 2)
@@ -249,25 +342,39 @@ private struct InteractiveLegRow: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    // Top header line: Title (+ expand indicator) & Fare Chip uniformly right-aligned
+
+                    // Title and Fare Chip
+
                     HStack(alignment: .center, spacing: 8) {
+
                         HStack(spacing: 6) {
+
                             Text(leg.title)
                                 .font(.raahaHeadline)
                                 .foregroundStyle(Color.honeydew)
 
-                            // Show chevron indicator directly beside expandable mode titles (e.g. Metro)
                             if isExpandable {
-                                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
+
+                                Image(
+                                    systemName: isExpanded
+                                    ? "chevron.up.circle.fill"
+                                    : "chevron.down.circle"
+                                )
+                                .font(.system(size: 15))
+                                .foregroundStyle(
+                                    Color.lightSkyBlue.opacity(0.85)
+                                )
                             }
                         }
 
                         Spacer(minLength: 8)
 
                         if let fare = leg.fare {
-                            FareChip(mode: leg.mode, text: fare)
+
+                            FareChip(
+                                mode: leg.mode,
+                                text: fare
+                            )
                         }
                     }
                     .padding(.top, 2)
@@ -281,84 +388,145 @@ private struct InteractiveLegRow: View {
                         .foregroundStyle(Color.lightSkyBlue)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    // Walk does not show lighting per user instructions
-                    if let lighting = leg.lighting, leg.mode != .walk {
+                    // Walk does not show lighting
+
+                    if let lighting = leg.lighting,
+                       leg.mode != .walk {
+
                         LightingTag(lighting: lighting)
                             .padding(.top, 4)
                     }
 
-                    // Expanded step details
+                    // Expanded Step Details
+
                     if isExpanded && isExpandable {
+
                         expandedLegDetails(for: leg)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            .transition(
+                                .opacity.combined(
+                                    with: .move(edge: .top)
+                                )
+                            )
                             .padding(.top, 4)
                             .padding(.bottom, 6)
                     }
 
                     if !isLast {
-                        HairlineDivider(color: Color.white.opacity(0.12))
-                            .padding(.top, 8)
-                            .padding(.bottom, 6)
+
+                        HairlineDivider(
+                            color: Color.white.opacity(0.12)
+                        )
+                        .padding(.top, 8)
+                        .padding(.bottom, 6)
                     }
                 }
             }
             .contentShape(Rectangle())
         }
+
         .buttonStyle(.plain)
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityElement(children: .combine)
         .sensoryFeedback(.selection, trigger: isExpanded)
     }
 
+    // MARK: - Expanded Leg Details
+
     @ViewBuilder
     private func expandedLegDetails(for leg: RouteLeg) -> some View {
+
         VStack(alignment: .leading, spacing: 6) {
+
             switch leg.mode {
+
             case .metro:
-                guidancePill(icon: "tram.fill", text: "Platform 2 • Washermanpet to Airport Corridor")
+
+                guidancePill(
+                    icon: "tram.fill",
+                    text: "Platform 2 • Washermanpet to Airport Corridor"
+                )
+
             case .bus:
-                guidancePill(icon: "bus.fill", text: "MTC Bus Bay 4 • Frequency every 5–10 mins")
-                guidancePill(icon: "ticket.fill", text: "Singara Chennai Card & Cash Accepted")
+
+                guidancePill(
+                    icon: "bus.fill",
+                    text: "MTC Bus Bay 4 • Frequency every 5–10 mins"
+                )
+
+                guidancePill(
+                    icon: "ticket.fill",
+                    text: "Singara Chennai Card & Cash Accepted"
+                )
+
             case .train:
-                guidancePill(icon: "train.side.front.car", text: "Suburban Platform 1 • Beach–Tambaram Fast")
+
+                guidancePill(
+                    icon: "train.side.front.car",
+                    text: "Suburban Platform 1 • Beach–Tambaram Fast"
+                )
+
             default:
+
                 EmptyView()
             }
         }
         .padding(10)
         .background(
+
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color.white.opacity(0.08))
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(
+                    .ultraThinMaterial,
+                    in: RoundedRectangle(
+                        cornerRadius: 14,
+                        style: .continuous
+                    )
+                )
         )
         .overlay(
+
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
     }
 
-    private func guidancePill(icon: String, text: String) -> some View {
+    // MARK: - Guidance Pill
+
+    private func guidancePill(
+        icon: String,
+        text: String
+    ) -> some View {
+
         HStack(spacing: 8) {
+
             Image(systemName: icon)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color.neonLime)
                 .frame(width: 16)
+
             Text(text)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.honeydew)
+
             Spacer()
         }
     }
 }
 
+// MARK: - Fare Chip
+
 private struct FareChip: View {
+
     let mode: TransportMode
     let text: String
 
     var body: some View {
+
         HStack(spacing: 5) {
+
             Image(systemName: "ticket")
                 .font(.system(size: 11, weight: .semibold))
+
             Text(text)
                 .font(.system(size: 12, weight: .semibold))
         }
@@ -366,13 +534,23 @@ private struct FareChip: View {
         .padding(.horizontal, 9)
         .padding(.vertical, 4.5)
         .background(
+
             Capsule()
                 .fill(Color.white.opacity(0.10))
                 .background(.ultraThinMaterial, in: Capsule())
         )
         .overlay(
+
             Capsule()
                 .stroke(Color.white.opacity(0.20), lineWidth: 1)
         )
     }
+}
+
+// MARK: - Preview
+
+#Preview("Route Detail") {
+
+    RouteDetailView(kind: .fastest)
+        .environmentObject(AppRouter())
 }
