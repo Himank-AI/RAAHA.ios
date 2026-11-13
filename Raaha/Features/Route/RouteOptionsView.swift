@@ -11,7 +11,10 @@ struct RouteOptionsView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            JourneyMapView()
+            JourneyMapView(
+                routeKind: selectedRoute,
+                activeMode: selectedOption.chain.first(where: { $0 != .walk }) ?? .metro
+            )
 
             BottomPanel(isExpanded: $isPanelExpanded) {
                 VStack(spacing: 12) {
@@ -79,11 +82,11 @@ private struct RouteOptionRow: View {
                         HStack(alignment: .firstTextBaseline, spacing: 5) {
                             Text("Est.")
                                 .font(.raahaFootnote)
-                                .foregroundStyle(Color.steelBlue.opacity(0.8))
+                                .foregroundStyle(Color.steelBlue.opacity(0.85))
 
                             Text("\(option.minutes) min")
                                 .font(.raahaTitle3)
-                                .foregroundStyle(Color.midnightBlue)
+                                .foregroundStyle(Color.deepSpace)
                         }
                         .lineLimit(1)
 
@@ -96,11 +99,11 @@ private struct RouteOptionRow: View {
                     VStack(alignment: .trailing, spacing: 3) {
                         Text("Est. Cost")
                             .font(.raahaCaption)
-                            .foregroundStyle(Color.steelBlue.opacity(0.8))
+                            .foregroundStyle(Color.steelBlue.opacity(0.85))
 
                         Text(option.fareText)
                             .font(.raahaTitle3.weight(.bold))
-                            .foregroundStyle(Color.royalBlue)
+                            .foregroundStyle(Color.deepSpace)
                             .lineLimit(1)
                     }
                 }
@@ -118,7 +121,7 @@ private struct RouteOptionRow: View {
                     .stroke(
                         isSelected
                             ? LinearGradient(
-                                colors: [Color(hex: 0x4E8EA2), Color(hex: 0x7BBDE8).opacity(0.60)],
+                                colors: [Color.transportMetro, Color.steelBlue.opacity(0.60)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -131,7 +134,7 @@ private struct RouteOptionRow: View {
                     )
             )
             .shadow(
-                color: isSelected ? Color(hex: 0x4E8EA2).opacity(0.30) : Color(hex: 0x49769F).opacity(0.14),
+                color: isSelected ? Color.transportMetro.opacity(0.28) : Color.steelBlue.opacity(0.14),
                 radius: isSelected ? 10 : 6,
                 x: 0,
                 y: isSelected ? 4 : 2
@@ -150,14 +153,14 @@ private struct RouteOptionRow: View {
         ZStack {
             if isSelected {
                 Circle()
-                    .fill(Color(hex: 0x4E8EA2))
+                    .fill(Color.transportMetro)
                     .frame(width: 24, height: 24)
                 Image(systemName: "checkmark")
                     .font(.system(size: 11, weight: .black))
                     .foregroundStyle(Color.white)
             } else {
                 Circle()
-                    .stroke(Color(hex: 0x49769F).opacity(0.40), lineWidth: 1.5)
+                    .stroke(Color.steelBlue.opacity(0.40), lineWidth: 1.5)
                     .frame(width: 24, height: 24)
             }
         }
@@ -198,17 +201,17 @@ private struct RouteOptionRow: View {
 
     private var badgeBackground: Color {
         switch option.kind {
-        case .fastest:     return Color(hex: 0x457B9D)
-        case .cheapest:    return Color(hex: 0x299D8F)
-        case .comfortable: return Color(hex: 0xA8DADC)
-        case .safest:      return Color(hex: 0x18866B)
+        case .fastest:     return Color.steelBlue      // #457B9D
+        case .cheapest:    return Color(hex: 0x299D8F)  // Teal Green
+        case .comfortable: return Color.frostedBlue     // #A8DADC
+        case .safest:      return Color(hex: 0x18866B)  // Forest Green
         }
     }
 
     private var badgeTextColor: Color {
         switch option.kind {
         case .comfortable:
-            return Color(hex: 0x1D3557)
+            return Color.deepSpace // #1D3557
         default:
             return Color.white
         }
@@ -219,22 +222,28 @@ private struct RouteOptionRow: View {
         HStack(spacing: 0) {
             ForEach(Array(option.chain.enumerated()), id: \.offset) { index, mode in
                 if index > 0 {
+                    let prevMode = option.chain[index - 1]
                     HStack(spacing: 2) {
-                        ForEach(0..<3, id: \.self) { _ in
+                        ForEach(0..<3, id: \.self) { dotIndex in
                             Circle()
-                                .fill(Color(hex: 0x49769F).opacity(0.45))
+                                .fill(
+                                    dotIndex == 0 ? prevMode.color.opacity(0.60) :
+                                    dotIndex == 1 ? Color.steelBlue.opacity(0.40) :
+                                    mode.color.opacity(0.60)
+                                )
                                 .frame(width: 2.5, height: 2.5)
                         }
                     }
-                    .padding(.horizontal, 2.5)
+                    .padding(.horizontal, 3)
                 }
 
                 ZStack {
                     Circle()
-                        .fill(Color(hex: 0x7BBDE8).opacity(0.18))
+                        .fill(mode.tintedBackground)
                         .background(.regularMaterial, in: Circle())
                         .frame(width: 28, height: 28)
-                        .overlay(Circle().stroke(Color(hex: 0x49769F).opacity(0.25), lineWidth: 0.8))
+                        .overlay(Circle().stroke(mode.strokeColor, lineWidth: 1))
+                        .shadow(color: mode.color.opacity(0.16), radius: 4, x: 0, y: 1.5)
 
                     modeGlyph(for: mode)
                         .frame(width: 14, height: 14)
@@ -246,20 +255,17 @@ private struct RouteOptionRow: View {
     @ViewBuilder
     private func modeGlyph(for mode: TransportMode) -> some View {
         Group {
-            switch mode {
-            case .walk:
-                Image(systemName: "figure.walk")
-            case .bus:
-                Image(systemName: "bus.fill")
-            case .metro, .train:
-                Image(systemName: "tram.fill")
-            case .auto, .cab, .car:
-                Image(systemName: "car.fill")
-            case .bike:
-                Image(systemName: "bicycle")
+            if let asset = mode.customAssetName {
+                Image(asset)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                Image(systemName: mode.symbolName)
+                    .resizable()
+                    .scaledToFit()
             }
         }
-        .font(.system(size: 13, weight: .semibold))
-        .foregroundStyle(Color(hex: 0x4E8EA2))
+        .foregroundStyle(mode.color)
     }
 }

@@ -161,6 +161,11 @@ struct ProfileView: View {
 
     private func modeChip(_ name: String, symbol: String, customAsset: String?) -> some View {
         let isSelected = selectedCommuteModes.contains(name)
+        let mode = TransportMode.mode(for: name)
+        let modeColor = mode?.color ?? Color.steelBlue
+        let modeBg = mode?.tintedBackground ?? Color.white.opacity(0.12)
+        let modeStroke = mode?.strokeColor ?? Color.white.opacity(0.20)
+
         return Button {
             withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
                 if isSelected {
@@ -185,22 +190,22 @@ struct ProfileView: View {
                     .font(.raahaCaption)
                     .lineLimit(1)
             }
-            .foregroundStyle(isSelected ? Color.midnightBlue : Color.white)
+            .foregroundStyle(isSelected ? modeColor : modeColor.opacity(0.75))
             .frame(maxWidth: .infinity, minHeight: 38)
             .background(
                 Capsule()
                     .fill(
                         isSelected
-                        ? AnyShapeStyle(.emraldGreen)
+                        ? AnyShapeStyle(modeBg)
                         : AnyShapeStyle(Color.white.opacity(0.08))
                     )
                     .background(.ultraThinMaterial, in: Capsule())
             )
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.white.opacity(0.4) : Color.white.opacity(0.18), lineWidth: 1)
+                    .stroke(isSelected ? modeStroke : Color.white.opacity(0.18), lineWidth: 1)
             )
-            .shadow(color: isSelected ? .emraldGreen.opacity(0.3) : Color.clear, radius: 6, x: 0, y: 2)
+            .shadow(color: isSelected ? modeColor.opacity(0.25) : Color.clear, radius: 6, x: 0, y: 2)
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)

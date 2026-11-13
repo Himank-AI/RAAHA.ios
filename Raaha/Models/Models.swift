@@ -10,11 +10,40 @@ enum TransportMode: Hashable {
         case .walk: return "Walk"
         case .metro: return "Metro"
         case .bus: return "Bus"
-        case .auto: return "Auto"
+        case .auto: return "Auto Rickshaw"
         case .bike: return "Bike"
-        case .train: return "Train"
+        case .train: return "Local Train"
         case .cab: return "Cab"
         case .car: return "Car"
+        }
+    }
+
+    /// Dedicated Transport Mode Colour
+    var color: Color {
+        switch self {
+        case .walk:       return .transportWalk   // Nature Green #218C70
+        case .bike:       return .transportBike   // Amber Orange #E58A27
+        case .auto:       return .transportAuto   // Golden Yellow #C28A12
+        case .bus:        return .transportBus    // Sky Blue #38A8D8
+        case .cab, .car:  return .transportCab    // Royal Lavender #8064A9
+        case .train:      return .transportTrain  // Steel Blue #457B9D
+        case .metro:      return .transportMetro  // Ocean Teal #16859A
+        }
+    }
+
+    /// Soft, light-tinted circular background derived from respective colour
+    var tintedBackground: Color {
+        switch self {
+        case .bus: return .transportBusBg         // Light Sky Blue #E2F4FC
+        default:   return color.opacity(0.14)
+        }
+    }
+
+    /// Subtle rim stroke derived from respective colour
+    var strokeColor: Color {
+        switch self {
+        case .bus: return color.opacity(0.35)
+        default:   return color.opacity(0.28)
         }
     }
 
@@ -41,6 +70,19 @@ enum TransportMode: Hashable {
         default:     return nil
         }
     }
+
+    /// Match mode from string identifier
+    static func mode(for name: String) -> TransportMode? {
+        let lower = name.lowercased()
+        if lower.contains("walk") { return .walk }
+        if lower.contains("bike") || lower.contains("bicycle") { return .bike }
+        if lower.contains("auto") { return .auto }
+        if lower.contains("bus") { return .bus }
+        if lower.contains("cab") || lower.contains("taxi") || lower.contains("car") { return .cab }
+        if lower.contains("train") { return .train }
+        if lower.contains("metro") { return .metro }
+        return nil
+    }
 }
 
 // MARK: - Routes
@@ -62,15 +104,15 @@ enum RouteKind: String, CaseIterable, Hashable, Identifiable {
     var badgeFill: Color {
         switch self {
         case .fastest:     return Color.steelBlue      // #457B9D
-        case .cheapest:    return Color.tealGreen       // #2A9D8F
+        case .cheapest:    return Color(hex: 0x299D8F)  // Teal Green
         case .comfortable: return Color.frostedBlue     // #A8DADC
-        case .safest:      return Color.statusGreen     // #16866A
+        case .safest:      return Color(hex: 0x18866B)  // Forest Green
         }
     }
 
     var badgeText: Color {
-        // frostedBlue (#A8DADC) is a light fill — needs dark text
-        self == .comfortable ? Color.deepSpace : Color.honeydew
+        // frostedBlue (#A8DADC) is a light fill — needs Deep Space Blue text
+        self == .comfortable ? Color.deepSpace : Color.white
     }
 }
 

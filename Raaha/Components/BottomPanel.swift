@@ -3,6 +3,9 @@ import MapKit
 
 /// Chennai map used behind the route and live-journey panels.
 struct JourneyMapView: View {
+    var routeKind: RouteKind? = nil
+    var activeMode: TransportMode? = nil
+
     @State private var position = MapCameraPosition.region(
         MKCoordinateRegion(
             center: MockData.mapCenter,
@@ -10,14 +13,18 @@ struct JourneyMapView: View {
         )
     )
 
+    private var indicatorColor: Color {
+        activeMode?.color ?? Color.transportMetro
+    }
+
     var body: some View {
         Map(position: $position) {
             MapPolyline(coordinates: MockData.routeCoordinates)
-                .stroke(Color.strawberry, lineWidth: 5)
+                .stroke(indicatorColor, lineWidth: 5)
             Marker("Current Location", systemImage: "location.fill", coordinate: MockData.origin)
                 .tint(Color.steelBlue)
             Marker("Phoenix Mall", image: "icon_pin", coordinate: MockData.destination)
-                .tint(Color.strawberry)
+                .tint(indicatorColor)
         }
         .mapStyle(.standard(elevation: .flat))
         .ignoresSafeArea()
@@ -39,6 +46,7 @@ struct BottomPanel<Content: View>: View {
     }
 
     @State private var _expanded = true
+    @State private var panelHeight: CGFloat = 0
     @GestureState private var drag: CGFloat = 0
 
     private var expanded: Bool {
@@ -56,17 +64,40 @@ struct BottomPanel<Content: View>: View {
     var body: some View {
         GeometryReader { proxy in
             if fitsContent {
+                let hidden = max(panelHeight - 48, 0)
+                let base = expanded ? 0 : hidden
+                let offset = min(max(base + drag, 0), hidden)
+
                 VStack(spacing: 0) {
                     grabber
+                        .gesture(
+                            DragGesture()
+                                .updating($drag) { value, state, _ in state = value.translation.height }
+                                .onEnded { value in
+                                    withAnimation(.snappy(duration: 0.3)) {
+                                        if value.translation.height < -25 { setExpanded(true) }
+                                        else if value.translation.height > 25 { setExpanded(false) }
+                                    }
+                                }
+                        )
+
                     ScrollView(showsIndicators: false) {
                         content
                             .padding(.bottom, 28)
                     }
                     .fixedSize(horizontal: false, vertical: true)
                 }
-                .frame(width: proxy.size.width)
-                .frame(maxHeight: proxy.size.height * 0.85, alignment: .bottom)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.preference(key: PanelHeightPreferenceKey.self, value: geo.size.height)
+                    }
+                )
+                .onPreferenceChange(PanelHeightPreferenceKey.self) { height in
+                    panelHeight = height
+                }
                 .background(panelBackground)
+                .frame(width: proxy.size.width)
+                .offset(y: offset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             } else {
                 let fullHeight = proxy.size.height * 0.88
@@ -125,8 +156,8 @@ struct BottomPanel<Content: View>: View {
             .frame(width: 36, height: 4)
             .frame(maxWidth: .infinity, minHeight: 14)
             .contentShape(Rectangle())
-            .padding(.top, 6)
-            .padding(.bottom, 2)
+            .padding(.top, 10)
+            .padding(.bottom, 6)
             .onTapGesture {
                 withAnimation(.snappy(duration: 0.3)) { setExpanded(!expanded) }
             }
@@ -134,5 +165,15 @@ struct BottomPanel<Content: View>: View {
             .accessibilityLabel(expanded ? "Collapse panel" : "Expand panel")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { setExpanded(!expanded) }
+    }
+}
+
+private struct PanelHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next > 0 {
+            value = next
+        }
     }
 }

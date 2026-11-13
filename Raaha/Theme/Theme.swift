@@ -29,8 +29,9 @@ extension Color {
     /// #BDD8E9 – Pale Ice / Frosted Powder (Tone 7)
     static let oceanicBDD8E9 = Color(hex: 0xBDD8E9)
 
-    // MARK: - Semantic Aliases Mapped to the 7-Color Gradient
-    static let midnightBlue = Color(hex: 0x001D39)
+    // MARK: - Semantic Aliases Mapped to the 7-Color Gradient & Deep Space Blue
+    /// Primary text — Deep Space Blue #1D3557
+    static let midnightBlue = Color(hex: 0x1D3557)
     static let royalBlue = Color(hex: 0x0A4174)
     static let electricBlue = Color(hex: 0x4E8EA2)
     static let brightBlue = Color(hex: 0x7BBDE8)
@@ -43,20 +44,39 @@ extension Color {
     /// Neon Lime Green #C6FF00 – high-contrast accent for key numbers, active states, indicators
     static let neonLime = Color(hex: 0xC6FF00)
 
-    // MARK: - Semantic Brand Color Aliases (light-mode oceanic glassmorphism)
-    /// Primary alert / accent
-    static let strawberry = Color(hex: 0xFF4D5E)
-    /// Primary text on light oceanic surfaces — Deep Abyssal Navy
-    static let honeydew = Color(hex: 0x001D39)
-    /// Secondary text — Prussian Blue / Deep Cerulean
-    static let frostedBlue = Color(hex: 0x0A4174)
-    /// Tertiary text & icon fills — Muted Slate Blue
-    static let steelBlue = Color(hex: 0x49769F)
-    /// Deep dark tone — Deep Abyssal Navy #001D39
-    static let deepSpace = Color(hex: 0x001D39)
+    // MARK: - RAAHA Brand Palette (Preserved)
+    /// Honeydew #F1FAEE
+    static let honeydew = Color(hex: 0xF1FAEE)
+    /// Frosted Blue #A8DADC
+    static let frostedBlue = Color(hex: 0xA8DADC)
+    /// Steel Blue #457B9D
+    static let steelBlue = Color(hex: 0x457B9D)
+    /// Deep Space Blue #1D3557 – Primary transport labels, headings, and high-contrast text
+    static let deepSpace = Color(hex: 0x1D3557)
+    /// Strawberry Red #E63946 – Primary alert / accent
+    static let strawberry = Color(hex: 0xE63946)
 
+    // MARK: - Dedicated Transport Mode Colour System
+    /// Walk: Nature Green — #218C70
+    static let transportWalk = Color(hex: 0x218C70)
+    /// Bike: Amber Orange — #E58A27
+    static let transportBike = Color(hex: 0xE58A27)
+    /// Auto Rickshaw: Golden Yellow — #C28A12
+    static let transportAuto = Color(hex: 0xC28A12)
+    /// Bus: Sky Blue — #38A8D8
+    static let transportBus = Color(hex: 0x38A8D8)
+    /// Bus Background: Light Sky Blue — #E2F4FC
+    static let transportBusBg = Color(hex: 0xE2F4FC)
+    /// Cab / Car: Royal Lavender — #8064A9
+    static let transportCab = Color(hex: 0x8064A9)
+    /// Local Train: Steel Blue — #457B9D
+    static let transportTrain = Color(hex: 0x457B9D)
+    /// Metro: Ocean Teal — #16859A
+    static let transportMetro = Color(hex: 0x16859A)
+
+    // MARK: - Semantic Brand Color Aliases (light-mode oceanic glassmorphism)
     /// Teal Green #2A9D8F
-    static let tealGreen = Color(hex: 0x4E8EA2)
+    static let tealGreen = Color(hex: 0x2A9D8F)
     /// Status Green – Vibrant Neon Lime Green for arrival, live status, verified badges
     static let statusGreen = Color(hex: 0xC6FF00)
 }

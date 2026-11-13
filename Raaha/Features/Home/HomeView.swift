@@ -90,7 +90,7 @@ struct HomeView: View {
 
             Text("Where to in\nChennai?")
                 .font(.system(size: 34, weight: .bold))
-                .foregroundStyle(Color.honeydew)
+                .foregroundStyle(Color.royalBlue)
                 .lineSpacing(1)
                 .fixedSize(horizontal: false, vertical: true)
 

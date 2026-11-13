@@ -103,26 +103,29 @@ struct ChevronLabel: View {
 
 // MARK: - Small building blocks
 
-/// A circular badge with a transport glyph.
+/// A circular badge with a dedicated transport glyph and mode-tinted circular background.
 struct ModeBadge: View {
     let mode: TransportMode
     var size: CGFloat = 40
-    var fill: Color = Color.white.opacity(0.55)
-    var tint: Color = Color.midnightBlue
+    var fill: Color? = nil
+    var tint: Color? = nil
 
     var body: some View {
+        let badgeTint = tint ?? mode.color
+        let badgeFill = fill ?? mode.tintedBackground
+
         ZStack {
             Circle()
-                .fill(fill)
+                .fill(badgeFill)
                 .background(.regularMaterial, in: Circle())
                 .overlay(
                     Circle()
-                        .stroke(Color(hex: 0x7BBDE8).opacity(0.40), lineWidth: 1)
+                        .stroke(tint != nil ? Color(hex: 0x7BBDE8).opacity(0.40) : mode.strokeColor, lineWidth: 1)
                 )
-                .shadow(color: Color(hex: 0x49769F).opacity(0.20), radius: 6, x: 0, y: 3)
+                .shadow(color: (tint != nil ? Color(hex: 0x49769F) : mode.color).opacity(0.18), radius: 6, x: 0, y: 3)
 
             glyph
-                .foregroundStyle(tint)
+                .foregroundStyle(badgeTint)
                 .frame(width: size * 0.5, height: size * 0.5)
         }
         .frame(width: size, height: size)

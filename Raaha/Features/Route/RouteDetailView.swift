@@ -235,9 +235,9 @@ private struct InteractiveLegRow: View {
         } label: {
             HStack(alignment: .top, spacing: 14) {
                 VStack(spacing: 4) {
-                    ModeBadge(mode: leg.mode, size: 44, fill: Color.white.opacity(0.75), tint: Color(hex: 0x0A4174))
+                    ModeBadge(mode: leg.mode, size: 44)
                     if !isLast {
-                        DashedVLine(color: Color(hex: 0x4E8EA2).opacity(0.40))
+                        DashedVLine(color: leg.mode.color.opacity(0.55))
                             .frame(maxHeight: .infinity)
                             .padding(.bottom, 2)
                     }
@@ -253,7 +253,7 @@ private struct InteractiveLegRow: View {
                             if isExpandable {
                                 Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle")
                                     .font(.system(size: 15))
-                                    .foregroundStyle(Color(hex: 0x4E8EA2))
+                                    .foregroundStyle(leg.mode.color)
                             }
                         }
 
@@ -267,7 +267,7 @@ private struct InteractiveLegRow: View {
 
                     Text(leg.detail)
                         .font(.raahaSubheadline)
-                        .foregroundStyle(Color.midnightBlue.opacity(0.85))
+                        .foregroundStyle(Color.deepSpace.opacity(0.85))
 
                     Text(leg.description)
                         .font(.raahaFootnote)
@@ -309,16 +309,16 @@ private struct InteractiveLegRow: View {
             HStack(spacing: 4) {
                 Text(title.replacingOccurrences(of: "(Green Line)", with: "").trimmingCharacters(in: .whitespaces))
                     .font(.raahaHeadline)
-                    .foregroundStyle(Color.midnightBlue)
+                    .foregroundStyle(Color.deepSpace)
 
                 Text("(Green Line)")
                     .font(.raahaHeadline)
-                    .foregroundStyle(Color(hex: 0x18866B))
+                    .foregroundStyle(Color.transportMetro)
             }
         } else {
             Text(title)
                 .font(.raahaHeadline)
-                .foregroundStyle(Color.midnightBlue)
+                .foregroundStyle(Color.deepSpace)
         }
     }
 
@@ -327,12 +327,12 @@ private struct InteractiveLegRow: View {
         VStack(alignment: .leading, spacing: 6) {
             switch leg.mode {
             case .metro:
-                guidancePill(icon: "tram.fill", text: "Platform 2 • Washermanpet to Airport Corridor")
+                guidancePill(icon: "tram.fill", text: "Platform 2 • Washermanpet to Airport Corridor", color: leg.mode.color)
             case .bus:
-                guidancePill(icon: "bus.fill", text: "MTC Bus Bay 4 • Frequency every 5–10 mins")
-                guidancePill(icon: "ticket.fill", text: "Singara Chennai Card & Cash Accepted")
+                guidancePill(icon: "bus.fill", text: "MTC Bus Bay 4 • Frequency every 5–10 mins", color: leg.mode.color)
+                guidancePill(icon: "ticket.fill", text: "Singara Chennai Card & Cash Accepted", color: leg.mode.color)
             case .train:
-                guidancePill(icon: "train.side.front.car", text: "Suburban Platform 1 • Beach–Tambaram Fast")
+                guidancePill(icon: "train.side.front.car", text: "Suburban Platform 1 • Beach–Tambaram Fast", color: leg.mode.color)
             default:
                 EmptyView()
             }
@@ -349,15 +349,15 @@ private struct InteractiveLegRow: View {
         )
     }
 
-    private func guidancePill(icon: String, text: String) -> some View {
+    private func guidancePill(icon: String, text: String, color: Color) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color(hex: 0x0A4174))
+                .foregroundStyle(color)
                 .frame(width: 16)
             Text(text)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.midnightBlue)
+                .foregroundStyle(Color.deepSpace)
             Spacer()
         }
     }
@@ -374,17 +374,17 @@ private struct FareChip: View {
             Text(text)
                 .font(.system(size: 12, weight: .bold))
         }
-        .foregroundStyle(Color.royalBlue)
+        .foregroundStyle(mode.color)
         .padding(.horizontal, 9)
         .padding(.vertical, 4.5)
         .background(
             Capsule()
-                .fill(Color(hex: 0x7BBDE8).opacity(0.20))
+                .fill(mode.tintedBackground)
                 .background(.regularMaterial, in: Capsule())
         )
         .overlay(
             Capsule()
-                .stroke(Color(hex: 0x49769F).opacity(0.25), lineWidth: 1)
+                .stroke(mode.strokeColor, lineWidth: 1)
         )
     }
 }
