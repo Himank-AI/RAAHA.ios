@@ -551,7 +551,7 @@ private struct NextTransferCard: View {
                 Image("train_illustration")
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 125)
+                    .frame(height: 100)
                     .mask(
                         LinearGradient(
                             stops: [
@@ -565,7 +565,7 @@ private struct NextTransferCard: View {
                             endPoint: .trailing
                         )
                     )
-                    .offset(x: 10, y: 6)
+                    .offset(x: 10, y: 10)
 
                 // ── FOREGROUND CONTENT ──
                 VStack(alignment: .leading, spacing: 0) {
@@ -573,13 +573,13 @@ private struct NextTransferCard: View {
                     // Top row: [Mode + Next Transfer] badge & [Clock + 12 min] chip
                     HStack(alignment: .center) {
                         // Combined capsule badge
-                        HStack(spacing: 8) {
+                        HStack(spacing: 7) {
                             ZStack {
                                 Circle()
                                     .fill(Color(hex: 0x38A8D8).opacity(0.18))
-                                    .frame(width: 30, height: 30)
+                                    .frame(width: 26, height: 26)
                                 Image(systemName: "bus.fill")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(Color(hex: 0x38A8D8))
                             }
 
@@ -588,51 +588,49 @@ private struct NextTransferCard: View {
                                 .foregroundStyle(Color.deepSpace)
                         }
                         .padding(.leading, 3)
-                        .padding(.trailing, 12)
+                        .padding(.trailing, 10)
                         .padding(.vertical, 3)
                         .background(Color.white.opacity(0.85), in: Capsule())
                         .overlay(Capsule().stroke(Color.white, lineWidth: 1.2))
-                        .shadow(color: Color(hex: 0x49769F).opacity(0.12), radius: 6, x: 0, y: 2)
+                        .shadow(color: Color(hex: 0x49769F).opacity(0.10), radius: 4, x: 0, y: 2)
 
                         Spacer()
 
                         // Time chip
                         HStack(spacing: 5) {
                             Image(systemName: "clock")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(Color.deepSpace)
                             Text(next.chip)
-                                .font(.system(size: 13, weight: .bold))
+                                .font(.system(size: 12, weight: .bold))
                                 .foregroundStyle(Color.deepSpace)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
                         .background(Color.white.opacity(0.85), in: Capsule())
                         .overlay(Capsule().stroke(Color.white, lineWidth: 1.2))
-                        .shadow(color: Color(hex: 0x49769F).opacity(0.12), radius: 6, x: 0, y: 2)
+                        .shadow(color: Color(hex: 0x49769F).opacity(0.10), radius: 4, x: 0, y: 2)
                     }
 
                     // "Train" headline
                     Text(next.headline)
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Color.deepSpace)
-                        .padding(.top, 12)
+                        .padding(.top, 8)
 
                     // Detail lines
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: 2) {
                         ForEach(next.lines) { line in
                             Text(line.text)
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(Color.deepSpace.opacity(0.80))
                                 .multilineTextAlignment(.leading)
                         }
                     }
-                    .padding(.top, 3)
-
-                    // Clearance space for train illustration
-                    Spacer().frame(height: 18)
+                    .padding(.top, 2)
                 }
-                .padding(16)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
