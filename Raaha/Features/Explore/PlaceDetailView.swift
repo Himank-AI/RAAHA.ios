@@ -221,7 +221,7 @@ private struct PlaceMapPin: View {
 }
 
 #Preview {
-    PlaceDetailView(place: ExploreMockData.curatedPlaces[0])
+    PlaceDetailView(place: ExploreMockData.marinaBeach)
         .environment(AppRouter())
 }
 
