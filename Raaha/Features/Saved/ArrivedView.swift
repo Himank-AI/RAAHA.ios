@@ -131,14 +131,14 @@ struct ArrivedView: View {
                 .foregroundStyle(Color.lightSkyBlue)
 
             HStack(spacing: 6) {
-                transportChip("Walk", symbol: "figure.walk")
-                transportChip("Metro", asset: "icon_metro")
-                transportChip("Auto", asset: "icon_auto")
-                transportChip("Walk", symbol: "figure.walk")
+                transportChip("Walk", mode: .walk)
+                transportChip("Metro", mode: .metro)
+                transportChip("Auto", mode: .auto)
+                transportChip("Walk", mode: .walk)
                 Text("₹ 112")
                     .font(.raahaCaption)
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color.midnightBlue)
+                    .foregroundStyle(Color.deepSpace)
                     .padding(.horizontal, 10)
                     .frame(minHeight: 28)
                     .background(Capsule().fill(Color.neonLime))
@@ -166,29 +166,30 @@ struct ArrivedView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func transportChip(_ name: String, symbol: String? = nil, asset: String? = nil) -> some View {
+    private func transportChip(_ name: String, mode: TransportMode) -> some View {
         HStack(spacing: 4) {
-            if let asset {
+            if let asset = mode.customAssetName {
                 Image(asset)
                     .renderingMode(.template)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 12, height: 12)
-            } else if let symbol {
-                Image(systemName: symbol)
+            } else {
+                Image(systemName: mode.symbolName)
                     .font(.system(size: 11))
             }
             Text(name)
                 .font(.raahaCaption2)
+                .foregroundStyle(Color.deepSpace)
         }
-        .foregroundStyle(Color.honeydew)
+        .foregroundStyle(mode.color)
         .padding(.horizontal, 8)
         .frame(minHeight: 28)
         .background(
             Capsule()
-                .fill(Color.white.opacity(0.10))
-                .background(.ultraThinMaterial, in: Capsule())
+                .fill(mode.tintedBackground)
+                .background(.regularMaterial, in: Capsule())
         )
-        .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
+        .overlay(Capsule().stroke(mode.strokeColor, lineWidth: 1))
     }
 }

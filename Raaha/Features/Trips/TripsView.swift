@@ -338,7 +338,7 @@ private struct UpcomingTripCard: View {
 
                     Spacer()
 
-                    ModeBadge(mode: trip.primaryMode, size: 38, fill: Color.white.opacity(0.55), tint: Color.royalBlue)
+                    ModeBadge(mode: trip.primaryMode, size: 38)
                 }
 
                 HStack(spacing: 8) {
@@ -495,12 +495,19 @@ private struct RecentTripRow: View {
 
     var body: some View {
         Button(action: action) {
+            let mode = TransportMode.mode(for: trip.mode)
+            let modeColor = mode?.color ?? Color.royalBlue
+            let modeBg = mode?.tintedBackground ?? Color.white.opacity(0.55)
+            let modeStroke = mode?.strokeColor ?? Color(hex: 0x7BBDE8).opacity(0.4)
+
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.white.opacity(0.55))
+                        .fill(modeBg)
+                        .background(.regularMaterial, in: Circle())
                         .frame(width: 44, height: 44)
-                        .overlay(Circle().stroke(Color(hex: 0x7BBDE8).opacity(0.4), lineWidth: 1))
+                        .overlay(Circle().stroke(modeStroke, lineWidth: 1))
+                        .shadow(color: modeColor.opacity(0.15), radius: 4, x: 0, y: 2)
 
                     if let asset = trip.customAsset {
                         Image(asset)
@@ -508,11 +515,11 @@ private struct RecentTripRow: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 20, height: 20)
-                            .foregroundStyle(Color.royalBlue)
+                            .foregroundStyle(modeColor)
                     } else {
                         Image(systemName: trip.symbol)
                             .font(.system(size: 18, weight: .medium))
-                            .foregroundStyle(Color.royalBlue)
+                            .foregroundStyle(modeColor)
                     }
                 }
 

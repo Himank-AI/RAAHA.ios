@@ -125,14 +125,14 @@ struct MissedTrainView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 26, height: 26)
-                    .foregroundStyle(Color.neonLime)
+                    .foregroundStyle(Color.transportTrain)
                     .frame(width: 52, height: 52)
                     .background(
                         Circle()
-                            .fill(Color.white.opacity(0.12))
-                            .background(.ultraThinMaterial, in: Circle())
+                            .fill(Color.transportTrain.opacity(0.14))
+                            .background(.regularMaterial, in: Circle())
                     )
-                    .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                    .overlay(Circle().stroke(Color.transportTrain.opacity(0.28), lineWidth: 1))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Chennai Central → Egmore")
@@ -200,14 +200,14 @@ private struct BestTrainCard: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 22, height: 22)
-                    .foregroundStyle(Color.neonLime)
+                    .foregroundStyle(Color.transportTrain)
                     .frame(width: 44, height: 44)
                     .background(
                         Circle()
-                            .fill(Color.white.opacity(0.12))
-                            .background(.ultraThinMaterial, in: Circle())
+                            .fill(Color.transportTrain.opacity(0.14))
+                            .background(.regularMaterial, in: Circle())
                     )
-                    .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                    .overlay(Circle().stroke(Color.transportTrain.opacity(0.28), lineWidth: 1))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(option.line)
@@ -271,14 +271,14 @@ private struct OtherTrainCard: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 22, height: 22)
-                .foregroundStyle(Color.lightSkyBlue)
+                .foregroundStyle(Color.transportTrain)
                 .frame(width: 44, height: 44)
                 .background(
                     Circle()
-                        .fill(Color.white.opacity(0.12))
-                        .background(.ultraThinMaterial, in: Circle())
+                        .fill(Color.transportTrain.opacity(0.14))
+                        .background(.regularMaterial, in: Circle())
                 )
-                .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                .overlay(Circle().stroke(Color.transportTrain.opacity(0.28), lineWidth: 1))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(option.line)
