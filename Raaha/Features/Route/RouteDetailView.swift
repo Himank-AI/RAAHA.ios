@@ -327,12 +327,12 @@ private struct InteractiveLegRow: View {
         VStack(alignment: .leading, spacing: 6) {
             switch leg.mode {
             case .metro:
-                guidancePill(icon: "tram.fill", text: "Platform 2 • Washermanpet to Airport Corridor", color: leg.mode.color)
+                guidancePill(mode: leg.mode, text: "Platform 2 • Washermanpet to Airport Corridor")
             case .bus:
                 guidancePill(icon: "bus.fill", text: "MTC Bus Bay 4 • Frequency every 5–10 mins", color: leg.mode.color)
                 guidancePill(icon: "ticket.fill", text: "Singara Chennai Card & Cash Accepted", color: leg.mode.color)
             case .train:
-                guidancePill(icon: "train.side.front.car", text: "Suburban Platform 1 • Beach–Tambaram Fast", color: leg.mode.color)
+                guidancePill(mode: leg.mode, text: "Suburban Platform 1 • Beach–Tambaram Fast")
             default:
                 EmptyView()
             }
@@ -350,10 +350,24 @@ private struct InteractiveLegRow: View {
     }
 
     private func guidancePill(icon: String, text: String, color: Color) -> some View {
-        HStack(spacing: 8) {
+        guidancePill(text: text) {
             Image(systemName: icon)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(color)
+        }
+    }
+
+    private func guidancePill(mode: TransportMode, text: String) -> some View {
+        guidancePill(text: text) {
+            ModeGlyph(mode: mode)
+                .foregroundStyle(mode.color)
+                .frame(width: 12, height: 12)
+        }
+    }
+
+    private func guidancePill<Icon: View>(text: String, @ViewBuilder icon: () -> Icon) -> some View {
+        HStack(spacing: 8) {
+            icon()
                 .frame(width: 16)
             Text(text)
                 .font(.system(size: 11, weight: .medium))

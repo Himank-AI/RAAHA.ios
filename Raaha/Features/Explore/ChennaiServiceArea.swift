@@ -160,7 +160,7 @@ public struct ChennaiServiceArea: Sendable {
             ChennaiLocality(name: "Mylapore", latitude: 13.0334, longitude: 80.2706, tagline: "Kapaleeshwarar & Heritage", symbol: "building.columns.fill"),
             ChennaiLocality(name: "Adyar", latitude: 13.0012, longitude: 80.2565, tagline: "Theosophical & Bakeries", symbol: "tree.fill"),
             ChennaiLocality(name: "Anna Nagar", latitude: 13.0850, longitude: 80.2100, tagline: "Tower Park & Boutiques", symbol: "sparkles"),
-            ChennaiLocality(name: "Velachery", latitude: 12.9759, longitude: 80.2212, tagline: "Phoenix Mall & Transit", symbol: "tram.fill"),
+            ChennaiLocality(name: "Velachery", latitude: 12.9759, longitude: 80.2212, tagline: "Phoenix Mall & Transit", symbol: "cart.fill"),
             ChennaiLocality(name: "San Thome", latitude: 13.0336, longitude: 80.2783, tagline: "Historic Basilica & Coast", symbol: "cross.fill"),
             ChennaiLocality(name: "Guindy", latitude: 13.0067, longitude: 80.2026, tagline: "National Park & Tech Hub", symbol: "leaf.fill"),
             ChennaiLocality(name: "Nungambakkam", latitude: 13.0594, longitude: 80.2425, tagline: "Culture & Fine Dining", symbol: "fork.knife")

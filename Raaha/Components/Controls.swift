@@ -124,16 +124,21 @@ struct ModeBadge: View {
                 )
                 .shadow(color: (tint != nil ? Color(hex: 0x49769F) : mode.color).opacity(0.18), radius: 6, x: 0, y: 3)
 
-            glyph
+            ModeGlyph(mode: mode)
                 .foregroundStyle(badgeTint)
                 .frame(width: size * 0.5, height: size * 0.5)
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
+}
 
-    @ViewBuilder
-    private var glyph: some View {
+/// Resizable, template-tinted glyph for a transport mode.
+/// Train, Metro, Bike and Auto always render their bundled artwork; SF Symbols are only for the rest.
+struct ModeGlyph: View {
+    let mode: TransportMode
+
+    var body: some View {
         if let asset = mode.customAssetName {
             Image(asset)
                 .renderingMode(.template)

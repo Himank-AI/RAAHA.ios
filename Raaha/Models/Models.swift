@@ -47,11 +47,11 @@ enum TransportMode: Hashable {
         }
     }
 
-    /// SF Symbol used for the mode.
+    /// SF Symbol used for the mode. Modes with a `customAssetName` must render that asset instead (see `ModeGlyph`).
     var symbolName: String {
         switch self {
         case .walk: return "figure.walk"
-        case .metro: return "tram.fill"
+        case .metro: return "train.side.front.car"
         case .bus: return "bus.fill"
         case .auto: return "car.fill"
         case .bike: return "bicycle"
@@ -179,10 +179,24 @@ struct PickupDrop {
     let dropTime: String
 }
 
+struct BoardedTimeline {
+    let locationTitle: String
+    let locationCaption: String
+    let title: String
+    let caption: String
+}
+
 enum LiveTimeline {
     case walk(WalkTimeline)
     case stops([StopItem])
     case pickupDrop(PickupDrop)
+    case boarded(BoardedTimeline)
+}
+
+/// Detail lines and stop progress for an illustrated ride card (e.g. Train).
+struct RideProgress {
+    let lines: [String]
+    let stopsRemaining: Int
 }
 
 struct NextLine: Identifiable {
@@ -198,6 +212,35 @@ struct NextTransfer {
     let lines: [NextLine]
 }
 
+struct WalkDirection {
+    enum Turn {
+        case straight, left, right, slightLeft, slightRight
+
+        var phrase: String {
+            switch self {
+            case .straight: return "Straight for"
+            case .left: return "Turn left in"
+            case .right: return "Turn right in"
+            case .slightLeft: return "Bear left in"
+            case .slightRight: return "Bear right in"
+            }
+        }
+
+        var symbolName: String {
+            switch self {
+            case .straight: return "arrow.up"
+            case .left: return "arrow.turn.up.left"
+            case .right: return "arrow.turn.up.right"
+            case .slightLeft: return "arrow.up.left"
+            case .slightRight: return "arrow.up.right"
+            }
+        }
+    }
+
+    let turn: Turn
+    let distance: String
+}
+
 struct LiveContent {
     let mode: TransportMode
     let title: String
@@ -207,6 +250,8 @@ struct LiveContent {
     let showsMissedAlert: Bool
     let next: NextTransfer
     let tips: [String]
+    var direction: WalkDirection? = nil
+    var ride: RideProgress? = nil
 }
 
 // MARK: - Trips, places, plan

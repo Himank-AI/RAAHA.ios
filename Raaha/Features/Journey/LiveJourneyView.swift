@@ -21,18 +21,31 @@ struct LiveJourneyView: View {
                     CurrentlyOnCard(content: content)
                         .bottomPanelPeek()
                     timeline
+                        .bottomPanelCollapsible(order: 0)
                     if content.showsMissedAlert {
                         MissedAlertBanner { router.push(.missedTrain) }
+                            .bottomPanelCollapsible(order: 1)
                     }
                     NextTransferCard(next: content.next) {
                         router.push(isLastStep ? .arrived : .live(kind, step + 1))
                     }
+                    .bottomPanelCollapsible(order: 2)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 2)
             }
         }
-        .pushedChrome(title: "Live Chennai Journey")
+        .pushedChrome {
+            if content.mode == .walk, let direction = content.direction {
+                WalkDirectionBanner(direction: direction)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            } else {
+                Text("Live Chennai Journey")
+                    .font(.raahaHeadline)
+                    .foregroundStyle(Color.midnightBlue)
+                    .lineLimit(1)
+            }
+        }
     }
 
     @ViewBuilder
@@ -41,9 +54,13 @@ struct LiveJourneyView: View {
         case .walk(let info):
             WalkTimelineCard(info: info)
         case .stops(let stops):
-            StopsTimelineCard(stops: stops)
+            StopsTimelineCard(stops: stops, mode: content.mode)
         case .pickupDrop(let info):
             PickupDropCard(info: info)
+        case .boarded(let info):
+            BoardedTimelineCard(info: info, mode: content.mode) {
+                router.push(.routeDetail(kind))
+            }
         }
     }
 }
@@ -131,6 +148,24 @@ private extension View {
     func glassPill(tint: Color? = nil) -> some View {
         modifier(GlassPill(tint: tint))
     }
+
+    /// Soft green highlight for the timeline row the rider is currently on.
+    func activeRowBackground() -> some View {
+        background {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.transportWalk.opacity(0.14), Color.transportWalk.opacity(0.04)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(Color.transportWalk.opacity(0.18), lineWidth: 0.8)
+                )
+        }
+    }
 }
 
 private struct PressableCardStyle: ButtonStyle {
@@ -210,6 +245,58 @@ private struct VerticalLine: Shape {
     }
 }
 
+// MARK: - Walk Direction Banner
+
+private struct WalkDirectionBanner: View {
+    let direction: WalkDirection
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isNudging = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: direction.turn.symbolName)
+                .font(.system(size: 18, weight: .heavy))
+                .foregroundStyle(Color.white)
+                .offset(y: isNudging ? -2 : 1)
+                .frame(width: 38, height: 38)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.transportWalk.opacity(0.8), Color.transportWalk],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.35), lineWidth: 0.8)
+                )
+                .shadow(color: Color.transportWalk.opacity(0.4), radius: 6, x: 0, y: 3)
+
+            Text("\(direction.turn.phrase) \(Text(direction.distance).foregroundStyle(Color.transportWalk).fontWeight(.heavy))")
+                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.deepSpace)
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .padding(.leading, 5)
+        .padding(.trailing, 16)
+        .padding(.vertical, 5)
+        .premiumGlass(radius: 16, tint: .transportWalk)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(direction.turn.phrase) \(direction.distance)")
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                isNudging = true
+            }
+        }
+    }
+}
+
 // MARK: - Cards
 
 private struct CurrentlyOnCard: View {
@@ -217,13 +304,96 @@ private struct CurrentlyOnCard: View {
 
     private static let walkFraction: CGFloat = 0.35
     private static let illustrationInset: CGFloat = 122
+    private static let rideIllustrationInset: CGFloat = 122
 
     var body: some View {
         if content.mode == .walk {
             walkCard
+        } else if let ride = content.ride {
+            rideCard(ride)
         } else {
             standardCard
         }
+    }
+
+    // MARK: Ride Card — illustrated vehicle with stop-by-stop progress
+    private func rideCard(_ ride: RideProgress) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center) {
+                LiveStatusPill(color: content.mode.color)
+                Spacer(minLength: 8)
+                if let chip = content.chips.first {
+                    GlassChip(text: chip, systemImage: "clock.fill")
+                }
+            }
+
+            Text(content.title)
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.deepSpace)
+                .padding(.top, 10)
+
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(ride.lines, id: \.self) { line in
+                    Text(line)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color.deepSpace.opacity(0.68))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+            }
+            .padding(.top, 3)
+
+            RideStopsTrack(mode: content.mode, stopsRemaining: ride.stopsRemaining)
+                .padding(.top, 12)
+        }
+        .padding(.leading, Self.rideIllustrationInset)
+        .padding(16)
+        .background(alignment: .leading) {
+            Image(content.mode == .train ? "local_train_illustration" : "train_illustration")
+                .resizable()
+                .scaledToFill()
+                .frame(width: 160, height: 112, alignment: .trailing)
+                .clipped()
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .black, location: 0.1),
+                            .init(color: .black, location: 0.6),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0),
+                            .init(color: .black, location: 0.6),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .offset(x: -26)
+                .accessibilityHidden(true)
+        }
+        .background {
+            LinearGradient(
+                stops: [
+                    .init(color: Color(hex: 0x8CCBF0).opacity(0.55), location: 0),
+                    .init(color: Color(hex: 0xCDE9F9).opacity(0.45), location: 0.45),
+                    .init(color: Color.white.opacity(0), location: 1)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .premiumGlass()
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: Walk Card — illustration sits behind, content is inset past it
@@ -245,7 +415,7 @@ private struct CurrentlyOnCard: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Color.deepSpace.opacity(0.68))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.85)
+                    .minimumScaleFactor(0.7)
             }
             .padding(.top, 10)
 
@@ -272,56 +442,27 @@ private struct CurrentlyOnCard: View {
                     .scaledToFit()
                     .frame(height: 132)
             }
-            .offset(x: -8, y: -6)
+            .offset(x: -15, y: -6)
             .accessibilityHidden(true)
         }
+        .background {
+            LinearGradient(
+                stops: [
+                    .init(color: Color.transportWalk.opacity(0.35), location: 0),
+                    .init(color: Color.transportWalk.opacity(0.12), location: 0.45),
+                    .init(color: Color.white.opacity(0), location: 1)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .premiumGlass(tint: .transportWalk)
         .accessibilityElement(children: .combine)
     }
 
     private var walkProgress: some View {
-        VStack(alignment: .trailing, spacing: 6) {
-            HStack(spacing: 8) {
-                GeometryReader { geo in
-                    let filled = geo.size.width * Self.walkFraction
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(Color.deepSpace.opacity(0.08))
-                            .overlay(Capsule().strokeBorder(Color.white.opacity(0.8), lineWidth: 0.5))
-                            .frame(height: 6)
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.transportWalk.opacity(0.7), Color.transportWalk],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: filled, height: 6)
-                            .shadow(color: Color.transportWalk.opacity(0.35), radius: 4, x: 0, y: 1)
-                        Circle()
-                            .fill(Color.white)
-                            .overlay(Circle().strokeBorder(Color.transportWalk, lineWidth: 3))
-                            .frame(width: 14, height: 14)
-                            .shadow(color: Color.transportWalk.opacity(0.45), radius: 4, x: 0, y: 1)
-                            .offset(x: filled - 7)
-                    }
-                    .frame(maxHeight: .infinity)
-                }
-                .frame(height: 14)
-
-                Image(systemName: "mappin.circle.fill")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color.deepSpace)
-                    .background(Circle().fill(Color.white).padding(2))
-                    .shadow(color: Color.deepSpace.opacity(0.22), radius: 3, x: 0, y: 1)
-            }
-
-            Text("300 m")
-                .font(.system(size: 12, weight: .bold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(Color.deepSpace)
-        }
+        WalkStepTrail(progress: Self.walkFraction, remaining: "300 m")
     }
 
     // MARK: Standard Card (all other modes)
@@ -352,6 +493,278 @@ private struct CurrentlyOnCard: View {
         .padding(16)
         .premiumGlass(tint: content.mode.color)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Walking progress as a trail of alternating footprints: walked steps fill in green and fade
+/// behind the walker puck, while the next few steps light up in sequence to lead the way.
+private struct WalkStepTrail: View {
+    let progress: CGFloat
+    let remaining: String
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shown: CGFloat = 0
+    @State private var isPulsing = false
+
+    private let stepPitch: CGFloat = 11
+    private let puckSize: CGFloat = 24
+    private let guideLength = 3
+
+    var body: some View {
+        VStack(spacing: 7) {
+            HStack(spacing: 6) {
+                GeometryReader { geo in
+                    let width = geo.size.width
+                    let count = max(Int(width / stepPitch), 2)
+                    let puckX = min(max(width * shown - puckSize / 2, 0), width - puckSize)
+
+                    ZStack(alignment: .leading) {
+                        TimelineView(.animation(minimumInterval: 0.22, paused: reduceMotion)) { context in
+                            let wave = Int(context.date.timeIntervalSinceReferenceDate / 0.22) % guideLength
+                            HStack(spacing: 0) {
+                                ForEach(0..<count, id: \.self) { index in
+                                    footstep(index: index, count: count, wave: wave)
+                                        .frame(maxWidth: .infinity)
+                                }
+                            }
+                        }
+
+                        puck
+                            .offset(x: puckX)
+                    }
+                    .frame(maxHeight: .infinity)
+                }
+                .frame(height: puckSize)
+
+                destination
+            }
+
+            HStack {
+                Text("\(Int((progress * 100).rounded()))% walked")
+                    .foregroundStyle(Color.transportWalk)
+                Spacer(minLength: 4)
+                Text("\(Text(remaining).font(.system(size: 12, weight: .bold, design: .rounded)).foregroundStyle(Color.deepSpace)) to go")
+                    .foregroundStyle(Color.deepSpace.opacity(0.6))
+            }
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .monospacedDigit()
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(Int((progress * 100).rounded())) percent walked, \(remaining) to go")
+        .onAppear {
+            guard !reduceMotion else {
+                shown = progress
+                return
+            }
+            withAnimation(.spring(duration: 1.1, bounce: 0.2).delay(0.2)) {
+                shown = progress
+            }
+            withAnimation(.easeOut(duration: 1.6).repeatForever(autoreverses: false)) {
+                isPulsing = true
+            }
+        }
+    }
+
+    private func footstep(index: Int, count: Int, wave: Int) -> some View {
+        let position = (CGFloat(index) + 0.5) / CGFloat(count)
+        let isWalked = position <= shown
+        let puckIndex = Int(shown * CGFloat(count))
+        let isGuiding = !isWalked && !reduceMotion && index == puckIndex + 1 + wave
+        let isLeftFoot = index.isMultiple(of: 2)
+        let trailOpacity = 0.35 + 0.65 * Double(position / max(shown, 0.01))
+
+        return Capsule()
+            .fill(
+                isWalked
+                    ? Color.transportWalk.opacity(trailOpacity)
+                    : Color.transportWalk.opacity(isGuiding ? 0.55 : 0)
+            )
+            .background(Capsule().fill(Color.deepSpace.opacity(isWalked ? 0 : 0.13)))
+            .frame(width: 4.5, height: 7.5)
+            .scaleEffect(isGuiding ? 1.2 : 1)
+            .rotationEffect(.degrees(90 + (isLeftFoot ? -14 : 14)))
+            .offset(y: isLeftFoot ? -2.5 : 2.5)
+            .animation(.easeInOut(duration: 0.2), value: isGuiding)
+    }
+
+    private var puck: some View {
+        ZStack {
+            Circle()
+                .fill(Color.transportWalk.opacity(0.25))
+                .scaleEffect(isPulsing ? 1.7 : 1)
+                .opacity(isPulsing ? 0 : 1)
+            Circle()
+                .fill(Color.white)
+            Circle()
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [Color.transportWalk.opacity(0.75), Color.transportWalk],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 2.5
+                )
+            Image(systemName: "figure.walk")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(Color.transportWalk)
+        }
+        .frame(width: puckSize, height: puckSize)
+        .shadow(color: Color.transportWalk.opacity(0.35), radius: 5, x: 0, y: 2)
+    }
+
+    private var destination: some View {
+        FinishFlagBadge(size: puckSize)
+    }
+}
+
+private struct FinishFlagBadge: View {
+    var size: CGFloat = 24
+
+    var body: some View {
+        Image(systemName: "flag.checkered")
+            .font(.system(size: size * 0.46, weight: .bold))
+            .foregroundStyle(Color.deepSpace)
+            .frame(width: size, height: size)
+            .background(Circle().fill(Color.white))
+            .overlay(Circle().strokeBorder(Color.deepSpace.opacity(0.12), lineWidth: 1))
+            .shadow(color: Color.deepSpace.opacity(0.15), radius: 3, x: 0, y: 1)
+    }
+}
+
+/// Railway track: two rails on sleepers, solid where the train has travelled and faded ahead.
+/// Stations sit on the track, the train puck rides along it, and the finish flag ends the line.
+private struct RideStopsTrack: View {
+    let mode: TransportMode
+    let stopsRemaining: Int
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shown: CGFloat = 0
+    @State private var isPulsing = false
+
+    private let nodeSize: CGFloat = 24
+    private let leadFraction: CGFloat = 0.5
+
+    private var tint: Color { mode.color }
+    private var segments: Int { max(stopsRemaining, 0) + 1 }
+    private var progress: CGFloat { leadFraction / CGFloat(segments) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 6) {
+                GeometryReader { geo in
+                    let width = geo.size.width
+                    let puckX = min(max(width * shown - nodeSize / 2, 0), width - nodeSize)
+
+                    ZStack(alignment: .leading) {
+                        RailTrack(progress: shown, tint: tint)
+
+                        ForEach(1..<segments, id: \.self) { index in
+                            stationDot(isPassed: CGFloat(index) / CGFloat(segments) <= shown)
+                                .offset(x: width * CGFloat(index) / CGFloat(segments) - 5)
+                        }
+
+                        puck
+                            .offset(x: puckX)
+                    }
+                    .frame(maxHeight: .infinity)
+                }
+                .frame(height: nodeSize)
+
+                FinishFlagBadge(size: nodeSize)
+            }
+
+            Text("\(stopsRemaining) \(stopsRemaining == 1 ? "stop" : "stops") remaining")
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(tint)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(stopsRemaining) \(stopsRemaining == 1 ? "stop" : "stops") remaining")
+        .onAppear {
+            guard !reduceMotion else {
+                shown = progress
+                return
+            }
+            withAnimation(.spring(duration: 1.1, bounce: 0.2).delay(0.2)) {
+                shown = progress
+            }
+            withAnimation(.easeOut(duration: 1.6).repeatForever(autoreverses: false)) {
+                isPulsing = true
+            }
+        }
+    }
+
+    private func stationDot(isPassed: Bool) -> some View {
+        Circle()
+            .fill(isPassed ? tint : Color.white)
+            .frame(width: 10, height: 10)
+            .overlay(Circle().strokeBorder(tint.opacity(isPassed ? 1 : 0.6), lineWidth: 2))
+            .shadow(color: Color.deepSpace.opacity(0.15), radius: 2, x: 0, y: 1)
+    }
+
+    private var puck: some View {
+        ZStack {
+            Circle()
+                .fill(tint.opacity(0.25))
+                .scaleEffect(isPulsing ? 1.7 : 1)
+                .opacity(isPulsing ? 0 : 1)
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [tint.opacity(0.8), tint],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            Circle()
+                .strokeBorder(Color.white.opacity(0.9), lineWidth: 1.5)
+            ModeGlyph(mode: mode)
+                .foregroundStyle(Color.white)
+                .frame(width: 12, height: 12)
+        }
+        .frame(width: nodeSize, height: nodeSize)
+        .shadow(color: tint.opacity(0.4), radius: 5, x: 0, y: 2)
+    }
+}
+
+/// Two rails on evenly spaced sleepers; the travelled stretch is solid, the rest faded.
+private struct RailTrack: View, Animatable {
+    var progress: CGFloat
+    let tint: Color
+
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    var body: some View {
+        Canvas { context, size in
+            let midY = size.height / 2
+            let railOffset: CGFloat = 3.5
+            let travelledX = size.width * progress
+            let ahead = tint.opacity(0.3)
+
+            var x: CGFloat = 3
+            while x < size.width - 1 {
+                let sleeper = CGRect(x: x - 1, y: midY - 6, width: 2.2, height: 12)
+                context.fill(
+                    Path(roundedRect: sleeper, cornerRadius: 1),
+                    with: .color(x <= travelledX ? tint.opacity(0.75) : ahead)
+                )
+                x += 6
+            }
+
+            for y in [midY - railOffset, midY + railOffset] {
+                var travelled = Path()
+                travelled.move(to: CGPoint(x: 0, y: y))
+                travelled.addLine(to: CGPoint(x: travelledX, y: y))
+                context.stroke(travelled, with: .color(tint), style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+
+                var remaining = Path()
+                remaining.move(to: CGPoint(x: travelledX, y: y))
+                remaining.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(remaining, with: .color(ahead), style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+            }
+        }
     }
 }
 
@@ -461,30 +874,106 @@ private struct WalkTimelineCard: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 10)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.transportWalk.opacity(0.14), Color.transportWalk.opacity(0.04)],
-                        startPoint: .leading,
-                        endPoint: .trailing
+        .activeRowBackground()
+    }
+}
+
+private struct BoardedTimelineCard: View {
+    let info: BoardedTimeline
+    let mode: TransportMode
+    let onViewDetails: () -> Void
+
+    private let railWidth: CGFloat = 34
+
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 12) {
+                Image("icon_pin")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
+                    .foregroundStyle(Color.transportWalk)
+                    .shadow(color: Color.transportWalk.opacity(0.3), radius: 4, x: 0, y: 2)
+                    .frame(width: railWidth)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(info.locationTitle)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.deepSpace)
+                    Text(info.locationCaption)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.deepSpace.opacity(0.65))
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .accessibilityElement(children: .combine)
+
+            HStack(spacing: 12) {
+                ModeGlyph(mode: mode)
+                    .foregroundStyle(Color.white)
+                    .frame(width: 15, height: 15)
+                    .frame(width: 34, height: 34)
+                    .background(
+                        Circle().fill(
+                            LinearGradient(
+                                colors: [Color.transportWalk.opacity(0.8), Color.transportWalk],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
                     )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.transportWalk.opacity(0.18), lineWidth: 0.8)
-                )
+                    .shadow(color: Color.transportWalk.opacity(0.35), radius: 5, x: 0, y: 3)
+                    .frame(width: railWidth)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(info.title)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.deepSpace)
+                    Text(info.caption)
+                        .font(.system(size: 12, weight: .medium))
+                        .monospacedDigit()
+                        .foregroundStyle(Color.deepSpace.opacity(0.65))
+                }
+                .accessibilityElement(children: .combine)
+
+                Spacer(minLength: 8)
+
+                Button(action: onViewDetails) {
+                    HStack(spacing: 3) {
+                        Text("View Details")
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 9, weight: .bold))
+                    }
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.transportWalk)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .glassPill(tint: .transportWalk)
+                }
+                .buttonStyle(PressableCardStyle())
+                .accessibilityHint("Shows the full route details")
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 10)
+            .activeRowBackground()
         }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 8)
+        .premiumGlass(tint: .transportWalk)
     }
 }
 
 private struct StopsTimelineCard: View {
     let stops: [StopItem]
+    let mode: TransportMode
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             ForEach(stops) { stop in
-                StopRow(stop: stop)
+                StopRow(stop: stop, mode: mode)
             }
         }
         .padding(.vertical, 20)
@@ -509,6 +998,7 @@ private struct StopsTimelineCard: View {
 
 private struct StopRow: View {
     let stop: StopItem
+    let mode: TransportMode
 
     var body: some View {
         HStack(spacing: 14) {
@@ -530,9 +1020,9 @@ private struct StopRow: View {
                 }
                 Spacer()
                 if stop.state == .next {
-                    Image(systemName: "tram.fill")
-                        .font(.system(size: 12, weight: .semibold))
+                    ModeGlyph(mode: mode)
                         .foregroundStyle(Color.transportMetro)
+                        .frame(width: 14, height: 14)
                         .frame(width: 28, height: 28)
                         .background(
                             Circle()
@@ -719,25 +1209,46 @@ private struct NextTransferCard: View {
 
     private let radius: CGFloat = 24
 
+    private var illustration: (name: String, height: CGFloat, offset: CGSize) {
+        switch next.icon {
+        case .train: return ("local_train_illustration", 100, CGSize(width: 10, height: 10))
+        case .auto: return ("auto_illustration", 138, CGSize(width: 10, height: 22))
+        default: return ("train_illustration", 100, CGSize(width: 10, height: 10))
+        }
+    }
+
+    private var wash: [Gradient.Stop] {
+        switch next.icon {
+        case .auto:
+            return [
+                .init(color: Color.white.opacity(0), location: 0.15),
+                .init(color: Color(hex: 0xFFF1B8).opacity(0.55), location: 0.55),
+                .init(color: Color(hex: 0xFFD54F).opacity(0.7), location: 1.0)
+            ]
+        default:
+            return [
+                .init(color: Color(hex: 0xE2F5FD).opacity(0), location: 0.35),
+                .init(color: Color(hex: 0xE2F5FD).opacity(0.7), location: 0.65),
+                .init(color: Color(hex: 0xB6E6F8).opacity(0.9), location: 1.0)
+            ]
+        }
+    }
+
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .center) {
                     HStack(spacing: 7) {
-                        Image(systemName: next.icon.symbolName)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(next.icon.color)
-                            .frame(width: 26, height: 26)
-                            .background(Circle().fill(next.icon.tintedBackground))
-                            .overlay(Circle().strokeBorder(next.icon.strokeColor, lineWidth: 0.8))
+                        Image(systemName: "arrow.left.arrow.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.deepSpace)
 
                         Text("Next Transfer")
                             .font(.system(size: 13, weight: .bold, design: .rounded))
                             .foregroundStyle(Color.deepSpace)
                     }
-                    .padding(.leading, 3)
-                    .padding(.trailing, 11)
-                    .padding(.vertical, 3)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
                     .glassPill()
 
                     Spacer()
@@ -745,15 +1256,10 @@ private struct NextTransferCard: View {
                     GlassChip(text: next.chip, systemImage: "clock.fill")
                 }
 
-                HStack(spacing: 6) {
-                    Text(next.headline)
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color.deepSpace)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(Color.deepSpace.opacity(0.35))
-                }
-                .padding(.top, 10)
+                Text(next.headline)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.deepSpace)
+                    .padding(.top, 10)
 
                 VStack(alignment: .leading, spacing: 3) {
                     ForEach(next.lines) { line in
@@ -778,20 +1284,12 @@ private struct NextTransferCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(alignment: .bottomTrailing) {
                 ZStack(alignment: .bottomTrailing) {
-                    LinearGradient(
-                        stops: [
-                            .init(color: Color(hex: 0xE2F5FD).opacity(0), location: 0.35),
-                            .init(color: Color(hex: 0xE2F5FD).opacity(0.7), location: 0.65),
-                            .init(color: Color(hex: 0xB6E6F8).opacity(0.9), location: 1.0)
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
+                    LinearGradient(stops: wash, startPoint: .leading, endPoint: .trailing)
 
-                    Image("train_illustration")
+                    Image(illustration.name)
                         .resizable()
                         .scaledToFit()
-                        .frame(height: 100)
+                        .frame(height: illustration.height)
                         .mask(
                             LinearGradient(
                                 stops: [
@@ -805,7 +1303,7 @@ private struct NextTransferCard: View {
                                 endPoint: .trailing
                             )
                         )
-                        .offset(x: 10, y: 10)
+                        .offset(illustration.offset)
                         .accessibilityHidden(true)
                 }
             }

@@ -112,6 +112,28 @@ extension View {
             }
     }
 
+    /// Pushed screens with a custom view (e.g. a live direction banner) centred beside the back button.
+    func pushedChrome<Center: View>(@ViewBuilder center: () -> Center) -> some View {
+        let center = center()
+        return self
+            .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top) {
+                HStack(spacing: 8) {
+                    BackButton()
+
+                    center
+                        .frame(maxWidth: .infinity)
+
+                    // Symmetrical invisible spacer to balance the back button width
+                    Color.clear
+                        .frame(width: 38, height: 38)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 4)
+                .padding(.bottom, 4)
+            }
+    }
+
     /// Pushed screens whose title sits left-aligned beside the back button (Trip Preview).
     func pushedChrome(leadingTitle: String) -> some View {
         self
