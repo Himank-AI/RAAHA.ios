@@ -53,7 +53,23 @@ struct BackButton: View {
             ZStack {
                 Circle()
                     .fill(.ultraThinMaterial)
-                    .frame(width: 38, height: 38)
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.7), Color.white.opacity(0.2)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                Circle()
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.95), Color.white.opacity(0.25)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
 
                 Image(systemName: "chevron.left")
                     .font(.system(size: 15, weight: .bold))
@@ -61,10 +77,20 @@ struct BackButton: View {
                     .offset(x: -1)
             }
             .frame(width: 38, height: 38)
+            .shadow(color: Color(hex: 0x1D3557).opacity(0.14), radius: 8, x: 0, y: 4)
             .contentShape(Circle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(GlassBackButtonStyle())
         .accessibilityLabel("Back")
+    }
+}
+
+private struct GlassBackButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.9 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .animation(.spring(duration: 0.25, bounce: 0.4), value: configuration.isPressed)
     }
 }
 

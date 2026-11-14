@@ -18,7 +18,7 @@ struct LiveJourneyView: View {
 
             BottomPanel(fitsContent: true) {
                 VStack(spacing: 14) {
-                    CurrentlyOnCard(content: content)
+                    CurrentlyOnCard(content: content) { router.push(.missedTrain) }
                         .bottomPanelPeek()
                     timeline
                         .bottomPanelCollapsible(order: 0)
@@ -58,9 +58,7 @@ struct LiveJourneyView: View {
         case .pickupDrop(let info):
             PickupDropCard(info: info)
         case .rideStops(let info):
-            RideStopsTimelineCard(info: info, mode: content.mode) {
-                router.push(.routeDetail(kind))
-            }
+            RideStopsTimelineCard(info: info, mode: content.mode)
         }
     }
 }
@@ -325,6 +323,7 @@ private struct WalkDirectionBanner: View {
 
 private struct CurrentlyOnCard: View {
     let content: LiveContent
+    var onMissedTrain: () -> Void = {}
 
     private static let walkFraction: CGFloat = 0.35
     private static let illustrationInset: CGFloat = 122
@@ -342,6 +341,20 @@ private struct CurrentlyOnCard: View {
 
     // MARK: Ride Card — illustrated vehicle with stop-by-stop progress
     private func rideCard(_ ride: RideProgress) -> some View {
+        VStack(spacing: 0) {
+            rideHeader(ride)
+            if content.mode == .train {
+                MissedTrainBanner(action: onMissedTrain)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
+            }
+        }
+        .background(CardWash.sky.gradient(from: .leading, to: .trailing))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .premiumGlass()
+    }
+
+    private func rideHeader(_ ride: RideProgress) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center) {
                 LiveStatusPill(color: content.mode.color)
@@ -404,9 +417,6 @@ private struct CurrentlyOnCard: View {
                 .offset(x: -26)
                 .accessibilityHidden(true)
         }
-        .background(CardWash.sky.gradient(from: .leading, to: .trailing))
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .premiumGlass()
         .accessibilityElement(children: .combine)
     }
 
@@ -879,7 +889,6 @@ private struct WalkTimelineCard: View {
 private struct RideStopsTimelineCard: View {
     let info: RideStopsTimeline
     let mode: TransportMode
-    let onViewDetails: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dashPhase: CGFloat = 0
@@ -1028,20 +1037,6 @@ private struct RideStopsTimelineCard: View {
 
             Spacer(minLength: 8)
 
-            Button(action: onViewDetails) {
-                HStack(spacing: 3) {
-                    Text("View Details")
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 9, weight: .bold))
-                }
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(tint)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .glassPill(tint: tint)
-            }
-            .buttonStyle(PressableCardStyle())
-            .accessibilityHint("Shows the full route details")
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 12)
@@ -1233,6 +1228,124 @@ private struct PickupDropCard: View {
                 .foregroundStyle(Color.royalBlue)
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Strawberry call-out inside the Train card: alert badge, copy, and a faded train with a runner chasing it.
+private struct MissedTrainBanner: View {
+    let action: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isRunning = false
+
+    private let radius: CGFloat = 18
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: "exclamationmark")
+                    .font(.system(size: 16, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Color.white)
+                    .frame(width: 34, height: 34)
+                    .background(
+                        Circle().fill(
+                            LinearGradient(
+                                colors: [Color.strawberry.opacity(0.85), Color.strawberry],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                    )
+                    .shadow(color: Color.strawberry.opacity(0.35), radius: 5, x: 0, y: 2)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Missed my train?")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.deepSpace)
+                    Text("Find next available trains")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color.deepSpace.opacity(0.7))
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+
+                Spacer(minLength: 4)
+
+                chase
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.deepSpace)
+            }
+            .padding(.leading, 12)
+            .padding(.trailing, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.strawberry.opacity(0.16), Color.strawberry.opacity(0.08)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            )
+            .background(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(Color.white.opacity(0.7))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(Color.strawberry.opacity(0.3), lineWidth: 1)
+            )
+            .shadow(color: Color.strawberry.opacity(0.12), radius: 8, x: 0, y: 3)
+        }
+        .buttonStyle(PressableCardStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Missed my train? Find next available trains")
+        .accessibilityAddTraits(.isButton)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
+                isRunning = true
+            }
+        }
+    }
+
+    private var chase: some View {
+        ZStack(alignment: .trailing) {
+            Image("local_train_illustration")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 30)
+                .grayscale(1)
+                .colorMultiply(Color.strawberry)
+                .opacity(0.22)
+                .mask(
+                    LinearGradient(
+                        colors: [.clear, .black],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .offset(x: -22)
+
+            VStack(alignment: .trailing, spacing: 4) {
+                ForEach([14, 20, 11], id: \.self) { width in
+                    Capsule()
+                        .fill(Color.strawberry.opacity(0.45))
+                        .frame(width: CGFloat(width), height: 2)
+                }
+            }
+            .offset(x: -26 + (isRunning ? -2 : 1))
+
+            Image(systemName: "figure.run")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(Color.strawberry)
+                .offset(x: isRunning ? 1 : -1, y: isRunning ? -1 : 0)
+        }
+        .frame(width: 92, height: 34, alignment: .trailing)
+        .accessibilityHidden(true)
     }
 }
 

@@ -287,16 +287,12 @@ enum MockData {
     // MARK: Missed train
 
     static let nextTrains: [MissedOption] = [
-        MissedOption(line: "Metro (Green Line)", path: "Chennai Central Metro → Egmore Metro",
-                     board: "Board at: 10:48 AM · Platform 1", duration: "17 min",
-                     departs: "10:48 AM", arrives: "11:05 AM", isBest: true),
-        MissedOption(line: "Metro (Green Line)", path: "Chennai Central Metro → Egmore Metro",
-                     board: "Board at: 11:12 AM · Platform 1", duration: "41 min",
-                     departs: "11:12 AM", arrives: "11:53 AM", isBest: false),
-        MissedOption(line: "Metro (Green Line)", path: "Chennai Central Metro → Egmore Metro",
-                     board: "Board at: 11:36 AM · Platform 1", duration: "1 hr 5 min",
-                     departs: "11:36 AM", arrives: "12:41 PM", isBest: false)
+        MissedOption(name: "Chennai Local", destination: "To Guindy Station", minutesAway: 3, platform: 2),
+        MissedOption(name: "Chennai Local", destination: "To Tambaram", minutesAway: 7, platform: 1),
+        MissedOption(name: "Express Train", destination: "To Central Station", minutesAway: 12, platform: 3)
     ]
+
+    static let nearbyStations = ["Potheri Station", "Guduvancheri Station", "Tambaram Station"]
 
     // MARK: Map
 
