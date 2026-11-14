@@ -13,7 +13,7 @@ struct ProfileView: View {
         ("Cab", "car.fill", nil),
         ("Bus", "bus.fill", nil),
         ("Local Train", "train.side.front.car", "icon_train"),
-        ("Metro", "tram.fill", "icon_metro")
+        ("Metro", "train.side.front.car", "icon_metro")
     ]
 
     private let interests: [(name: String, symbol: String)] = [
@@ -24,7 +24,7 @@ struct ProfileView: View {
         ("Adventure", "tent.fill"),
         ("Nature", "leaf"),
         ("Cafes", "cup.and.saucer.fill"),
-        ("Metro", "tram.fill"),
+        ("Metro", "train.side.front.car"),
         ("Photography", "camera.aperture")
     ]
 
@@ -108,9 +108,9 @@ struct ProfileView: View {
 
                     // Trips taken with numbers only arranged neatly
                     HStack(spacing: 6) {
-                        Image(systemName: "tram.fill")
-                            .font(.system(size: 11))
+                        ModeGlyph(mode: .metro)
                             .foregroundStyle(Color.neonLime)
+                            .frame(width: 11, height: 11)
                         Text("28")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(Color.neonLime)
@@ -310,8 +310,13 @@ struct ProfileView: View {
             }
         } label: {
             HStack(spacing: 5) {
-                Image(systemName: symbol)
-                    .font(.system(size: 11))
+                if let mode = TransportMode.mode(for: name), mode.customAssetName != nil {
+                    ModeGlyph(mode: mode)
+                        .frame(width: 12, height: 12)
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: 11))
+                }
                 Text(name)
                     .font(.raahaCaption)
                     .lineLimit(1)

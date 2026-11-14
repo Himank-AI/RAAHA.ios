@@ -9,20 +9,18 @@ enum MockData {
     static let routes: [RouteOption] = [
         RouteOption(
             kind: .fastest,
-            minutes: 58,
-            fare: 112,
-            chain: [.walk, .metro, .bus, .walk],
+            minutes: 52,
+            fare: 90,
+            chain: [.walk, .train, .auto],
             legs: [
                 RouteLeg(id: "f1", mode: .walk, title: "Walk", detail: "2 min · 180 m",
-                         description: "From your location to\nChennai Metro Station"),
-                RouteLeg(id: "f2", mode: .metro, title: "Metro (Green Line)", detail: "22 min · 5 stops",
-                         description: "Chennai Metro Station →\nSt. Thomas Mount", fare: "₹ 40"),
-                RouteLeg(id: "f3", mode: .bus, title: "Bus", detail: "10 min · 3.2 km",
-                         description: "St. Thomas Mount →\nPhoenix Mall", fare: "₹ 72"),
-                RouteLeg(id: "f4", mode: .walk, title: "Walk", detail: "4 min · 350 m",
-                         description: "From drop-off to your destination")
+                         description: "From your location to\nPotheri Railway Station"),
+                RouteLeg(id: "f2", mode: .train, title: "Train", detail: "40 min · 8 stops",
+                         description: "Potheri Railway Station →\nGuindy Railway Station", fare: "₹ 10"),
+                RouteLeg(id: "f3", mode: .auto, title: "Auto", detail: "10 min · 3.2 km",
+                         description: "Guindy Railway Station →\nPhoenix Mall", fare: "₹ 80")
             ],
-            liveScreens: [.walk, .metro, .bus, .walkEnd],
+            liveScreens: [.walk, .train, .auto],
             modeCountOverride: 3
         ),
         RouteOption(
@@ -87,12 +85,13 @@ enum MockData {
             return LiveContent(
                 mode: .walk,
                 title: "Walk",
-                subtitle: "Chennai Central → Egmore",
-                chips: ["20 min"],
+                subtitle: "Your Location → Potheri Railway Station",
+                chips: ["2 min"],
                 timeline: .walk(walkTimeline),
                 showsMissedAlert: false,
                 next: trainNext,
-                tips: ["Use crosswalks and footpaths where available", "Keep your phone charged"]
+                tips: ["Use crosswalks and footpaths where available", "Keep your phone charged"],
+                direction: WalkDirection(turn: .straight, distance: "80 m")
             )
         case .walkEnd:
             return LiveContent(
@@ -103,7 +102,8 @@ enum MockData {
                 timeline: .walk(walkTimeline),
                 showsMissedAlert: false,
                 next: trainNext,
-                tips: ["Use crosswalks and footpaths where available", "Keep your phone charged"]
+                tips: ["Use crosswalks and footpaths where available", "Keep your phone charged"],
+                direction: WalkDirection(turn: .straight, distance: "80 m")
             )
         case .metro:
             return LiveContent(
@@ -155,7 +155,7 @@ enum MockData {
                 timeline: .stops(fullStops),
                 showsMissedAlert: false,
                 next: NextTransfer(
-                    icon: .bus,
+                    icon: .train,
                     chip: "12 min",
                     headline: "Train",
                     lines: [
@@ -169,23 +169,34 @@ enum MockData {
             return LiveContent(
                 mode: .train,
                 title: "Train",
-                subtitle: "Chennai Central → Egmore",
-                chips: ["₹ 40", "22 min"],
-                timeline: .stops(Array(fullStops.dropFirst())),
-                showsMissedAlert: true,
-                next: trainNext,
-                tips: ["Check bus number and route", "Same ticket/card for bus and metro", "Auto & bike options at the next stop"]
+                subtitle: "Potheri → Guindy",
+                chips: ["12 min"],
+                timeline: .boarded(
+                    BoardedTimeline(
+                        locationTitle: "Current Location",
+                        locationCaption: "Potheri Station",
+                        title: "Train",
+                        caption: "Boarded • 10:32 AM"
+                    )
+                ),
+                showsMissedAlert: false,
+                next: autoNext,
+                tips: ["Check bus number and route", "Same ticket/card for bus and metro", "Auto & bike options at the next stop"],
+                ride: RideProgress(
+                    lines: ["Potheri Station to Guindy Station"],
+                    stopsRemaining: 2
+                )
             )
         }
     }
 
     private static let walkTimeline = WalkTimeline(
-        startTitle: "T. Nagar",
-        startCaption: "Start your walk from T. Nagar",
+        startTitle: "Current Location",
+        startCaption: "Start your walk from Your Location",
         walkTitle: "Walking",
-        walkCaption: "2.4 km · 32 min",
-        walkChip: "22 min",
-        endTitle: "Marina Beach",
+        walkCaption: "180 m · 2 min",
+        walkChip: "2 min",
+        endTitle: "Potheri Railway Station",
         endCaption: "You will reach your destination by 10:13 AM"
     )
 
@@ -196,13 +207,23 @@ enum MockData {
         StopItem(name: "Alandur", caption: "Arriving · 22 min", state: .arriving)
     ]
 
+    private static let autoNext = NextTransfer(
+        icon: .auto,
+        chip: "5 min",
+        headline: "Auto",
+        lines: [
+            NextLine(text: "Board at: 10:37 AM, Guindy"),
+            NextLine(text: "Towards: Anna Nagar")
+        ]
+    )
+
     private static let trainNext = NextTransfer(
-        icon: .bus,
+        icon: .train,
         chip: "12 min",
         headline: "Train",
         lines: [
-            NextLine(text: "Route: 22A → Saidapet"),
-            NextLine(text: "Board at: 10:32 AM, Alandur Station")
+            NextLine(text: "Route: Potheri → Guindy"),
+            NextLine(text: "Board at: 10:32 AM, Potheri Station")
         ]
     )
 
@@ -256,7 +277,7 @@ enum MockData {
 
     static let recentTrips: [RecentTrip] = [
         RecentTrip(route: "Chennai Airport → Alandur", mode: "Metro (Blue Line)",
-                   symbol: "tram.fill", customAsset: "icon_metro", day: "Today", time: "9:12 AM"),
+                   symbol: "train.side.front.car", customAsset: "icon_metro", day: "Today", time: "9:12 AM"),
         RecentTrip(route: "T. Nagar → Anna Nagar", mode: "Bus (Route 21C)",
                    symbol: "bus.fill", customAsset: nil, day: "Yesterday", time: "6:45 PM"),
         RecentTrip(route: "R.K. Salai → Adyar", mode: "Auto",
