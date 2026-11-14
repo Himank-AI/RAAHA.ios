@@ -292,13 +292,10 @@ struct RecentTrip: Identifiable {
 
 struct MissedOption: Identifiable {
     let id = UUID()
-    let line: String
-    let path: String
-    let board: String
-    let duration: String
-    let departs: String
-    let arrives: String
-    let isBest: Bool
+    let name: String
+    let destination: String
+    let minutesAway: Int
+    let platform: Int
 }
 
 struct PlannedTrip: Identifiable {
