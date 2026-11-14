@@ -171,12 +171,11 @@ enum MockData {
                 title: "Train",
                 subtitle: "Potheri → Guindy",
                 chips: ["12 min"],
-                timeline: .boarded(
-                    BoardedTimeline(
-                        locationTitle: "Current Location",
-                        locationCaption: "Potheri Station",
-                        title: "Train",
-                        caption: "Boarded • 10:32 AM"
+                timeline: .rideStops(
+                    RideStopsTimeline(
+                        previous: .init(name: "Potheri", caption: "Departed 10:32 AM"),
+                        current: .init(name: "Gudduvancheri", caption: "Arriving now"),
+                        next: .init(name: "Urappakkam", caption: "in 4 min")
                     )
                 ),
                 showsMissedAlert: false,
@@ -184,7 +183,8 @@ enum MockData {
                 tips: ["Check bus number and route", "Same ticket/card for bus and metro", "Auto & bike options at the next stop"],
                 ride: RideProgress(
                     lines: ["Potheri Station to Guindy Station"],
-                    stopsRemaining: 2
+                    totalStops: 8,
+                    currentStopIndex: 1
                 )
             )
         }

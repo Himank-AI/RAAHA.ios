@@ -57,8 +57,8 @@ struct LiveJourneyView: View {
             StopsTimelineCard(stops: stops, mode: content.mode)
         case .pickupDrop(let info):
             PickupDropCard(info: info)
-        case .boarded(let info):
-            BoardedTimelineCard(info: info, mode: content.mode) {
+        case .rideStops(let info):
+            RideStopsTimelineCard(info: info, mode: content.mode) {
                 router.push(.routeDetail(kind))
             }
         }
@@ -149,22 +149,46 @@ private extension View {
         modifier(GlassPill(tint: tint))
     }
 
-    /// Soft green highlight for the timeline row the rider is currently on.
-    func activeRowBackground() -> some View {
+    /// Soft tinted highlight for the timeline row the rider is currently on.
+    func activeRowBackground(tint: Color = .transportWalk) -> some View {
         background {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.transportWalk.opacity(0.14), Color.transportWalk.opacity(0.04)],
+                        colors: [tint.opacity(0.14), tint.opacity(0.04)],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.transportWalk.opacity(0.18), lineWidth: 0.8)
+                        .strokeBorder(tint.opacity(0.18), lineWidth: 0.8)
                 )
         }
+    }
+}
+
+/// Edge-to-clear colour wash shared by the illustrated cards. Every wash uses the same falloff
+/// (edge → mid at 45% → clear), and per-colour opacities are tuned so each tint lightens the
+/// card by the same amount as the Train sky-blue reference.
+private struct CardWash {
+    let edge: Color
+    let mid: Color
+
+    static let sky = CardWash(edge: Color(hex: 0x8CCBF0).opacity(0.55), mid: Color(hex: 0xCDE9F9).opacity(0.45))
+    static let natureGreen = CardWash(edge: Color.transportWalk.opacity(0.25), mid: Color.transportWalk.opacity(0.09))
+    static let autoYellow = CardWash(edge: Color(hex: 0xFFD54F).opacity(0.82), mid: Color(hex: 0xFFD54F).opacity(0.28))
+
+    func gradient(from start: UnitPoint, to end: UnitPoint) -> LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: edge, location: 0),
+                .init(color: mid, location: 0.45),
+                .init(color: mid.opacity(0), location: 1)
+            ],
+            startPoint: start,
+            endPoint: end
+        )
     }
 }
 
@@ -343,7 +367,7 @@ private struct CurrentlyOnCard: View {
             }
             .padding(.top, 3)
 
-            RideStopsTrack(mode: content.mode, stopsRemaining: ride.stopsRemaining)
+            RideStopsTrack(mode: content.mode, totalStops: ride.totalStops, currentIndex: ride.currentStopIndex)
                 .padding(.top, 12)
         }
         .padding(.leading, Self.rideIllustrationInset)
@@ -380,17 +404,7 @@ private struct CurrentlyOnCard: View {
                 .offset(x: -26)
                 .accessibilityHidden(true)
         }
-        .background {
-            LinearGradient(
-                stops: [
-                    .init(color: Color(hex: 0x8CCBF0).opacity(0.55), location: 0),
-                    .init(color: Color(hex: 0xCDE9F9).opacity(0.45), location: 0.45),
-                    .init(color: Color.white.opacity(0), location: 1)
-                ],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        }
+        .background(CardWash.sky.gradient(from: .leading, to: .trailing))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .premiumGlass()
         .accessibilityElement(children: .combine)
@@ -425,39 +439,16 @@ private struct CurrentlyOnCard: View {
         .padding(.leading, Self.illustrationInset)
         .padding(16)
         .background(alignment: .bottomLeading) {
-            ZStack {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color.transportWalk.opacity(0.18), Color.transportWalk.opacity(0)],
-                            center: .center,
-                            startRadius: 4,
-                            endRadius: 70
-                        )
-                    )
-                    .frame(width: 140, height: 140)
-                    .offset(y: 8)
-                Image("walk_illustration")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 132)
-            }
-            .offset(x: -15, y: -6)
-            .accessibilityHidden(true)
+            Image("walk_illustration")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 132)
+                .offset(x: -15, y: -6)
+                .accessibilityHidden(true)
         }
-        .background {
-            LinearGradient(
-                stops: [
-                    .init(color: Color.transportWalk.opacity(0.35), location: 0),
-                    .init(color: Color.transportWalk.opacity(0.12), location: 0.45),
-                    .init(color: Color.white.opacity(0), location: 1)
-                ],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        }
+        .background(CardWash.natureGreen.gradient(from: .leading, to: .trailing))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .premiumGlass(tint: .transportWalk)
+        .premiumGlass()
         .accessibilityElement(children: .combine)
     }
 
@@ -632,21 +623,26 @@ private struct FinishFlagBadge: View {
 }
 
 /// Railway track: two rails on sleepers, solid where the train has travelled and faded ahead.
-/// Stations sit on the track, the train puck rides along it, and the finish flag ends the line.
+/// Every stop on the leg sits on the track, the train puck rides to the current stop, and the finish flag ends the line.
 private struct RideStopsTrack: View {
     let mode: TransportMode
-    let stopsRemaining: Int
+    let totalStops: Int
+    let currentIndex: Int
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shown: CGFloat = 0
     @State private var isPulsing = false
 
     private let nodeSize: CGFloat = 24
-    private let leadFraction: CGFloat = 0.5
+    private let dotSize: CGFloat = 8
 
     private var tint: Color { mode.color }
-    private var segments: Int { max(stopsRemaining, 0) + 1 }
-    private var progress: CGFloat { leadFraction / CGFloat(segments) }
+    private var stopsRemaining: Int { max(totalStops - currentIndex - 1, 0) }
+    private var progress: CGFloat { position(of: currentIndex) }
+
+    private func position(of index: Int) -> CGFloat {
+        CGFloat(index + 1) / CGFloat(totalStops + 1)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
@@ -658,9 +654,9 @@ private struct RideStopsTrack: View {
                     ZStack(alignment: .leading) {
                         RailTrack(progress: shown, tint: tint)
 
-                        ForEach(1..<segments, id: \.self) { index in
-                            stationDot(isPassed: CGFloat(index) / CGFloat(segments) <= shown)
-                                .offset(x: width * CGFloat(index) / CGFloat(segments) - 5)
+                        ForEach(0..<max(totalStops, 0), id: \.self) { index in
+                            stationDot(isPassed: position(of: index) <= shown + 0.001)
+                                .offset(x: width * position(of: index) - dotSize / 2)
                         }
 
                         puck
@@ -678,7 +674,7 @@ private struct RideStopsTrack: View {
                 .foregroundStyle(tint)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(stopsRemaining) \(stopsRemaining == 1 ? "stop" : "stops") remaining")
+        .accessibilityLabel("Stop \(currentIndex + 1) of \(totalStops), \(stopsRemaining) \(stopsRemaining == 1 ? "stop" : "stops") remaining")
         .onAppear {
             guard !reduceMotion else {
                 shown = progress
@@ -696,8 +692,8 @@ private struct RideStopsTrack: View {
     private func stationDot(isPassed: Bool) -> some View {
         Circle()
             .fill(isPassed ? tint : Color.white)
-            .frame(width: 10, height: 10)
-            .overlay(Circle().strokeBorder(tint.opacity(isPassed ? 1 : 0.6), lineWidth: 2))
+            .frame(width: dotSize, height: dotSize)
+            .overlay(Circle().strokeBorder(tint.opacity(isPassed ? 1 : 0.6), lineWidth: 1.6))
             .shadow(color: Color.deepSpace.opacity(0.15), radius: 2, x: 0, y: 1)
     }
 
@@ -878,91 +874,178 @@ private struct WalkTimelineCard: View {
     }
 }
 
-private struct BoardedTimelineCard: View {
-    let info: BoardedTimeline
+/// Previous → current → next stop, drawn as a steel line: solid where the ride has been,
+/// marching dashes toward the next stop, with the current stop lifted into a highlighted row.
+private struct RideStopsTimelineCard: View {
+    let info: RideStopsTimeline
     let mode: TransportMode
     let onViewDetails: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var dashPhase: CGFloat = 0
+    @State private var isPulsing = false
+
     private let railWidth: CGFloat = 34
+    private var tint: Color { mode.color }
 
     var body: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 12) {
-                Image("icon_pin")
-                    .renderingMode(.template)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 22, height: 22)
-                    .foregroundStyle(Color.transportWalk)
-                    .shadow(color: Color.transportWalk.opacity(0.3), radius: 4, x: 0, y: 2)
-                    .frame(width: railWidth)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(info.locationTitle)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color.deepSpace)
-                    Text(info.locationCaption)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.deepSpace.opacity(0.65))
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .accessibilityElement(children: .combine)
-
-            HStack(spacing: 12) {
-                ModeGlyph(mode: mode)
-                    .foregroundStyle(Color.white)
-                    .frame(width: 15, height: 15)
-                    .frame(width: 34, height: 34)
-                    .background(
-                        Circle().fill(
-                            LinearGradient(
-                                colors: [Color.transportWalk.opacity(0.8), Color.transportWalk],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                    )
-                    .shadow(color: Color.transportWalk.opacity(0.35), radius: 5, x: 0, y: 3)
-                    .frame(width: railWidth)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(info.title)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color.deepSpace)
-                    Text(info.caption)
-                        .font(.system(size: 12, weight: .medium))
-                        .monospacedDigit()
-                        .foregroundStyle(Color.deepSpace.opacity(0.65))
-                }
-                .accessibilityElement(children: .combine)
-
-                Spacer(minLength: 8)
-
-                Button(action: onViewDetails) {
-                    HStack(spacing: 3) {
-                        Text("View Details")
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 9, weight: .bold))
-                    }
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.transportWalk)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .glassPill(tint: .transportWalk)
-                }
-                .buttonStyle(PressableCardStyle())
-                .accessibilityHint("Shows the full route details")
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 10)
-            .activeRowBackground()
+        VStack(spacing: 0) {
+            stopRow(label: "Previous Stop", stop: info.previous, isPassed: true)
+            connector(isTravelled: true)
+            currentRow
+            connector(isTravelled: false)
+            stopRow(label: "Next Stop", stop: info.next, isPassed: false)
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 8)
-        .premiumGlass(tint: .transportWalk)
+        .premiumGlass(tint: tint)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) {
+                dashPhase = -8
+            }
+            withAnimation(.easeOut(duration: 1.6).repeatForever(autoreverses: false)) {
+                isPulsing = true
+            }
+        }
+    }
+
+    private func stopRow(label: String, stop: RideStopsTimeline.Stop, isPassed: Bool) -> some View {
+        HStack(spacing: 12) {
+            node(isPassed: isPassed)
+                .frame(width: railWidth)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label.uppercased())
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .tracking(0.8)
+                    .foregroundStyle(tint.opacity(isPassed ? 0.7 : 1))
+                Text(stop.name)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.deepSpace.opacity(isPassed ? 0.6 : 1))
+            }
+
+            Spacer(minLength: 8)
+
+            HStack(spacing: 4) {
+                Image(systemName: isPassed ? "checkmark.circle.fill" : "clock.fill")
+                    .font(.system(size: 10, weight: .semibold))
+                Text(stop.caption)
+                    .monospacedDigit()
+            }
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .foregroundStyle(isPassed ? Color.deepSpace.opacity(0.5) : tint)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .glassPill(tint: isPassed ? nil : tint)
+        }
+        .padding(.horizontal, 8)
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private func node(isPassed: Bool) -> some View {
+        if isPassed {
+            Image(systemName: "checkmark")
+                .font(.system(size: 8, weight: .heavy))
+                .foregroundStyle(Color.white)
+                .frame(width: 18, height: 18)
+                .background(Circle().fill(tint.opacity(0.75)))
+                .overlay(Circle().strokeBorder(Color.white.opacity(0.9), lineWidth: 1.5))
+                .shadow(color: tint.opacity(0.3), radius: 3, x: 0, y: 1)
+        } else {
+            Circle()
+                .fill(Color.white)
+                .overlay(Circle().strokeBorder(tint, lineWidth: 3.5))
+                .frame(width: 18, height: 18)
+                .shadow(color: tint.opacity(0.3), radius: 3, x: 0, y: 1)
+        }
+    }
+
+    private func connector(isTravelled: Bool) -> some View {
+        HStack(spacing: 0) {
+            Group {
+                if isTravelled {
+                    Capsule()
+                        .fill(tint.opacity(0.75))
+                        .frame(width: 3)
+                } else {
+                    VerticalLine()
+                        .stroke(
+                            tint.opacity(0.7),
+                            style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [3, 5], dashPhase: dashPhase)
+                        )
+                        .frame(width: 3)
+                }
+            }
+            .frame(width: railWidth, height: 14)
+            Spacer()
+        }
+        .padding(.horizontal, 8)
+    }
+
+    private var currentRow: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(tint.opacity(0.25))
+                    .scaleEffect(isPulsing ? 1.6 : 1)
+                    .opacity(isPulsing ? 0 : 1)
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [tint.opacity(0.8), tint],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                Circle()
+                    .strokeBorder(Color.white.opacity(0.9), lineWidth: 1.5)
+                ModeGlyph(mode: mode)
+                    .foregroundStyle(Color.white)
+                    .frame(width: 15, height: 15)
+            }
+            .frame(width: 34, height: 34)
+            .shadow(color: tint.opacity(0.4), radius: 6, x: 0, y: 3)
+            .frame(width: railWidth)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(info.current.name)
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.deepSpace)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(tint)
+                        .frame(width: 6, height: 6)
+                    Text(info.current.caption)
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(tint)
+                }
+            }
+            .accessibilityElement(children: .combine)
+
+            Spacer(minLength: 8)
+
+            Button(action: onViewDetails) {
+                HStack(spacing: 3) {
+                    Text("View Details")
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 9, weight: .bold))
+                }
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(tint)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .glassPill(tint: tint)
+            }
+            .buttonStyle(PressableCardStyle())
+            .accessibilityHint("Shows the full route details")
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 12)
+        .activeRowBackground(tint: tint)
     }
 }
 
@@ -1212,26 +1295,13 @@ private struct NextTransferCard: View {
     private var illustration: (name: String, height: CGFloat, offset: CGSize) {
         switch next.icon {
         case .train: return ("local_train_illustration", 100, CGSize(width: 10, height: 10))
-        case .auto: return ("auto_illustration", 138, CGSize(width: 10, height: 22))
+        case .auto: return ("auto_illustration", 138, CGSize(width: 10, height: 12))
         default: return ("train_illustration", 100, CGSize(width: 10, height: 10))
         }
     }
 
-    private var wash: [Gradient.Stop] {
-        switch next.icon {
-        case .auto:
-            return [
-                .init(color: Color.white.opacity(0), location: 0.15),
-                .init(color: Color(hex: 0xFFF1B8).opacity(0.55), location: 0.55),
-                .init(color: Color(hex: 0xFFD54F).opacity(0.7), location: 1.0)
-            ]
-        default:
-            return [
-                .init(color: Color(hex: 0xE2F5FD).opacity(0), location: 0.35),
-                .init(color: Color(hex: 0xE2F5FD).opacity(0.7), location: 0.65),
-                .init(color: Color(hex: 0xB6E6F8).opacity(0.9), location: 1.0)
-            ]
-        }
+    private var wash: CardWash {
+        next.icon == .auto ? .autoYellow : .sky
     }
 
     var body: some View {
@@ -1284,7 +1354,7 @@ private struct NextTransferCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(alignment: .bottomTrailing) {
                 ZStack(alignment: .bottomTrailing) {
-                    LinearGradient(stops: wash, startPoint: .leading, endPoint: .trailing)
+                    wash.gradient(from: .trailing, to: .leading)
 
                     Image(illustration.name)
                         .resizable()

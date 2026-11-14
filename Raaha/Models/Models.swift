@@ -179,24 +179,33 @@ struct PickupDrop {
     let dropTime: String
 }
 
-struct BoardedTimeline {
-    let locationTitle: String
-    let locationCaption: String
-    let title: String
-    let caption: String
+/// Previous / current / next stop around the rider on a ride leg.
+struct RideStopsTimeline {
+    struct Stop {
+        let name: String
+        let caption: String
+    }
+
+    let previous: Stop
+    let current: Stop
+    let next: Stop
 }
 
 enum LiveTimeline {
     case walk(WalkTimeline)
     case stops([StopItem])
     case pickupDrop(PickupDrop)
-    case boarded(BoardedTimeline)
+    case rideStops(RideStopsTimeline)
 }
 
 /// Detail lines and stop progress for an illustrated ride card (e.g. Train).
 struct RideProgress {
     let lines: [String]
-    let stopsRemaining: Int
+    let totalStops: Int
+    /// Zero-based index of the stop the vehicle is currently at.
+    let currentStopIndex: Int
+
+    var stopsRemaining: Int { max(totalStops - currentStopIndex - 1, 0) }
 }
 
 struct NextLine: Identifiable {
