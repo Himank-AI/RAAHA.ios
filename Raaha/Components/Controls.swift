@@ -424,7 +424,8 @@ struct SlideToStartJourneyButton: View {
                                 }
                                 action()
 
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                                Task { @MainActor in
+                                    try? await Task.sleep(for: .milliseconds(800))
                                     hasTriggered = false
                                     withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                                         dragOffset = 0
