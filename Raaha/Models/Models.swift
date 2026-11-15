@@ -273,11 +273,19 @@ struct Place: Identifiable {
 }
 
 struct SavedJourney: Identifiable {
-    let id = UUID()
+    let id: UUID
     let name: String
     let route: String
     let imageName: String
     let isBookmarked: Bool
+
+    init(id: UUID = UUID(), name: String, route: String, imageName: String, isBookmarked: Bool) {
+        self.id = id
+        self.name = name
+        self.route = route
+        self.imageName = imageName
+        self.isBookmarked = isBookmarked
+    }
 }
 
 struct RecentTrip: Identifiable {
