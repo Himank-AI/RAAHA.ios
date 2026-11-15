@@ -122,6 +122,36 @@ struct ExplorePlace: Identifiable, Hashable {
         ChennaiServiceArea.shared.validate(coordinate: coordinate)
     }
 
+    /// Normalized phone digits suitable for `tel:` URLs, if a usable number exists.
+    var dialablePhoneNumber: String? {
+        guard let phoneNumber else { return nil }
+        let trimmed = phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let dialable = trimmed.filter { $0.isNumber || $0 == "+" }
+        guard dialable.filter(\.isNumber).count >= 6 else { return nil }
+        return dialable
+    }
+
+    /// Whether the Place Detail phone section should appear for this location.
+    /// Beaches never show phone; restaurants/cafes and other places show it only when a valid number exists.
+    var shouldDisplayPhoneSection: Bool {
+        guard dialablePhoneNumber != nil else { return false }
+        switch category {
+        case .beach:
+            return false
+        case .restaurant, .cafe, .landmark, .shopping, .attraction, .park, .entertainment, .other:
+            return true
+        }
+    }
+
+    /// Combined address line for detail screens.
+    var displayAddress: String {
+        [address, locality]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+    }
+
     // MARK: Hashable & Equatable
 
     static func == (lhs: ExplorePlace, rhs: ExplorePlace) -> Bool {
@@ -132,18 +162,6 @@ struct ExplorePlace: Identifiable, Hashable {
         hasher.combine(id)
     }
 
-    /// Opens location in native Apple Maps.
-    func openInMaps() {
-        let item: MKMapItem
-        if #available(iOS 26.0, *) {
-            let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-            item = MKMapItem(location: location, address: nil)
-        } else {
-            item = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
-        }
-        item.name = name
-        item.openInMaps(launchOptions: nil)
-    }
 }
 
 // MARK: - MapKit Compatibility
