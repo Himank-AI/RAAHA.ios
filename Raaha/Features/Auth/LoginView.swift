@@ -94,14 +94,27 @@ struct LoginView: View {
                 }
             }
             .overlay(alignment: .topTrailing) {
-                Image("login_birds")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geo.size.width * 0.12)
-                    .padding(.top, geo.safeAreaInsets.top + 88)
-                    .padding(.trailing, 6)
-                    .accessibilityHidden(true)
-                    .offset(x: -40, y: 40)
+                ZStack(alignment: .topTrailing) {
+                    // Primary birds flock to the right of logo
+                    Image("login_birds")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: geo.size.width * 0.12)
+                        .padding(.top, geo.safeAreaInsets.top + 88)
+                        .padding(.trailing, 6)
+                        .accessibilityHidden(true)
+                        .offset(x: -40, y: 40)
+
+                    // Secondary birds flock higher up on top right
+                    Image("birds")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: geo.size.width * 0.11)
+                        .padding(.top, geo.safeAreaInsets.top + 34)
+                        .padding(.trailing, 18)
+                        .opacity(0.85)
+                        .accessibilityHidden(true)
+                }
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
