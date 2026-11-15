@@ -14,6 +14,28 @@ struct ProfileView: View {
     @State private var showEditSheet: Bool = false
     @State private var editingField: EditableField = .name
 
+    // Frequent Locations state
+    @State private var homeAddress: String = "Chennai Central, Park Town"
+    @State private var workAddress: String = "T. Nagar Smart City Complex"
+    @State private var showLocationSheet: Bool = false
+    @State private var editingLocation: LocationField = .home
+
+    enum LocationField {
+        case home, workplace
+        var title: String {
+            switch self {
+            case .home:      return "Home"
+            case .workplace: return "Workplace"
+            }
+        }
+        var symbol: String {
+            switch self {
+            case .home:      return "house.fill"
+            case .workplace: return "briefcase.fill"
+            }
+        }
+    }
+
     enum EditableField {
         case name, email, phone
         var title: String {
@@ -108,6 +130,16 @@ struct ProfileView: View {
                 userName: $userName,
                 userEmail: $userEmail,
                 userPhone: $userPhone
+            )
+            .presentationDetents([.height(260)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(28)
+        }
+        .sheet(isPresented: $showLocationSheet) {
+            EditLocationSheet(
+                location: editingLocation,
+                homeAddress: $homeAddress,
+                workAddress: $workAddress
             )
             .presentationDetents([.height(260)])
             .presentationDragIndicator(.visible)
@@ -344,16 +376,16 @@ struct ProfileView: View {
 
             VStack(spacing: 0) {
                 placeRow(
+                    location: .home,
                     symbol: "house.fill",
-                    title: "Home",
-                    detail: "Chennai Central, Park Town",
+                    detail: homeAddress,
                     color: Color(hex: 0x4EA8DE)
                 )
                 HairlineDivider(color: Color(hex: 0x49769F).opacity(0.12))
                 placeRow(
+                    location: .workplace,
                     symbol: "briefcase.fill",
-                    title: "Workplace",
-                    detail: "T. Nagar Smart City Complex",
+                    detail: workAddress,
                     color: Color(hex: 0x2A82BE)
                 )
             }
@@ -362,7 +394,7 @@ struct ProfileView: View {
         }
     }
 
-    private func placeRow(symbol: String, title: String, detail: String, color: Color) -> some View {
+    private func placeRow(location: LocationField, symbol: String, detail: String, color: Color) -> some View {
         HStack(spacing: 12) {
             Circle()
                 .fill(color)
@@ -374,7 +406,7 @@ struct ProfileView: View {
                 )
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
+                Text(location.title)
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(Color.midnightBlue)
 
@@ -386,6 +418,8 @@ struct ProfileView: View {
             Spacer()
 
             Button {
+                editingLocation = location
+                showLocationSheet = true
             } label: {
                 Text("Edit")
                     .font(.system(size: 12, weight: .semibold))
@@ -586,6 +620,89 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, 8)
         .padding(.bottom, 12)
+    }
+}
+
+// MARK: - Edit Location Sheet
+struct EditLocationSheet: View {
+    let location: ProfileView.LocationField
+    @Binding var homeAddress: String
+    @Binding var workAddress: String
+
+    @Environment(\.dismiss) private var dismiss
+    @FocusState private var isFocused: Bool
+
+    private var binding: Binding<String> {
+        switch location {
+        case .home:      return $homeAddress
+        case .workplace: return $workAddress
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Capsule()
+                .fill(Color(hex: 0xC7D6E3))
+                .frame(width: 36, height: 4)
+                .padding(.top, 12)
+                .padding(.bottom, 20)
+
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 10) {
+                    Image(systemName: location.symbol)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0x2A90D4))
+                        .frame(width: 36, height: 36)
+                        .background(Circle().fill(Color(hex: 0x2A90D4).opacity(0.10)))
+
+                    Text("Edit \(location.title)")
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.midnightBlue)
+
+                    Spacer()
+
+                    Button("Done") { dismiss() }
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0x2A90D4))
+                }
+
+                HStack(spacing: 10) {
+                    TextField("Enter address", text: binding)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Color.midnightBlue)
+                        .autocorrectionDisabled()
+                        .focused($isFocused)
+                        .submitLabel(.done)
+                        .onSubmit { dismiss() }
+
+                    if !binding.wrappedValue.isEmpty {
+                        Button {
+                            binding.wrappedValue = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(Color(hex: 0xABBDCC))
+                                .font(.system(size: 16))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 13)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color(hex: 0xEEF4F9))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(isFocused ? Color(hex: 0x2A90D4).opacity(0.6) : Color.clear, lineWidth: 1.5)
+                        )
+                )
+            }
+            .padding(.horizontal, 20)
+
+            Spacer()
+        }
+        .background(Color.white)
+        .onAppear { isFocused = true }
     }
 }
 
