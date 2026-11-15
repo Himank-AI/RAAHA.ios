@@ -174,9 +174,7 @@ struct WalkTimeline {
 
 struct PickupDrop {
     let pickup: String
-    let pickupTime: String
     let drop: String
-    let dropTime: String
 }
 
 /// Previous / current / next stop around the rider on a ride leg.
@@ -261,6 +259,8 @@ struct LiveContent {
     let tips: [String]
     var direction: WalkDirection? = nil
     var ride: RideProgress? = nil
+    /// Estimated arrival shown in place of the next transfer when this is the journey's final leg.
+    var arrival: String? = nil
 }
 
 // MARK: - Trips, places, plan
