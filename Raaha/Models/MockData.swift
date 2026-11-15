@@ -25,51 +25,49 @@ enum MockData {
         ),
         RouteOption(
             kind: .cheapest,
-            minutes: 97,
-            fare: 68,
-            chain: [.walk, .bus, .train, .bike],
+            minutes: 66,
+            fare: 25,
+            chain: [.walk, .train, .bus, .walk],
             legs: [
-                RouteLeg(id: "c1", mode: .walk, title: "Walk", detail: "10 min · 180 m",
-                         description: "From your location to\nChennai Bus Station"),
-                RouteLeg(id: "c2", mode: .bus, title: "Bus (MC13)", detail: "45 min · 5 stops",
-                         description: "Chennai Metro Station →\nSt. Thomas Mount", fare: "₹ 25"),
-                RouteLeg(id: "c5", mode: .train, title: "Train", detail: "5 min · 350 m",
-                         description: "From drop-off to your destination", fare: "₹ 13"),
-                RouteLeg(id: "c4", mode: .bike, title: "Bike", detail: "7 min · 3.2 km",
-                         description: "St. Thomas Mount →\nPhoenix Mall", fare: "₹ 30")
+                RouteLeg(id: "c1", mode: .walk, title: "Walk", detail: "2 min · 200 m",
+                         description: "From your location to\nPotheri Railway Station"),
+                RouteLeg(id: "c2", mode: .train, title: "Train", detail: "40 min · 8 stops",
+                         description: "Potheri Railway Station →\nGuindy Railway Station", fare: "₹ 10"),
+                RouteLeg(id: "c3", mode: .bus, title: "Bus (M31)", detail: "18 min · 4 stops",
+                         description: "Guindy Bus Terminal →\nGuru Nanak College", fare: "₹ 15"),
+                RouteLeg(id: "c4", mode: .walk, title: "Walk", detail: "6 min · 400 m",
+                         description: "From Guru Nanak College to\nyour destination")
             ],
-            liveScreens: [.walk, .bus, .auto, .train],
-            modeCountOverride: 4
+            liveScreens: [.walk, .train, .bus],
+            modeCountOverride: 3
         ),
         RouteOption(
             kind: .comfortable,
             minutes: 92,
-            fare: 598,
-            chain: [.walk, .cab],
+            fare: 360,
+            chain: [.auto, .metro, .auto],
             legs: [
-                RouteLeg(id: "m1", mode: .walk, title: "Walk", detail: "2 min · 180 m",
-                         description: "From your location to\nSRM Gate", lighting: .wellLit),
-                RouteLeg(id: "m2", mode: .cab, title: "Cab", detail: "90 min · 35 km",
-                         description: "From drop-off to your destination", fare: "₹ 598", lighting: .wellLit)
+                RouteLeg(id: "m1", mode: .auto, title: "Auto", detail: "52 min · 29 km",
+                         description: "From Your Location to\nTirusulam Metro Station", fare: "₹ 200"),
+                RouteLeg(id: "m2", mode: .metro, title: "Metro", detail: "26 min · 5 stops",
+                         description: "Tirusulam →\nGuindy", fare: "₹ 50"),
+                RouteLeg(id: "m3", mode: .auto, title: "Auto", detail: "14 min · 6 km",
+                         description: "From Guindy Metro Station to\nyour destination", fare: "₹ 110")
             ],
-            liveScreens: [.walk, .auto],
+            liveScreens: [.autoToMetro, .metro, .autoEnd],
             modeCountOverride: 2
         ),
         RouteOption(
             kind: .safest,
             minutes: 80,
-            fare: 360,
-            chain: [.walk, .bus, .bus, .car],
+            fare: 480,
+            chain: [.cab],
             legs: [
-                RouteLeg(id: "s1", mode: .walk, title: "Walk", detail: "10 min · 180 m",
-                         description: "From your location to\nChennai Bus Station", lighting: .wellLit),
-                RouteLeg(id: "s2", mode: .bus, title: "Bus", detail: "55 min · 6 km",
-                         description: "St. Thomas Mount →\nPhoenix Mall", fare: "₹ 300", lighting: .wellLit),
-                RouteLeg(id: "s3", mode: .car, title: "Cab", detail: "15 min · 8 km",
-                         description: "From drop-off to your destination", fare: "₹ 60", lighting: .wellLit)
+                RouteLeg(id: "s1", mode: .cab, title: "Cab", detail: "80 min · 32 km",
+                         description: "Direct cab from your location\nto your destination", fare: "₹ 480")
             ],
-            liveScreens: [.walk, .auto, .metro],
-            modeCountOverride: 3
+            liveScreens: [.cab],
+            modeCountOverride: 1
         )
     ]
 
@@ -79,13 +77,13 @@ enum MockData {
 
     // MARK: Live journey screens
 
-    static func live(_ screen: LiveScreen) -> LiveContent {
+    static func live(_ screen: LiveScreen, kind: RouteKind = .fastest) -> LiveContent {
         switch screen {
         case .walk:
             return LiveContent(
                 mode: .walk,
                 title: "Walk",
-                subtitle: "Your Location → Potheri Railway Station",
+                subtitle: "Your Location to Potheri Railway Station",
                 chips: ["2 min"],
                 timeline: .walk(walkTimeline),
                 showsMissedAlert: false,
@@ -97,39 +95,51 @@ enum MockData {
             return LiveContent(
                 mode: .walk,
                 title: "Walk",
-                subtitle: "Chennai Central → Egmore",
-                chips: ["18 min"],
+                subtitle: "Guru Nanak College to your destination",
+                chips: ["6 min"],
                 timeline: .walk(walkTimeline),
                 showsMissedAlert: false,
                 next: trainNext,
                 tips: ["Use crosswalks and footpaths where available", "Keep your phone charged"],
-                direction: WalkDirection(turn: .straight, distance: "80 m")
+                direction: WalkDirection(turn: .straight, distance: "80 m"),
+                arrival: "10:45 AM"
             )
         case .metro:
             return LiveContent(
                 mode: .metro,
                 title: "Metro (Blue Line)",
-                subtitle: "Chennai Airport → Alandur",
-                chips: ["₹ 40", "10 min"],
-                timeline: .stops(fullStops),
+                subtitle: "Tirusulam → Guindy",
+                chips: ["26 min"],
+                timeline: .rideStops(
+                    RideStopsTimeline(
+                        previous: .init(name: "Tirusulam", caption: "Departed 10:58 AM"),
+                        current: .init(name: "Meenambakkam", caption: "Arriving now"),
+                        next: .init(name: "Nanganallur Road", caption: "in 4 min")
+                    )
+                ),
                 showsMissedAlert: false,
                 next: NextTransfer(
-                    icon: .bus,
-                    chip: "22 min",
-                    headline: "Take the auto at Alandur",
+                    icon: .auto,
+                    chip: "14 min",
+                    headline: "Auto",
                     lines: [
-                        NextLine(text: "Route: 4 km"),
-                        NextLine(text: "You will reach your destination by 10:45 AM")
+                        NextLine(text: "Board at: 11:20 AM, Guindy"),
+                        NextLine(text: "Reach your destination by 11:34 AM")
                     ]
                 ),
-                tips: ["Check metro number & route", "Keep exact change / transit card", "Watch for your stop"]
+                tips: ["Check metro number & route", "Keep exact change / transit card", "Watch for your stop"],
+                ride: RideProgress(
+                    lines: ["Tirusulam to Guindy"],
+                    totalStops: 5,
+                    currentStopIndex: 1
+                )
             )
         case .auto:
             return LiveContent(
                 mode: .auto,
                 title: "Auto",
                 subtitle: "Guindy → Anna Nagar",
-                chips: ["5 min"],
+                chips: ["10 min"],
                 timeline: .pickupDrop(
                     PickupDrop(pickup: "Guindy Railway Station", drop: "Phoenix mall, Velachery")
                 ),
@@ -151,31 +161,98 @@ enum MockData {
                 ),
                 arrival: "1:38 PM"
             )
+        case .autoEnd:
+            return LiveContent(
+                mode: .auto,
+                title: "Auto",
+                subtitle: "Guindy → Anna Nagar",
+                chips: ["14 min"],
+                timeline: .pickupDrop(
+                    PickupDrop(pickup: "Guindy Railway Station", drop: "Phoenix mall, Velachery")
+                ),
+                showsMissedAlert: false,
+                next: NextTransfer(
+                    icon: .walk,
+                    chip: "12 min",
+                    headline: "Walking",
+                    lines: [
+                        NextLine(text: "Route: 500 m → Destination"),
+                        NextLine(text: "You will reach your destination by 10:45 AM")
+                    ]
+                ),
+                tips: ["Confirm fare before starting", "Share location for safety", "Keep small change handy"],
+                ride: RideProgress(
+                    lines: ["Guindy Station to Phoenix Mall"],
+                    totalStops: 4,
+                    currentStopIndex: 1,
+                    remaining: "4.1 km"
+                ),
+                arrival: "1:38 PM"
+            )
+        case .autoToMetro:
+            return LiveContent(
+                mode: .auto,
+                title: "Auto",
+                subtitle: "Your Location → Tirusulam Metro",
+                chips: ["52 min"],
+                timeline: .pickupDrop(
+                    PickupDrop(pickup: "Your Location", drop: "Tirusulam Metro Station")
+                ),
+                showsMissedAlert: false,
+                next: NextTransfer(
+                    icon: .metro,
+                    chip: "26 min",
+                    headline: "Metro",
+                    lines: [
+                        NextLine(text: "Route: Tirusulam → Guindy"),
+                        NextLine(text: "Board at: 10:58 AM, Towards LIC")
+                    ]
+                ),
+                tips: ["Confirm fare before starting", "Share location for safety", "Keep small change handy"],
+                ride: RideProgress(
+                    lines: ["Your Location to Tirusulam Metro"],
+                    totalStops: 4,
+                    currentStopIndex: 1,
+                    remaining: "21.2 km"
+                )
+            )
         case .bus:
             return LiveContent(
                 mode: .bus,
-                title: "Bus",
-                subtitle: "Chennai Airport → Alandur",
-                chips: ["₹ 85", "22 min"],
-                timeline: .stops(fullStops),
+                title: "Bus (M31)",
+                subtitle: "Guindy Bus Terminal → Guru Nanak College",
+                chips: ["18 min"],
+                timeline: .rideStops(
+                    RideStopsTimeline(
+                        previous: .init(name: "Guindy Bus Terminal", caption: "Departed 11:18 AM"),
+                        current: .init(name: "Saidapet", caption: "Arriving now"),
+                        next: .init(name: "Velachery", caption: "in 6 min")
+                    )
+                ),
                 showsMissedAlert: false,
                 next: NextTransfer(
-                    icon: .train,
-                    chip: "12 min",
-                    headline: "Train",
+                    icon: .walk,
+                    chip: "6 min",
+                    headline: "Walk to your destination",
                     lines: [
-                        NextLine(text: "Board at: Chennai Central", trailing: "10:32 AM"),
-                        NextLine(text: "Get down at: Egmore", trailing: "10:57 AM")
+                        NextLine(text: "From Guru Nanak College"),
+                        NextLine(text: "400 m to your destination")
                     ]
                 ),
-                tips: ["Check bus number and route", "Same ticket/card for bus and metro", "Auto & bike options at the next stop"]
+                tips: ["Check bus number and route", "Same ticket/card for bus and metro", "Auto & bike options at the next stop"],
+                ride: RideProgress(
+                    lines: ["Guindy Bus Terminal to Guru Nanak College"],
+                    totalStops: 4,
+                    currentStopIndex: 1
+                ),
+                arrival: "1:38 PM"
             )
         case .train:
             return LiveContent(
                 mode: .train,
                 title: "Train",
                 subtitle: "Potheri → Guindy",
-                chips: ["12 min"],
+                chips: ["40 min"],
                 timeline: .rideStops(
                     RideStopsTimeline(
                         previous: .init(name: "Potheri", caption: "Departed 10:32 AM"),
@@ -184,13 +261,41 @@ enum MockData {
                     )
                 ),
                 showsMissedAlert: false,
-                next: autoNext,
+                next: kind == .cheapest ? busNext : autoNext,
                 tips: ["Check bus number and route", "Same ticket/card for bus and metro", "Auto & bike options at the next stop"],
                 ride: RideProgress(
                     lines: ["Potheri Station to Guindy Station"],
                     totalStops: 8,
                     currentStopIndex: 1
                 )
+            )
+        case .cab:
+            return LiveContent(
+                mode: .cab,
+                title: "Cab",
+                subtitle: "Your location → Destination",
+                chips: ["80 min"],
+                timeline: .pickupDrop(
+                    PickupDrop(pickup: "Your Location", drop: "Phoenix Mall, Velachery")
+                ),
+                showsMissedAlert: false,
+                next: NextTransfer(
+                    icon: .cab,
+                    chip: "80 min",
+                    headline: "Direct cab",
+                    lines: [
+                        NextLine(text: "Door to door, no transfers"),
+                        NextLine(text: "You will reach your destination by 11:00 AM")
+                    ]
+                ),
+                tips: ["Confirm the cab and fare before starting", "Share your live location", "Sit in the back and keep the doors locked"],
+                ride: RideProgress(
+                    lines: ["Your location to Destination"],
+                    totalStops: 4,
+                    currentStopIndex: 1,
+                    remaining: "20.8 km"
+                ),
+                arrival: "11:00 AM"
             )
         }
     }
@@ -212,9 +317,19 @@ enum MockData {
         StopItem(name: "Alandur", caption: "Arriving · 22 min", state: .arriving)
     ]
 
+    private static let busNext = NextTransfer(
+        icon: .bus,
+        chip: "18 min",
+        headline: "Bus (M31)",
+        lines: [
+            NextLine(text: "Board at: 11:18 AM"),
+            NextLine(text: "Guindy Bus Terminal")
+        ]
+    )
+
     private static let autoNext = NextTransfer(
         icon: .auto,
-        chip: "5 min",
+        chip: "10 min",
         headline: "Auto",
         lines: [
             NextLine(text: "Board at: 10:37 AM, Guindy"),
@@ -224,7 +339,7 @@ enum MockData {
 
     private static let trainNext = NextTransfer(
         icon: .train,
-        chip: "12 min",
+        chip: "40 min",
         headline: "Train",
         lines: [
             NextLine(text: "Route: Potheri → Guindy"),

@@ -179,6 +179,7 @@ private struct PlacesContent: View {
     let vm: ExploreViewModel
     @Binding var selectedPlace: ExplorePlace?
     @Binding var showAllNearby: Bool
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -238,6 +239,8 @@ private struct PlacesContent: View {
                         } else {
                             vm.outsideBoundaryAlertMessage = "\(place.name) is outside the Chennai service area."
                         }
+                    } planAction: {
+                        router.planJourney(from: "Current Location", to: place.name)
                     }
                 }
             }
@@ -319,6 +322,8 @@ private struct PlacesContent: View {
                         } else {
                             vm.outsideBoundaryAlertMessage = "\(place.name) is outside the Chennai service area."
                         }
+                    } planAction: {
+                        router.planJourney(from: "Current Location", to: place.name)
                     }
                 }
             }
@@ -346,10 +351,11 @@ private struct PlacesContent: View {
 private struct RealNearbySpotRow: View {
     let place: ExplorePlace
     let action: () -> Void
+    let planAction: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .center, spacing: 14) {
+            HStack(spacing: 14) {
                 // Real Place Image Thumbnail with fallback
                 PlaceImageView(place: place, style: .thumbnail(size: 54))
                     .shadow(color: Color.deepSpace.opacity(0.18), radius: 4, x: 0, y: 2)
@@ -390,22 +396,29 @@ private struct RealNearbySpotRow: View {
                     }
                 }
 
-                Spacer(minLength: 8)
+                Spacer()
 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(Color.electricBlue)
-                    .frame(width: 22, alignment: .center)
-                    .accessibilityHidden(true)
+                VStack(spacing: 6) {
+                    Image(systemName: "chevron.right")
+                        .font(.raahaFootnoteSemibold)
+                        .foregroundStyle(Color.frostedBlue)
+
+                    // Quick route button
+                    Button(action: planAction) {
+                        Image(systemName: "arrow.triangle.turn.up.right.circle")
+                            .font(.raahaTitle3)
+                            .foregroundStyle(Color.frostedBlue)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Plan route to \(place.name)")
+                }
             }
-            .padding(.leading, 12)
-            .padding(.trailing, 14)
+            .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .navyCard(radius: 18, gradient: .raahaNavyGlow)
         }
         .buttonStyle(TactileButtonStyle())
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Opens place details")
     }
 }
 
@@ -492,6 +505,7 @@ private struct AllNearbySheet: View {
     let vm: ExploreViewModel
     @Binding var selectedPlace: ExplorePlace?
     @Binding var showAllNearby: Bool
+    @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -506,6 +520,9 @@ private struct AllNearbySheet: View {
                                 try? await Task.sleep(for: .milliseconds(300))
                                 selectedPlace = place
                             }
+                        } planAction: {
+                            dismiss()
+                            router.planJourney(from: "Current Location", to: place.name)
                         }
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)

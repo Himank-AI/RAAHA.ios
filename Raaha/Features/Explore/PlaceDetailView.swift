@@ -12,211 +12,157 @@ struct PlaceDetailView: View {
     @Environment(\.openURL) private var openURL
 
     var body: some View {
-        VStack(spacing: 0) {
-            navigationHeader
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                // Hero image / banner
+                heroSection
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    heroSection
+                // Details card
+                VStack(alignment: .leading, spacing: 20) {
+                    // Name + category + rating
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(place.name)
+                            .font(.raahaTitle2)
+                            .foregroundStyle(Color.deepSpace)
 
-                    detailContent
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-                        .padding(.bottom, 28)
+                        // Badges row
+                        FlowBadgesView(place: place)
+                    }
+
+                    HairlineDivider()
+
+                    // Opening status
+                    if let opening = place.openingStatus {
+                        detailRow(
+                            symbol: "clock.fill",
+                            title: "Hours",
+                            value: opening
+                        )
+                    }
+
+                    // Address
+                    if !place.address.isEmpty || place.locality != "Chennai" {
+                        detailRow(
+                            symbol: "mappin.and.ellipse",
+                            title: "Address",
+                            value: [place.address, place.locality]
+                                .filter { !$0.isEmpty }
+                                .joined(separator: ", ")
+                        )
+                    }
+
+                    // Phone
+                    if let phone = place.phoneNumber, !phone.isEmpty {
+                        Button {
+                            let tel = "tel:\(phone.filter { $0.isNumber || $0 == "+" })"
+                            if let url = URL(string: tel) { openURL(url) }
+                        } label: {
+                            detailRow(symbol: "phone.fill", title: "Phone", value: phone)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // Website
+                    if let web = place.website {
+                        Link(destination: web) {
+                            detailRow(
+                                symbol: "safari.fill",
+                                title: "Website",
+                                value: web.host(percentEncoded: false) ?? web.absoluteString
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    HairlineDivider()
+
+                    // Mini Map
+                    Map {
+                        Annotation(place.name, coordinate: place.coordinate) {
+                            PlaceMapPin()
+                        }
+                    }
+                    .frame(height: 180)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .disabled(true)
+
+                    // Open in Maps button
+                    Button {
+                        place.openInMaps()
+                    } label: {
+                        Label("Open in Maps", systemImage: "map.fill")
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .dark))
+
+                    // Plan journey button
+                    Button {
+                        router.planJourney(from: "Current Location", to: place.name)
+                    } label: {
+                        Label("Get Directions via RAAHA", systemImage: "arrow.triangle.turn.up.right.circle.fill")
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .light))
                 }
+                .padding(20)
+                .padding(.bottom, 40)
             }
-            .scrollIndicators(.hidden)
-            .contentMargins(.bottom, 110, for: .scrollContent)
         }
         .raahaScreenBackground()
-        .toolbar(.hidden, for: .navigationBar)
-    }
-
-    // MARK: - Navigation Header (safe-area aware)
-
-    private var navigationHeader: some View {
-        HStack(alignment: .center, spacing: 12) {
-            BackButton()
-
-            Text(place.name)
-                .font(.raahaHeadline)
-                .foregroundStyle(Color.midnightBlue)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityAddTraits(.isHeader)
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            Rectangle()
-                .fill(Color.white.opacity(0.55))
-                .background(.ultraThinMaterial)
-                .ignoresSafeArea(edges: .top)
-        }
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color(hex: 0x49769F).opacity(0.18))
-                .frame(height: 1)
-        }
+        .pushedChrome(title: place.name)
+        .ignoresSafeArea(edges: .top)
     }
 
     // MARK: - Hero
 
     private var heroSection: some View {
-        ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .bottom) {
+            // Place photo hero or design system fallback
             PlaceImageView(place: place, style: .hero(height: 220))
-                .frame(maxWidth: .infinity)
-                .frame(height: 220)
+                .frame(maxWidth: .infinity, maxHeight: 220)
                 .clipped()
 
+            // Bottom gradient scrim
             LinearGradient(
-                colors: [Color.clear, Color.deepSpace.opacity(0.62)],
+                colors: [Color.clear, Color.deepSpace.opacity(0.65)],
                 startPoint: .center,
                 endPoint: .bottom
             )
             .frame(height: 220)
-            .allowsHitTesting(false)
 
-            Label(place.category.title, systemImage: place.symbolName)
-                .font(.raahaFootnoteSemibold)
-                .foregroundStyle(Color.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Capsule().fill(Color.deepSpace.opacity(0.78)))
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 220)
-        .clipShape(RoundedRectangle(cornerRadius: 0, style: .continuous))
-    }
-
-    // MARK: - Detail Content
-
-    private var detailContent: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            titleBlock
-
-            metaBadges
-
-            HairlineDivider(color: Color(hex: 0x49769F).opacity(0.16))
-
-            if let opening = place.openingStatus, !opening.isEmpty {
-                detailRow(symbol: "clock.fill", title: "Hours", value: opening)
+            // Category badge bottom-leading
+            HStack {
+                Label(place.category.title, systemImage: place.symbolName)
+                    .font(.raahaFootnoteSemibold)
+                    .foregroundStyle(Color.honeydew)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color.deepSpace.opacity(0.75)))
+                Spacer()
             }
-
-            if !place.displayAddress.isEmpty {
-                detailRow(symbol: "mappin.and.ellipse", title: "Address", value: place.displayAddress)
-            }
-
-            if place.shouldDisplayPhoneSection, let phone = place.phoneNumber {
-                Button(action: dialPhone) {
-                    detailRow(symbol: "phone.fill", title: "Phone", value: phone)
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint("Opens the Phone app to call this number")
-            }
-
-            HairlineDivider(color: Color(hex: 0x49769F).opacity(0.16))
-
-            mapPreview
-
-            actionButtons
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white.opacity(0.62))
-                .background(
-                    .ultraThinMaterial,
-                    in: RoundedRectangle(cornerRadius: 24, style: .continuous)
-                )
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.75), lineWidth: 1)
-        )
-        .shadow(color: Color(hex: 0x49769F).opacity(0.16), radius: 12, x: 0, y: 5)
-    }
-
-    private var titleBlock: some View {
-        Text(place.name)
-            .font(.raahaTitle2)
-            .foregroundStyle(Color.deepSpace)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityAddTraits(.isHeader)
-    }
-
-    private var metaBadges: some View {
-        FlowBadgesView(place: place)
-    }
-
-    private var mapPreview: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Location")
-                .font(.raahaCaption)
-                .foregroundStyle(Color.steelBlue)
-
-            Map {
-                Annotation(place.name, coordinate: place.coordinate) {
-                    PlaceMapPin()
-                }
-            }
-            .frame(height: 180)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(hex: 0x49769F).opacity(0.18), lineWidth: 1)
-            )
-            .disabled(true)
-            .accessibilityLabel("Map preview of \(place.name)")
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
     }
 
-    private var actionButtons: some View {
-        Button {
-            router.planJourney(from: "Current Location", to: place.name)
-        } label: {
-            Label("Get Directions via RAAHA", systemImage: "arrow.triangle.turn.up.right.circle.fill")
-        }
-        .buttonStyle(PillButtonStyle(kind: .light))
-        .padding(.top, 4)
-        .accessibilityHint("Plans a journey to this place inside RAAHA")
-    }
-
-    // MARK: - Helpers
+    // MARK: - Detail Row
 
     private func detailRow(symbol: String, title: String, value: String) -> some View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: symbol)
                 .font(.raahaSubheadlineMedium)
                 .foregroundStyle(Color.steelBlue)
-                .frame(width: 24, alignment: .center)
-                .accessibilityHidden(true)
+                .frame(width: 24)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.raahaCaption)
                     .foregroundStyle(Color.steelBlue)
                 Text(value)
                     .font(.raahaBody)
                     .foregroundStyle(Color.deepSpace)
-                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            Spacer(minLength: 0)
+            Spacer()
         }
-        .accessibilityElement(children: .combine)
-    }
-
-    private func dialPhone() {
-        guard let dialable = place.dialablePhoneNumber,
-              let url = URL(string: "tel:\(dialable)") else { return }
-        openURL(url)
     }
 }
 
@@ -229,9 +175,9 @@ private struct FlowBadgesView: View {
         HStack(spacing: 8) {
             Label(place.category.title, systemImage: place.symbolName)
                 .font(.raahaFootnoteSemibold)
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.honeydew)
                 .padding(.horizontal, 10)
-                .padding(.vertical, 5)
+                .padding(.vertical, 4)
                 .background(Capsule().fill(Color.steelBlue))
 
             if let rating = place.ratingText {
@@ -239,8 +185,8 @@ private struct FlowBadgesView: View {
                     .font(.raahaFootnoteSemibold)
                     .foregroundStyle(Color.deepSpace)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(Color(hex: 0xBDD8E9)))
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Color.frostedBlue))
             }
 
             if let dist = place.distanceText {
@@ -268,29 +214,15 @@ private struct PlaceMapPin: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 14, height: 14)
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.honeydew)
         }
         .shadow(radius: 4)
     }
 }
 
-#Preview("Restaurant") {
-    NavigationStack {
-        PlaceDetailView(place: ExploreMockData.muruganIdliShop)
-    }
-    .environment(AppRouter())
+#Preview {
+    PlaceDetailView(place: ExploreMockData.marinaBeach)
+        .environment(AppRouter())
 }
 
-#Preview("Beach") {
-    NavigationStack {
-        PlaceDetailView(place: ExploreMockData.marinaBeach)
-    }
-    .environment(AppRouter())
-}
 
-#Preview("Shopping") {
-    NavigationStack {
-        PlaceDetailView(place: ExploreMockData.ranganathanStreet)
-    }
-    .environment(AppRouter())
-}

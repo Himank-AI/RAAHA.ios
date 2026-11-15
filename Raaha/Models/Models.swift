@@ -148,7 +148,7 @@ struct RouteOption: Identifiable {
 // MARK: - Live journey
 
 enum LiveScreen: Hashable {
-    case walk, walkEnd, metro, auto, bus, train
+    case walk, walkEnd, metro, auto, autoToMetro, autoEnd, bus, train, cab
 }
 
 enum StopState {
@@ -202,6 +202,8 @@ struct RideProgress {
     let totalStops: Int
     /// Zero-based index of the stop the vehicle is currently at.
     let currentStopIndex: Int
+    /// Distance still ahead, shown on the road progress. Defaults to a short walk remainder.
+    var remaining: String? = nil
 
     var stopsRemaining: Int { max(totalStops - currentStopIndex - 1, 0) }
 }
