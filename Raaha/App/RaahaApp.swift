@@ -2,36 +2,62 @@ import SwiftUI
 
 @main
 struct RaahaApp: App {
+    init() {
+        UIScrollView.appearance().showsVerticalScrollIndicator = false
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 // Light mode by default
                 .preferredColorScheme(.light)
+                .scrollIndicators(.hidden, axes: .vertical)
         }
     }
 }
 
 struct RootView: View {
     @State private var router = AppRouter()
+    @State private var launch = LaunchTransitionManager()
 
     var body: some View {
         @Bindable var router = router
-        Group {
-            if router.showLogin {
-                LoginView()
+        ZStack {
+            Group {
+                if router.showLogin && !launch.isPresenting {
+                    LoginView()
+                        .transition(.opacity)
+                } else {
+                    MainAppView(router: router)
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 0.3), value: router.showLogin)
+            .accessibilityHidden(launch.isPresenting)
+
+            if launch.isPresenting {
+                RAAHACinematicLaunchView(manager: launch)
                     .transition(.opacity)
-            } else {
-                MainAppView(router: router)
-                    .transition(.opacity)
+                    .zIndex(1)
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: router.showLogin)
         .environment(router)
+        .environment(launch)
+        .onChange(of: launch.handoffStarted) { _, started in
+            guard started, router.showLogin else { return }
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                router.showLogin = false
+            }
+        }
     }
 }
 
 private struct MainAppView: View {
     @Bindable var router: AppRouter
+    @Environment(LaunchTransitionManager.self) private var launch
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -66,7 +92,14 @@ private struct MainAppView: View {
                 RaahaTabBar(selection: $router.tab)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 4)
+                    .opacity(launch.chromeReveal)
+                    .offset(y: (1 - launch.chromeReveal) * 18)
+                    .animation(reduceMotion ? nil : .interactiveSpring(response: 0.52, dampingFraction: 0.86, blendDuration: 0.12).delay(0.10), value: launch.chromeReveal)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .onAppear { launch.revealContent() }
+                    .onChange(of: launch.handoffStarted) { _, _ in
+                        launch.revealContent()
+                    }
             }
         }
         .animation(.easeInOut(duration: 0.25), value: router.isTabBarVisible)

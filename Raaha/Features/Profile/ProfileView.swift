@@ -3,9 +3,41 @@ import SwiftUI
 struct ProfileView: View {
     // MARK: - State
     @Environment(AppRouter.self) private var router
-    @State private var selectedCommuteModes: Set<String> = ["Metro", "Bus", "Local Train"]
+    @State private var selectedCommuteModes: Set<String> = ["Bus"]
     @State private var selectedInterests: Set<String> = ["Beaches", "Heritage", "Food"]
     @State private var showLogoutDialog: Bool = false
+
+    // Edit Profile state
+    @State private var userName: String = "Akshaya Kumar"
+    @State private var userEmail: String = "akshaya.kumar@gmail.com"
+    @State private var userPhone: String = "+91 98765 43210"
+    @State private var showEditSheet: Bool = false
+    @State private var editingField: EditableField = .name
+
+    enum EditableField {
+        case name, email, phone
+        var title: String {
+            switch self {
+            case .name:  return "Full Name"
+            case .email: return "Email Address"
+            case .phone: return "Phone Number"
+            }
+        }
+        var symbol: String {
+            switch self {
+            case .name:  return "person.fill"
+            case .email: return "envelope.fill"
+            case .phone: return "phone.fill"
+            }
+        }
+        var keyboardType: UIKeyboardType {
+            switch self {
+            case .name:  return .default
+            case .email: return .emailAddress
+            case .phone: return .phonePad
+            }
+        }
+    }
 
     private let commuteModes: [(name: String, symbol: String, customAsset: String?)] = [
         ("Bike", "bicycle", "icon_bike"),
@@ -22,19 +54,20 @@ struct ProfileView: View {
         ("Heritage", "building.columns"),
         ("Food", "fork.knife"),
         ("Adventure", "tent.fill"),
-        ("Nature", "leaf"),
-        ("Cafes", "cup.and.saucer.fill"),
-        ("Metro", "train.side.front.car"),
-        ("Photography", "camera.aperture")
+        ("Nature", "leaf")
     ]
 
     var body: some View {
         VStack(spacing: 0) {
+            // Top card from ExploreView (NavyHeader)
             header
 
             ScrollView {
                 VStack(spacing: 16) {
-                    // 1. Commute Preferences Group (Same chip layout as Discovery Interests)
+                    // 0. Edit Profile Details
+                    editProfileSection
+
+                    // 1. Commute Preferences Group
                     commutePreferencesSection
 
                     // 2. Saved Chennai Places Group
@@ -43,14 +76,14 @@ struct ProfileView: View {
                     // 3. Discovery Interests Group
                     travelInterestsSection
 
-                    // 4. Transit & Support Group (Only FAQs and Help + Logout)
+                    // 4. Transit & Support Group
                     transitSupportSection
 
                     // Version Footer
                     footerNote
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 18)
+                .padding(.top, 16)
                 .padding(.bottom, 24)
             }
             .contentMargins(.bottom, 110, for: .scrollContent)
@@ -69,81 +102,165 @@ struct ProfileView: View {
         } message: {
             Text("You will need to sign in again to sync your journeys.")
         }
-    }
-
-    // MARK: - Header (Includes 28 Trips Taken)
-    private var header: some View {
-        NavyHeader {
-            HStack(spacing: 16) {
-                // Profile Avatar with verified badge
-                ZStack(alignment: .bottomTrailing) {
-                    Image(systemName: "person.crop.circle.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 72, height: 72)
-                        .foregroundStyle(Color.lightSkyBlue)
-                        .background(Circle().fill(Color.white.opacity(0.12)))
-                        .overlay(Circle().stroke(Color.white.opacity(0.35), lineWidth: 2))
-
-                    Circle()
-                        .fill(Color.neonLime)
-                        .frame(width: 24, height: 24)
-                        .overlay(
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(Color.midnightBlue)
-                        )
-                        .overlay(Circle().stroke(Color.midnightBlue, lineWidth: 2))
-                        .offset(x: 2, y: 2)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Akshaya Kumar")
-                        .font(.raahaTitle2)
-                        .foregroundStyle(Color.white)
-
-                    Text("akshaya.kumar@gmail.com")
-                        .font(.raahaCaption)
-                        .foregroundStyle(Color(hex: 0xBDD8E9))
-
-                    // Trips taken with numbers only arranged neatly
-                    HStack(spacing: 6) {
-                        ModeGlyph(mode: .metro)
-                            .foregroundStyle(Color.neonLime)
-                            .frame(width: 11, height: 11)
-                        Text("28")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(Color.neonLime)
-                        Text("Trips Taken")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color.white)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4.5)
-                    .background(
-                        Capsule()
-                            .fill(Color.white.opacity(0.12))
-                            .background(.ultraThinMaterial, in: Capsule())
-                    )
-                    .overlay(Capsule().stroke(Color.white.opacity(0.22), lineWidth: 1))
-                    .padding(.top, 2)
-                }
-
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, minHeight: 154, alignment: .leading)
+        .sheet(isPresented: $showEditSheet) {
+            EditFieldSheet(
+                field: editingField,
+                userName: $userName,
+                userEmail: $userEmail,
+                userPhone: $userPhone
+            )
+            .presentationDetents([.height(260)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(28)
         }
     }
 
-    // MARK: - Commute Preferences (Same chip layout as Discovery Interests)
+    // MARK: - Header (Top card from ExploreView / NavyHeader)
+    private var header: some View {
+        NavyHeader {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Profile")
+                    .font(.raahaTitle)
+                    .foregroundStyle(Color.white)
+                    .accessibilityAddTraits(.isHeader)
+
+                HStack(spacing: 16) {
+                    // Profile Avatar with verified badge
+                    ZStack(alignment: .bottomTrailing) {
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 64, height: 64)
+                            .foregroundStyle(Color.lightSkyBlue)
+                            .background(Circle().fill(Color.white.opacity(0.12)))
+                            .overlay(Circle().stroke(Color.white.opacity(0.35), lineWidth: 2))
+
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.brightBlue, Color.electricBlue],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 22, height: 22)
+                            .overlay(
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(Color.white)
+                            )
+                            .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                            .offset(x: 2, y: 2)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(userName)
+                            .font(.raahaTitle2)
+                            .foregroundStyle(Color.white)
+
+                        Text(userEmail)
+                            .font(.raahaCaption)
+                            .foregroundStyle(Color(hex: 0xBDD8E9))
+
+                        // Trips Taken Pill Badge
+                        HStack(spacing: 6) {
+                            Image(systemName: "bus.fill")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(Color(hex: 0x2A90D4))
+
+                            Text("25")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(Color(hex: 0x2A90D4))
+
+                            Text("Trips Taken")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Color.midnightBlue.opacity(0.75))
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4.5)
+                        .background(
+                            Capsule()
+                                .fill(Color.white)
+                                .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
+                        )
+                        .padding(.top, 2)
+                    }
+
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    // MARK: - Edit Profile Section
+    private var editProfileSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle(title: "Personal Details", icon: "person.crop.circle.fill")
+
+            VStack(spacing: 0) {
+                editRow(field: .name, value: userName)
+
+                HairlineDivider(color: Color(hex: 0x49769F).opacity(0.12))
+
+                editRow(field: .email, value: userEmail)
+
+                HairlineDivider(color: Color(hex: 0x49769F).opacity(0.12))
+
+                editRow(field: .phone, value: userPhone)
+            }
+            .padding(.horizontal, 14)
+            .profileCard(radius: 24)
+        }
+    }
+
+    private func editRow(field: EditableField, value: String) -> some View {
+        Button {
+            editingField = field
+            showEditSheet = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: field.symbol)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+                    .frame(width: 32, height: 32)
+                    .background(
+                        Circle()
+                            .fill(Color(hex: 0x2A90D4).opacity(0.10))
+                            .background(.ultraThinMaterial, in: Circle())
+                    )
+                    .overlay(Circle().stroke(Color.white.opacity(0.9), lineWidth: 1))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(field.title)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color(hex: 0x49769F))
+
+                    Text(value)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.midnightBlue)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                Image(systemName: "pencil")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+            }
+            .padding(.vertical, 10)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Commute Preferences Section
     private var commutePreferencesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle(title: "Commute Preferences", icon: "slider.horizontal.3")
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Select your preferred Chennai transit options:")
-                    .font(.raahaCaption)
-                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Color(hex: 0x49769F))
 
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
@@ -155,7 +272,7 @@ struct ProfileView: View {
                 }
             }
             .padding(14)
-            .navyCard(radius: 20)
+            .profileCard(radius: 24)
         }
     }
 
@@ -163,8 +280,6 @@ struct ProfileView: View {
         let isSelected = selectedCommuteModes.contains(name)
         let mode = TransportMode.mode(for: name)
         let modeColor = mode?.color ?? Color.steelBlue
-        let modeBg = mode?.tintedBackground ?? Color.white.opacity(0.12)
-        let modeStroke = mode?.strokeColor ?? Color.white.opacity(0.20)
 
         return Button {
             withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
@@ -175,37 +290,48 @@ struct ProfileView: View {
                 }
             }
         } label: {
-            HStack(spacing: 5) {
+            HStack(spacing: 6) {
                 if let customAsset {
                     Image(customAsset)
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 14, height: 14)
+                        .frame(width: 15, height: 15)
                 } else {
                     Image(systemName: symbol)
-                        .font(.system(size: 11))
+                        .font(.system(size: 13, weight: .semibold))
                 }
                 Text(name)
-                    .font(.raahaCaption)
+                    .font(.system(size: 13, weight: isSelected ? .bold : .semibold))
                     .lineLimit(1)
             }
-            .foregroundStyle(isSelected ? modeColor : modeColor.opacity(0.75))
-            .frame(maxWidth: .infinity, minHeight: 38)
+            .foregroundStyle(isSelected ? Color.white : modeColor)
+            .frame(maxWidth: .infinity, minHeight: 40)
             .background(
                 Capsule()
                     .fill(
                         isSelected
-                        ? AnyShapeStyle(modeBg)
-                        : AnyShapeStyle(Color.white.opacity(0.08))
+                        ? AnyShapeStyle(
+                            LinearGradient(
+                                colors: [Color.brightBlue, Color.electricBlue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        : AnyShapeStyle(Color.white.opacity(0.85))
                     )
                     .background(.ultraThinMaterial, in: Capsule())
             )
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? modeStroke : Color.white.opacity(0.18), lineWidth: 1)
+                    .stroke(isSelected ? Color.white.opacity(0.55) : Color.white.opacity(0.90), lineWidth: 1)
             )
-            .shadow(color: isSelected ? modeColor.opacity(0.25) : Color.clear, radius: 6, x: 0, y: 2)
+            .shadow(
+                color: isSelected ? Color.electricBlue.opacity(0.35) : Color.black.opacity(0.04),
+                radius: isSelected ? 8 : 4,
+                x: 0,
+                y: 2
+            )
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
@@ -214,43 +340,47 @@ struct ProfileView: View {
     // MARK: - Saved Places Section
     private var savedPlacesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Frequent Locations", icon: "mappin.and.ellipse")
+            sectionTitle(title: "Frequent Locations", icon: "mappin.fill")
 
             VStack(spacing: 0) {
                 placeRow(
                     symbol: "house.fill",
                     title: "Home",
                     detail: "Chennai Central, Park Town",
-                    color: Color.brightBlue
+                    color: Color(hex: 0x4EA8DE)
                 )
-                HairlineDivider(color: Color.white.opacity(0.12))
+                HairlineDivider(color: Color(hex: 0x49769F).opacity(0.12))
                 placeRow(
                     symbol: "briefcase.fill",
                     title: "Workplace",
                     detail: "T. Nagar Smart City Complex",
-                    color: Color.electricBlue
+                    color: Color(hex: 0x2A82BE)
                 )
             }
             .padding(.horizontal, 14)
-            .navyCard(radius: 20)
+            .profileCard(radius: 24)
         }
     }
 
     private func placeRow(symbol: String, title: String, detail: String, color: Color) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: symbol)
-                .font(.raahaSubheadlineMedium)
-                .foregroundStyle(color == Color.neonLime ? Color.midnightBlue : Color.white)
-                .frame(width: 32, height: 32)
-                .background(Circle().fill(color))
+            Circle()
+                .fill(color)
+                .frame(width: 36, height: 36)
+                .overlay(
+                    Image(systemName: symbol)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.white)
+                )
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.raahaSubheadlineMedium)
-                    .foregroundStyle(Color.honeydew)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Color.midnightBlue)
+
                 Text(detail)
-                    .font(.raahaCaption2)
-                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color(hex: 0x49769F))
             }
 
             Spacer()
@@ -258,16 +388,17 @@ struct ProfileView: View {
             Button {
             } label: {
                 Text("Edit")
-                    .font(.raahaCaption)
-                    .foregroundStyle(Color.lightSkyBlue)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
                     .background(
                         Capsule()
-                            .fill(Color.white.opacity(0.08))
+                            .fill(Color.white.opacity(0.85))
                             .background(.ultraThinMaterial, in: Capsule())
                     )
-                    .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                    .overlay(Capsule().stroke(Color.white.opacity(0.9), lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.04), radius: 3, x: 0, y: 1)
             }
             .buttonStyle(.plain)
         }
@@ -277,12 +408,12 @@ struct ProfileView: View {
     // MARK: - Discovery Interests Section
     private var travelInterestsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Discovery Interests", icon: "sparkles")
+            sectionTitle(title: "Discovery Interests")
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Customize your Chennai Explore recommendations:")
-                    .font(.raahaCaption)
-                    .foregroundStyle(Color.lightSkyBlue.opacity(0.85))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Color(hex: 0x49769F))
 
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
@@ -294,7 +425,7 @@ struct ProfileView: View {
                 }
             }
             .padding(14)
-            .navyCard(radius: 20)
+            .profileCard(radius: 24)
         }
     }
 
@@ -310,54 +441,60 @@ struct ProfileView: View {
             }
         } label: {
             HStack(spacing: 5) {
-                if let mode = TransportMode.mode(for: name), mode.customAssetName != nil {
-                    ModeGlyph(mode: mode)
-                        .frame(width: 12, height: 12)
-                } else {
-                    Image(systemName: symbol)
-                        .font(.system(size: 11))
-                }
+                Image(systemName: symbol)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(isSelected ? Color.white : Color(hex: 0x2A90D4))
+
                 Text(name)
-                    .font(.raahaCaption)
+                    .font(.system(size: 12, weight: isSelected ? .bold : .semibold))
                     .lineLimit(1)
             }
-            .foregroundStyle(isSelected ? Color.midnightBlue : Color.white)
-            .frame(maxWidth: .infinity, minHeight: 38)
+            .foregroundStyle(isSelected ? Color.white : Color.midnightBlue)
+            .frame(maxWidth: .infinity, minHeight: 40)
             .background(
                 Capsule()
                     .fill(
                         isSelected
-                        ? AnyShapeStyle(Color.neonLime)
-                        : AnyShapeStyle(Color.white.opacity(0.08))
+                        ? AnyShapeStyle(
+                            LinearGradient(
+                                colors: [Color.brightBlue, Color.electricBlue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        : AnyShapeStyle(Color.white.opacity(0.85))
                     )
                     .background(.ultraThinMaterial, in: Capsule())
             )
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.white.opacity(0.4) : Color.white.opacity(0.18), lineWidth: 1)
+                    .stroke(isSelected ? Color.white.opacity(0.55) : Color.white.opacity(0.90), lineWidth: 1)
             )
-            .shadow(color: isSelected ? Color.neonLime.opacity(0.3) : Color.clear, radius: 6, x: 0, y: 2)
+            .shadow(
+                color: isSelected ? Color.electricBlue.opacity(0.35) : Color.black.opacity(0.04),
+                radius: isSelected ? 8 : 4,
+                x: 0,
+                y: 2
+            )
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
     }
 
-    // MARK: - Transit & Support Section (Only FAQs and Help + Logout)
+    // MARK: - Transit & Support Section
     private var transitSupportSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Transit & Support", icon: "gearshape.fill")
+            sectionTitle(title: "Transit & Support")
 
             VStack(spacing: 0) {
-                // Chennai Transit FAQs and Help
                 actionRow(
                     symbol: "questionmark.circle.fill",
                     title: "Chennai Transit FAQs and Help",
                     trailing: "Guide"
                 )
 
-                HairlineDivider(color: Color.white.opacity(0.12))
+                HairlineDivider(color: Color(hex: 0x49769F).opacity(0.12))
 
-                // Logout button
                 Button {
                     showLogoutDialog = true
                 } label: {
@@ -368,26 +505,26 @@ struct ProfileView: View {
                             .frame(width: 32, height: 32)
                             .background(
                                 Circle()
-                                    .fill(Color.strawberry.opacity(0.2))
+                                    .fill(Color.strawberry.opacity(0.15))
                                     .background(.ultraThinMaterial, in: Circle())
                             )
 
                         Text("Logout")
-                            .font(.raahaSubheadlineMedium)
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(Color.strawberry)
 
                         Spacer()
 
                         Image(systemName: "chevron.right")
                             .font(.raahaCaption)
-                            .foregroundStyle(Color.lightSkyBlue.opacity(0.5))
+                            .foregroundStyle(Color(hex: 0x49769F).opacity(0.5))
                     }
                     .padding(.vertical, 10)
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 14)
-            .navyCard(radius: 20)
+            .profileCard(radius: 24)
         }
     }
 
@@ -395,41 +532,43 @@ struct ProfileView: View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.raahaSubheadlineMedium)
-                .foregroundStyle(Color.honeydew)
+                .foregroundStyle(Color(hex: 0x2A90D4))
                 .frame(width: 32, height: 32)
                 .background(
                     Circle()
-                        .fill(Color.white.opacity(0.12))
+                        .fill(Color.white.opacity(0.85))
                         .background(.ultraThinMaterial, in: Circle())
                 )
-                .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                .overlay(Circle().stroke(Color.white.opacity(0.9), lineWidth: 1))
 
             Text(title)
-                .font(.raahaSubheadlineMedium)
-                .foregroundStyle(Color.honeydew)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Color.midnightBlue)
 
             Spacer()
 
             Text(trailing)
-                .font(.raahaCaption)
-                .foregroundStyle(Color.lightSkyBlue)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Color(hex: 0x49769F))
 
             Image(systemName: "chevron.right")
                 .font(.raahaCaption)
-                .foregroundStyle(Color.lightSkyBlue.opacity(0.5))
+                .foregroundStyle(Color(hex: 0x49769F).opacity(0.5))
         }
         .padding(.vertical, 10)
     }
 
     // MARK: - Section Title Helper
-    private func sectionTitle(title: String, icon: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.neonLime)
+    private func sectionTitle(title: String, icon: String? = nil) -> some View {
+        HStack(spacing: 8) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+            }
             Text(title)
-                .font(.raahaFootnoteSemibold)
-                .foregroundStyle(Color.honeydew)
+                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.midnightBlue)
         }
         .padding(.leading, 4)
     }
@@ -439,14 +578,129 @@ struct ProfileView: View {
         VStack(spacing: 4) {
             Text("RAAHA Chennai • Multimodal Urban Transit")
                 .font(.raahaCaption)
-                .foregroundStyle(Color.lightSkyBlue)
-            Text("Version 2.2.0 (Build 50) • Native SwiftUI")
+                .foregroundStyle(Color(hex: 0x6B7280))
+            Text("Version 1.0.0 (Build 50) • Native SwiftUI")
                 .font(.raahaCaption2)
-                .foregroundStyle(Color.lightSkyBlue.opacity(0.75))
+                .foregroundStyle(Color(hex: 0x6B7280))
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 8)
         .padding(.bottom, 12)
+    }
+}
+
+// MARK: - Edit Field Sheet
+struct EditFieldSheet: View {
+    let field: ProfileView.EditableField
+    @Binding var userName: String
+    @Binding var userEmail: String
+    @Binding var userPhone: String
+
+    @Environment(\.dismiss) private var dismiss
+    @FocusState private var isFocused: Bool
+
+    private var binding: Binding<String> {
+        switch field {
+        case .name:  return $userName
+        case .email: return $userEmail
+        case .phone: return $userPhone
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Handle bar
+            Capsule()
+                .fill(Color(hex: 0xC7D6E3))
+                .frame(width: 36, height: 4)
+                .padding(.top, 12)
+                .padding(.bottom, 20)
+
+            VStack(alignment: .leading, spacing: 18) {
+                // Title row
+                HStack(spacing: 10) {
+                    Image(systemName: field.symbol)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0x2A90D4))
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle()
+                                .fill(Color(hex: 0x2A90D4).opacity(0.10))
+                        )
+
+                    Text("Edit \(field.title)")
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.midnightBlue)
+
+                    Spacer()
+
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+                }
+
+                // Text field
+                HStack(spacing: 10) {
+                    TextField(field.title, text: binding)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Color.midnightBlue)
+                        .keyboardType(field.keyboardType)
+                        .autocorrectionDisabled(field == .email || field == .phone)
+                        .textInputAutocapitalization(field == .name ? .words : .never)
+                        .focused($isFocused)
+                        .submitLabel(.done)
+                        .onSubmit { dismiss() }
+
+                    if !binding.wrappedValue.isEmpty {
+                        Button {
+                            binding.wrappedValue = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(Color(hex: 0xABBDCC))
+                                .font(.system(size: 16))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 13)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color(hex: 0xEEF4F9))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(isFocused ? Color(hex: 0x2A90D4).opacity(0.6) : Color.clear, lineWidth: 1.5)
+                        )
+                )
+            }
+            .padding(.horizontal, 20)
+
+            Spacer()
+        }
+        .background(Color.white)
+        .onAppear { isFocused = true }
+    }
+}
+
+// MARK: - Profile Card Surface Extension
+private extension View {
+    func profileCard(radius: CGFloat = 24) -> some View {
+        self
+            .background(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(Color.white.opacity(0.70))
+                    .background(
+                        .ultraThinMaterial,
+                        in: RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: radius, style: .continuous)
+                            .stroke(Color.white.opacity(0.85), lineWidth: 1.2)
+                    )
+                    .shadow(color: Color(hex: 0x49769F).opacity(0.12), radius: 12, x: 0, y: 4)
+            )
     }
 }
 

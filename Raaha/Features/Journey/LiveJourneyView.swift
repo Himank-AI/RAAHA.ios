@@ -8,7 +8,7 @@ struct LiveJourneyView: View {
     private var screens: [LiveScreen] { MockData.route(kind).liveScreens }
     private var content: LiveContent {
         let index = min(max(step, 0), screens.count - 1)
-        return MockData.live(screens[index])
+        return MockData.live(screens[index], kind: kind)
     }
     private var isLastStep: Bool { step >= screens.count - 1 }
 
@@ -74,7 +74,7 @@ struct LiveJourneyView: View {
         case .stops(let stops):
             StopsTimelineCard(stops: stops, mode: content.mode)
         case .pickupDrop(let info):
-            PickupDropCard(info: info)
+            PickupDropCard(info: info, tint: content.mode.color)
         case .rideStops(let info):
             RideStopsTimelineCard(info: info, mode: content.mode)
         }
@@ -195,6 +195,9 @@ private struct CardWash {
     static let natureGreen = CardWash(edge: Color.transportWalk.opacity(0.25), mid: Color.transportWalk.opacity(0.09))
     static let autoYellow = CardWash(edge: Color(hex: 0xFFD54F).opacity(0.32), mid: Color(hex: 0xFFD54F).opacity(0.09))
     static let autoYellowSoft = CardWash(edge: Color(hex: 0xFFD54F).opacity(0.24), mid: Color(hex: 0xFFD54F).opacity(0.07))
+    static let busBlue = CardWash(edge: Color(hex: 0x38A8D8).opacity(0.38), mid: Color(hex: 0x38A8D8).opacity(0.12))
+    static let metroTeal = CardWash(edge: Color(hex: 0x16859A).opacity(0.38), mid: Color(hex: 0x16859A).opacity(0.12))
+    static let cabLavender = CardWash(edge: Color(hex: 0x8064A9).opacity(0.38), mid: Color(hex: 0x8064A9).opacity(0.12))
 
     func gradient(from start: UnitPoint, to end: UnitPoint) -> LinearGradient {
         LinearGradient(
@@ -355,12 +358,23 @@ private struct CurrentlyOnCard: View {
     private var rideIllustration: (name: String, size: CGSize, offsetX: CGFloat) {
         switch content.mode {
         case .train: return ("local_train_illustration", CGSize(width: 160, height: 112), -26)
+        case .metro: return ("train_illustration", CGSize(width: 176, height: 112), -40)
         case .auto: return ("auto_illustration", CGSize(width: 184, height: 132), -40)
+        case .bus: return ("bus_illustration", CGSize(width: 188, height: 124), -34)
+        case .cab: return ("cab_illustration", CGSize(width: 210, height: 108), -24)
         default: return ("train_illustration", CGSize(width: 160, height: 112), -26)
         }
     }
 
-    private var rideWash: CardWash { content.mode == .auto ? .autoYellowSoft : .sky }
+    private var rideWash: CardWash {
+        switch content.mode {
+        case .auto: return .autoYellowSoft
+        case .bus: return .busBlue
+        case .metro: return .metroTeal
+        case .cab: return .cabLavender
+        default: return .sky
+        }
+    }
 
     var body: some View {
         if content.mode == .walk {
@@ -387,19 +401,43 @@ private struct CurrentlyOnCard: View {
         .premiumGlass()
     }
 
+    @ViewBuilder
+    private var rideTitle: some View {
+        let marker = "(Blue Line)"
+        let titleFont = Font.system(size: 24, weight: .bold, design: .rounded)
+        if let range = content.title.range(of: marker) {
+            let name = String(content.title[..<range.lowerBound]).trimmingCharacters(in: .whitespaces)
+            HStack(spacing: 5) {
+                Text(name)
+                    .foregroundStyle(Color.deepSpace)
+                Text(marker)
+                    .foregroundStyle(Color(hex: 0x16859A))
+            }
+            .font(titleFont)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+        } else {
+            Text(content.title)
+                .font(titleFont)
+                .foregroundStyle(Color.deepSpace)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+    }
+
     private func rideHeader(_ ride: RideProgress) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center) {
                 LiveStatusPill(color: rideTint)
                 Spacer(minLength: 8)
-                if let chip = content.chips.first {
-                    GlassChip(text: chip, systemImage: "clock.fill")
+                HStack(spacing: 6) {
+                    ForEach(content.chips, id: \.self) { chip in
+                        GlassChip(text: chip, systemImage: chip.contains("₹") ? nil : "clock.fill")
+                    }
                 }
             }
 
-            Text(content.title)
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.deepSpace)
+            rideTitle
                 .padding(.top, 10)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -414,8 +452,8 @@ private struct CurrentlyOnCard: View {
             .padding(.top, 3)
 
             Group {
-                if content.mode == .auto {
-                    RoadTrail(mode: content.mode, tint: rideTint, progress: Self.autoFraction, remaining: "300 m")
+                if content.mode == .auto || content.mode == .cab {
+                    RoadTrail(mode: content.mode, tint: rideTint, progress: Self.autoFraction, remaining: ride.remaining ?? "300 m")
                 } else {
                     RideStopsTrack(
                         mode: content.mode,
@@ -436,25 +474,39 @@ private struct CurrentlyOnCard: View {
                 .scaledToFill()
                 .frame(width: rideIllustration.size.width, height: rideIllustration.size.height, alignment: .trailing)
                 .clipped()
+                .scaleEffect(x: content.mode == .cab ? -1 : 1)
                 .mask(
                     LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0),
-                            .init(color: .black, location: 0.1),
-                            .init(color: .black, location: 0.6),
-                            .init(color: .clear, location: 1)
-                        ],
+                        stops: content.mode == .cab
+                            ? [
+                                .init(color: .black, location: 0),
+                                .init(color: .black, location: 0.40),
+                                .init(color: .black.opacity(0.28), location: 0.58),
+                                .init(color: .clear, location: 0.72)
+                            ]
+                            : [
+                                .init(color: .clear, location: 0),
+                                .init(color: .black, location: 0.1),
+                                .init(color: .black, location: 0.6),
+                                .init(color: .clear, location: 1)
+                            ],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
                 )
                 .mask(
                     LinearGradient(
-                        stops: [
-                            .init(color: .black, location: 0),
-                            .init(color: .black, location: 0.6),
-                            .init(color: .clear, location: 1)
-                        ],
+                        stops: content.mode == .cab
+                            ? [
+                                .init(color: .black, location: 0),
+                                .init(color: .black, location: 0.82),
+                                .init(color: .black.opacity(0.9), location: 1)
+                            ]
+                            : [
+                                .init(color: .black, location: 0),
+                                .init(color: .black, location: 0.6),
+                                .init(color: .clear, location: 1)
+                            ],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -1349,8 +1401,8 @@ private struct StopRow: View {
 /// Pick-up pin and drop flag joined by a dashed route, with a hairline between the two stops.
 private struct PickupDropCard: View {
     let info: PickupDrop
+    var tint: Color = .transportAuto
 
-    private let blue = Color.transportAuto
     private let iconColumn: CGFloat = 26
 
     var body: some View {
@@ -1358,9 +1410,9 @@ private struct PickupDropCard: View {
             row(label: "Pick up", name: info.pickup) {
                 Circle()
                     .fill(Color.white)
-                    .overlay(Circle().strokeBorder(blue, lineWidth: 4))
+                    .overlay(Circle().strokeBorder(tint, lineWidth: 4))
                     .frame(width: 16, height: 16)
-                    .shadow(color: blue.opacity(0.3), radius: 3, x: 0, y: 1)
+                    .shadow(color: tint.opacity(0.3), radius: 3, x: 0, y: 1)
                     .padding(.top, 2)
             }
 
@@ -1375,12 +1427,12 @@ private struct PickupDropCard: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 20, height: 20)
-                    .foregroundStyle(blue)
+                    .foregroundStyle(tint)
             }
         }
         .background(alignment: .topLeading) {
             VerticalLine()
-                .stroke(blue.opacity(0.55), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 4]))
+                .stroke(tint.opacity(0.55), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 4]))
                 .frame(width: 2)
                 .padding(.top, 22)
                 .padding(.bottom, 24)
@@ -1389,7 +1441,7 @@ private struct PickupDropCard: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .premiumGlass(tint: blue)
+        .premiumGlass(tint: tint)
     }
 
     private func row<Icon: View>(label: String, name: String, @ViewBuilder icon: () -> Icon) -> some View {
@@ -1702,12 +1754,18 @@ private struct NextTransferCard: View {
         switch next.icon {
         case .train: return ("local_train_illustration", 100, CGSize(width: 10, height: 10))
         case .auto: return ("auto_illustration", 138, CGSize(width: 10, height: 12))
+        case .bus: return ("bus_illustration", 124, CGSize(width: 8, height: 6))
         default: return ("train_illustration", 100, CGSize(width: 10, height: 10))
         }
     }
 
     private var wash: CardWash {
-        next.icon == .auto ? .autoYellow : .sky
+        switch next.icon {
+        case .auto: return .autoYellow
+        case .bus: return .busBlue
+        case .metro: return .metroTeal
+        default: return .sky
+        }
     }
 
     var body: some View {

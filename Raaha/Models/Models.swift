@@ -148,7 +148,7 @@ struct RouteOption: Identifiable {
 // MARK: - Live journey
 
 enum LiveScreen: Hashable {
-    case walk, walkEnd, metro, auto, bus, train
+    case walk, walkEnd, metro, auto, autoToMetro, autoEnd, bus, train, cab
 }
 
 enum StopState {
@@ -202,6 +202,8 @@ struct RideProgress {
     let totalStops: Int
     /// Zero-based index of the stop the vehicle is currently at.
     let currentStopIndex: Int
+    /// Distance still ahead, shown on the road progress. Defaults to a short walk remainder.
+    var remaining: String? = nil
 
     var stopsRemaining: Int { max(totalStops - currentStopIndex - 1, 0) }
 }
@@ -273,11 +275,19 @@ struct Place: Identifiable {
 }
 
 struct SavedJourney: Identifiable {
-    let id = UUID()
+    let id: UUID
     let name: String
     let route: String
     let imageName: String
     let isBookmarked: Bool
+
+    init(id: UUID = UUID(), name: String, route: String, imageName: String, isBookmarked: Bool) {
+        self.id = id
+        self.name = name
+        self.route = route
+        self.imageName = imageName
+        self.isBookmarked = isBookmarked
+    }
 }
 
 struct RecentTrip: Identifiable {

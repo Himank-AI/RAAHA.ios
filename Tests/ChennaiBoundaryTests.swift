@@ -109,13 +109,14 @@ struct ChennaiBoundaryTestsApp {
         runner.assert(!serviceArea.isUserInChennai(location: nil), "Nil location is safely handled as false")
 
         print("\n--- TEST GROUP 6: MapItem Filtering ---")
-        let sfPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194))
-        let sfMapItem = MKMapItem(placemark: sfPlacemark)
-        sfMapItem.name = "Golden Gate Grill, San Francisco"
-
-        let chennaiPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 13.0418, longitude: 80.2341))
-        let chennaiMapItem = MKMapItem(placemark: chennaiPlacemark)
-        chennaiMapItem.name = "Murugan Idli Shop, T. Nagar, Chennai"
+        let sfMapItem = MKMapItem.raahaItem(
+            coordinate: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
+            name: "Golden Gate Grill, San Francisco"
+        )
+        let chennaiMapItem = MKMapItem.raahaItem(
+            coordinate: CLLocationCoordinate2D(latitude: 13.0418, longitude: 80.2341),
+            name: "Murugan Idli Shop, T. Nagar, Chennai"
+        )
 
         runner.assert(!serviceArea.validate(mapItem: sfMapItem), "San Francisco MapItem is rejected by mapItem validator")
         runner.assert(serviceArea.validate(mapItem: chennaiMapItem), "Chennai MapItem is accepted by mapItem validator")

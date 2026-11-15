@@ -63,21 +63,38 @@ struct ExplorePlace: Identifiable, Hashable {
         }
         self.name = mapItem.name ?? "Unknown"
         self.category = .landmark
-        self.address = mapItem.placemark.thoroughfare ?? mapItem.placemark.locality ?? ""
-        self.locality = mapItem.placemark.locality ?? mapItem.placemark.administrativeArea ?? "Chennai"
         self.phoneNumber = mapItem.phoneNumber
         self.website = mapItem.url
-        if let userLocation, let coord = mapItem.placemark.location {
-            self.distance = userLocation.distance(from: coord)
-        } else {
-            self.distance = nil
-        }
         self.rating = nil
         self.reviewCount = nil
         self.openingStatus = "Open now"
-        self.coordinate = mapItem.placemark.coordinate
         self.localAssetImageName = nil
         self.tags = []
+
+        if #available(iOS 26.0, *) {
+            let location = mapItem.location
+            self.coordinate = location.coordinate
+            self.address = mapItem.addressRepresentations?.fullAddress(includingRegion: false, singleLine: true)
+                ?? mapItem.address?.fullAddress
+                ?? mapItem.name
+                ?? ""
+            self.locality = mapItem.addressRepresentations?.cityWithContext(.short)
+                ?? "Chennai"
+            if let userLocation {
+                self.distance = userLocation.distance(from: location)
+            } else {
+                self.distance = nil
+            }
+        } else {
+            self.address = mapItem.placemark.thoroughfare ?? mapItem.placemark.locality ?? ""
+            self.locality = mapItem.placemark.locality ?? mapItem.placemark.administrativeArea ?? "Chennai"
+            if let userLocation, let coord = mapItem.placemark.location {
+                self.distance = userLocation.distance(from: coord)
+            } else {
+                self.distance = nil
+            }
+            self.coordinate = mapItem.placemark.coordinate
+        }
     }
 
     var distanceText: String? {
@@ -117,41 +134,74 @@ struct ExplorePlace: Identifiable, Hashable {
 
     /// Opens location in native Apple Maps.
     func openInMaps() {
-        let placemark = MKPlacemark(coordinate: coordinate)
-        let item = MKMapItem(placemark: placemark)
+        let item: MKMapItem
+        if #available(iOS 26.0, *) {
+            let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            item = MKMapItem(location: location, address: nil)
+        } else {
+            item = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        }
         item.name = name
         item.openInMaps(launchOptions: nil)
+    }
+}
+
+// MARK: - MapKit Compatibility
+
+extension MKMapItem {
+    /// Coordinate using the modern `location` API on iOS 26+, with placemark fallback for earlier OS versions.
+    var raahaCoordinate: CLLocationCoordinate2D {
+        if #available(iOS 26.0, *) {
+            location.coordinate
+        } else {
+            placemark.coordinate
+        }
+    }
+
+    /// Creates an `MKMapItem` without relying on deprecated placemark APIs when running on iOS 26+.
+    static func raahaItem(coordinate: CLLocationCoordinate2D, name: String? = nil) -> MKMapItem {
+        let item: MKMapItem
+        if #available(iOS 26.0, *) {
+            let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            item = MKMapItem(location: location, address: nil)
+        } else {
+            item = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        }
+        item.name = name
+        return item
     }
 }
 
 // MARK: - Place Categories
 
 enum PlaceCategory: String, CaseIterable, Hashable {
-    case restaurant, cafe, beach, park, landmark, shopping, attraction, other
+    case restaurant, cafe, beach, park, landmark, shopping, attraction, entertainment, other
 
     var title: String {
         switch self {
-        case .restaurant:  return "Restaurant"
-        case .cafe:        return "Cafe"
-        case .beach:       return "Beach"
-        case .park:        return "Park"
-        case .landmark:    return "Landmark"
-        case .shopping:    return "Shopping"
-        case .attraction:  return "Attraction"
-        case .other:       return "Place"
+        case .restaurant:     return "Restaurant"
+        case .cafe:           return "Cafe"
+        case .beach:          return "Beach"
+        case .park:           return "Park"
+        case .landmark:       return "Landmark"
+        case .shopping:       return "Shopping"
+        case .attraction:     return "Attraction"
+        case .entertainment:  return "Entertainment"
+        case .other:          return "Place"
         }
     }
 
     var symbol: String {
         switch self {
-        case .restaurant:  return "fork.knife"
-        case .cafe:        return "cup.and.heat.waves"
-        case .beach:       return "umbrella.fill"
-        case .park:        return "tree.fill"
-        case .landmark:    return "building.columns.fill"
-        case .shopping:    return "bag.fill"
-        case .attraction:  return "star.fill"
-        case .other:       return "mappin.and.ellipse"
+        case .restaurant:     return "fork.knife"
+        case .cafe:           return "cup.and.heat.waves"
+        case .beach:          return "umbrella.fill"
+        case .park:           return "tree.fill"
+        case .landmark:       return "building.columns.fill"
+        case .shopping:       return "bag.fill"
+        case .attraction:     return "star.fill"
+        case .entertainment:  return "theatermasks.fill"
+        case .other:          return "mappin.and.ellipse"
         }
     }
 }
@@ -183,29 +233,40 @@ enum PlacesLoadState: Equatable {
 // MARK: - Filter
 
 enum ExploreFilter: String, CaseIterable, Identifiable, Hashable {
-    case all, restaurants, beaches, parks, landmarks, shopping
+    case all
+    case restaurants
+    case cafes
+    case parks
+    case beaches
+    case touristSpots
+    case shopping
+    case entertainment
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .all:         return "All"
-        case .restaurants: return "Restaurants"
-        case .beaches:     return "Beaches"
-        case .parks:       return "Parks"
-        case .landmarks:   return "Landmarks"
-        case .shopping:    return "Shopping"
+        case .all:            return "All"
+        case .restaurants:    return "Restaurants"
+        case .cafes:          return "Cafes"
+        case .parks:          return "Parks"
+        case .beaches:        return "Beaches"
+        case .touristSpots:   return "Tourist Spots"
+        case .shopping:       return "Shopping"
+        case .entertainment:  return "Entertainment"
         }
     }
 
     var symbol: String {
         switch self {
-        case .all:         return "square.grid.2x2"
-        case .restaurants: return "fork.knife"
-        case .beaches:     return "umbrella.fill"
-        case .parks:       return "tree.fill"
-        case .landmarks:   return "building.columns.fill"
-        case .shopping:    return "bag.fill"
+        case .all:            return "square.grid.2x2"
+        case .restaurants:    return "fork.knife"
+        case .cafes:          return "cup.and.heat.waves"
+        case .parks:          return "tree.fill"
+        case .beaches:        return "umbrella.fill"
+        case .touristSpots:   return "binoculars.fill"
+        case .shopping:       return "bag.fill"
+        case .entertainment:  return "theatermasks.fill"
         }
     }
 
@@ -214,15 +275,20 @@ enum ExploreFilter: String, CaseIterable, Identifiable, Hashable {
         case .all:
             return true
         case .restaurants:
-            return place.category == .restaurant || place.category == .cafe
-        case .beaches:
-            return place.category == .beach
+            return place.category == .restaurant
+        case .cafes:
+            return place.category == .cafe
         case .parks:
             return place.category == .park
-        case .landmarks:
+        case .beaches:
+            return place.category == .beach
+        case .touristSpots:
             return place.category == .landmark || place.category == .attraction
         case .shopping:
             return place.category == .shopping
+        case .entertainment:
+            return place.category == .entertainment
+                || place.tags.contains { $0.lowercased().contains("cinema") || $0.lowercased().contains("entertainment") }
         }
     }
 }

@@ -321,7 +321,8 @@ struct EmailLoginView: View {
 
         isLoading = true
         // Simulate quick authentication
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
             isLoading = false
             onSuccess()
         }

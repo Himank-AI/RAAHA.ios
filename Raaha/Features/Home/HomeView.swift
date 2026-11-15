@@ -5,6 +5,8 @@ import SwiftUI
 /// Creative, premium, interactive Home screen for RAAHA Chennai multimodal journey planner.
 struct HomeView: View {
     @Environment(AppRouter.self) private var router
+    @Environment(LaunchTransitionManager.self) private var launch
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var from: String = "Current Location"
     @State private var to: String   = "Phoenix Mall, Velachery"
@@ -23,7 +25,13 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     plannerCard
+                        .opacity(launch.homeReveal)
+                        .offset(y: (1 - launch.homeReveal) * 36)
+                        .animation(reduceMotion ? nil : .spring(response: 0.58, dampingFraction: 0.86), value: launch.homeReveal)
                     smartRouteCard
+                        .opacity(launch.smartReveal)
+                        .offset(y: (1 - launch.smartReveal) * 52)
+                        .animation(reduceMotion ? nil : .spring(response: 0.64, dampingFraction: 0.74).delay(0.08), value: launch.smartReveal)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 20)
@@ -54,6 +62,10 @@ struct HomeView: View {
             ) { chosen in
                 to = chosen
             }
+        }
+        .onAppear { launch.revealContent() }
+        .onChange(of: launch.handoffStarted) { _, _ in
+            launch.revealContent()
         }
     }
 
@@ -106,8 +118,14 @@ struct HomeView: View {
         .padding(.horizontal, 20)
         .padding(.bottom, 12)
         .padding(.top, 8)
+        .opacity(launch.homeReveal)
+        .offset(y: (1 - launch.homeReveal) * 12)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.55), value: launch.homeReveal)
         .background(alignment: .topTrailing) {
             transitIllustration
+                .opacity(launch.homeReveal)
+                .offset(y: (1 - launch.homeReveal) * 16)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.7), value: launch.homeReveal)
                 .ignoresSafeArea(edges: .top)
         }
     }
@@ -196,26 +214,16 @@ struct HomeView: View {
                         .frame(height: 1)
 
                     Button {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.65)) {
-                            swapRotation += 180
+                        withAnimation(reduceMotion ? nil : .spring(response: 0.42, dampingFraction: 0.72)) {
+                            if !reduceMotion { swapRotation += 180 }
                             let temp = from
                             from = to
                             to = temp
                         }
                     } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.royalBlue.opacity(0.65))
-                                .background(.ultraThinMaterial, in: Circle())
-                                .frame(width: 40, height: 40)
-                                .overlay(Circle().stroke(Color.white.opacity(0.30), lineWidth: 1))
-                            Image(systemName: "arrow.up.arrow.down")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(Color.neonLime)
-                                .rotationEffect(.degrees(swapRotation))
-                        }
+                        SwapLocationButton(rotation: swapRotation)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(SwapLocationButtonStyle())
                     .sensoryFeedback(.impact(weight: .light), trigger: swapRotation)
                     .accessibilityLabel("Swap origin and destination")
                 }
@@ -380,7 +388,7 @@ struct LocationPickerSheet: View {
                     HStack(spacing: 12) {
                         Image(systemName: "location.fill")
                             .font(.raahaHeadline)
-                            .foregroundStyle(Color.neonLime)
+                            .foregroundStyle(Color(hex: 0x278EAA))
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Use Current Location")
                                 .font(.raahaHeadline)
@@ -415,7 +423,7 @@ struct LocationPickerSheet: View {
                             if place == current {
                                 Image(systemName: "checkmark")
                                     .font(.raahaCaption)
-                                    .foregroundStyle(Color.neonLime)
+                                    .foregroundStyle(Color(hex: 0x278EAA))
                             }
                         }
                         .padding(.vertical, 6)
@@ -476,13 +484,29 @@ enum LocationSuggestions {
     ]
 }
 
-// MARK: - SmartRouteBanner (Shared by Home and Trips)
+// MARK: - Smart Route Planner
+
+private struct SmartRoutePressedKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+private extension EnvironmentValues {
+    var smartRoutePressed: Bool {
+        get { self[SmartRoutePressedKey.self] }
+        set { self[SmartRoutePressedKey.self] = newValue }
+    }
+}
 
 struct SmartRouteBanner: View {
     let action: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var taps = 0
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            taps += 1
+            action()
+        } label: {
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Not sure where to go?")
@@ -490,81 +514,157 @@ struct SmartRouteBanner: View {
                         .foregroundStyle(Color.white)
 
                     Text("Try our Smart Route Planner")
-                        .font(.system(size: 13.5, weight: .regular))
-                        .foregroundStyle(Color.lightSkyBlue)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.86))
                 }
 
                 Spacer(minLength: 8)
 
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.neonLime, Color(hex: 0x9EE600)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 48, height: 48)
-                        .shadow(color: Color.neonLime.opacity(0.35), radius: 8, x: 0, y: 3)
-
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(Color.midnightBlue)
-                }
+                PlannerArrowButton()
             }
             .padding(.leading, 22)
-            .padding(.trailing, 18)
-            .padding(.vertical, 18)
-            .frame(maxWidth: .infinity, minHeight: 84)
-            .background(SmartRouteBackground())
+            .padding(.trailing, 16)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity, minHeight: 88)
+            .background { SmartRouteBackground(animated: !reduceMotion) }
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay(
+            .overlay {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(
                         LinearGradient(
-                            colors: [Color.white.opacity(0.3), Color.white.opacity(0.08)],
+                            colors: [Color.white.opacity(0.42), Color(hex: 0xA9E2ED).opacity(0.18)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
                         lineWidth: 1
                     )
-            )
-            .shadow(color: Color.midnightBlue.opacity(0.35), radius: 14, x: 0, y: 6)
+            }
+            .shadow(color: Color.midnightBlue.opacity(0.28), radius: 16, y: 8)
         }
-        .buttonStyle(TactileButtonStyle())
+        .buttonStyle(SmartRouteCardStyle())
+        .sensoryFeedback(.impact(weight: .medium), trigger: taps)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Not sure where to go? Try our Smart Route Planner")
-        .accessibilityHint("Plans a smart route across Chennai")
+        .accessibilityHint("Plans a route using your current origin and destination")
+    }
+}
+
+private struct SmartRouteCardStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .environment(\.smartRoutePressed, configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .animation(.spring(response: 0.32, dampingFraction: 0.72), value: configuration.isPressed)
+    }
+}
+
+private struct PlannerArrowButton: View {
+    @Environment(\.smartRoutePressed) private var pressed
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color(hex: 0x278EAA).opacity(0.28))
+                .frame(width: 62, height: 62)
+                .blur(radius: 8)
+
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: 0x278EAA), Color(hex: 0x176987)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: 0xA9E2ED).opacity(pressed ? 0.7 : 0.42), Color.white.opacity(0.05), Color.clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            if #available(iOS 26, *) {
+                Circle()
+                    .fill(Color.clear)
+                    .glassEffect(.clear.tint(Color(hex: 0xA9E2ED).opacity(0.22)), in: Circle())
+            }
+            Circle()
+                .stroke(Color.white.opacity(0.78), lineWidth: 1)
+
+            Image(systemName: "arrow.right")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(Color.white)
+                .offset(x: pressed ? 3.5 : 0)
+        }
+        .frame(width: 50, height: 50)
+        .scaleEffect(pressed ? 0.93 : 1)
+        .shadow(color: Color(hex: 0x176987).opacity(0.38), radius: 10, y: 5)
+        .animation(.spring(response: 0.28, dampingFraction: 0.68), value: pressed)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct SwapLocationButton: View {
+    var rotation: Double
+
+    var body: some View {
+        ZStack {
+            Circle().fill(.ultraThinMaterial)
+            Circle().fill(Color.white.opacity(0.62))
+            Circle()
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white, Color(hex: 0xA9E2ED).opacity(0.85)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 1
+                )
+            Image(systemName: "arrow.up.arrow.down")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color(hex: 0x278EAA))
+                .rotationEffect(.degrees(rotation))
+        }
+        .frame(width: 40, height: 40)
+        .shadow(color: Color(hex: 0x176987).opacity(0.16), radius: 6, y: 2)
+    }
+}
+
+private struct SwapLocationButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .animation(.spring(response: 0.26, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
 
 // MARK: - Smart Route Banner Fluid Waves Background
 
 private struct SmartRouteBackground: View {
+    var animated: Bool
+
     var body: some View {
         GeometryReader { proxy in
             let w = proxy.size.width
             let h = proxy.size.height
 
             ZStack {
-                // 1. Base deep midnight to royal blue gradient background
                 LinearGradient(
                     stops: [
-                        .init(color: Color.midnightBlue, location: 0.0),
-                        .init(color: Color.royalBlue.opacity(0.85), location: 0.50),
-                        .init(color: Color.midnightBlue, location: 1.0)
+                        .init(color: Color(hex: 0x2A4E72), location: 0.0),
+                        .init(color: Color.midnightBlue, location: 0.42),
+                        .init(color: Color(hex: 0x12283F), location: 1.0)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
 
-                // 2. Electric blue atmospheric glow
                 Circle()
-                    .fill(Color.electricBlue.opacity(0.45))
-                    .frame(width: 140, height: 140)
-                    .blur(radius: 25)
-                    .offset(x: w * 0.35, y: -h * 0.1)
+                    .fill(Color(hex: 0x278EAA).opacity(0.28))
+                    .frame(width: 150, height: 150)
+                    .blur(radius: 28)
+                    .offset(x: w * 0.32, y: -h * 0.15)
 
                 // 3. Subtle translucent wave contour
                 Path { p in
@@ -614,12 +714,31 @@ private struct SmartRouteBackground: View {
                         endPoint: .bottom
                     )
                 )
+
+                if animated {
+                    TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { context in
+                        let cycle = context.date.timeIntervalSinceReferenceDate
+                            .truncatingRemainder(dividingBy: 8) / 8
+                        LinearGradient(
+                            colors: [Color.clear, Color.white.opacity(0.14), Color.clear],
+                            startPoint: UnitPoint(x: cycle * 1.5 - 0.4, y: 0),
+                            endPoint: UnitPoint(x: cycle * 1.5 - 0.05, y: 1)
+                        )
+                    }
+                    .allowsHitTesting(false)
+                }
             }
         }
     }
 }
 
 #Preview {
-    HomeView()
+    let launch = LaunchTransitionManager()
+    launch.homeReveal = 1
+    launch.smartReveal = 1
+    launch.chromeReveal = 1
+    launch.isPresenting = false
+    return HomeView()
         .environment(AppRouter())
+        .environment(launch)
 }
