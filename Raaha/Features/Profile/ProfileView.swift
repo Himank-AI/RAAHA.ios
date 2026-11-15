@@ -207,7 +207,7 @@ struct ProfileView: View {
                         isSelected
                         ? AnyShapeStyle(
                             LinearGradient(
-                                colors: [Color(hex: 0x4EA8DE), Color(hex: 0x2A82BE)],
+                                colors: [Color.brightBlue, Color.electricBlue],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -218,10 +218,10 @@ struct ProfileView: View {
             )
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.white.opacity(0.40) : Color.white.opacity(0.90), lineWidth: 1)
+                    .stroke(isSelected ? Color.white.opacity(0.55) : Color.white.opacity(0.90), lineWidth: 1)
             )
             .shadow(
-                color: isSelected ? Color(hex: 0x2A82BE).opacity(0.35) : Color.black.opacity(0.04),
+                color: isSelected ? Color.electricBlue.opacity(0.35) : Color.black.opacity(0.04),
                 radius: isSelected ? 8 : 4,
                 x: 0,
                 y: 2
@@ -302,7 +302,7 @@ struct ProfileView: View {
     // MARK: - Discovery Interests Section
     private var travelInterestsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Discovery Interests", icon: "sparkles")
+            sectionTitle(title: "Discovery Interests")
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Customize your Chennai Explore recommendations:")
@@ -351,7 +351,7 @@ struct ProfileView: View {
                         isSelected
                         ? AnyShapeStyle(
                             LinearGradient(
-                                colors: [Color(hex: 0x4EA8DE), Color(hex: 0x2A82BE)],
+                                colors: [Color.brightBlue, Color.electricBlue],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -362,10 +362,10 @@ struct ProfileView: View {
             )
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.white.opacity(0.40) : Color.white.opacity(0.90), lineWidth: 1)
+                    .stroke(isSelected ? Color.white.opacity(0.55) : Color.white.opacity(0.90), lineWidth: 1)
             )
             .shadow(
-                color: isSelected ? Color(hex: 0x2A82BE).opacity(0.35) : Color.black.opacity(0.04),
+                color: isSelected ? Color.electricBlue.opacity(0.35) : Color.black.opacity(0.04),
                 radius: isSelected ? 8 : 4,
                 x: 0,
                 y: 2
@@ -378,7 +378,7 @@ struct ProfileView: View {
     // MARK: - Transit & Support Section
     private var transitSupportSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Transit & Support", icon: "gearshape.fill")
+            sectionTitle(title: "Transit & Support")
 
             VStack(spacing: 0) {
                 actionRow(
@@ -453,11 +453,13 @@ struct ProfileView: View {
     }
 
     // MARK: - Section Title Helper
-    private func sectionTitle(title: String, icon: String) -> some View {
+    private func sectionTitle(title: String, icon: String? = nil) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(Color(hex: 0x2A90D4))
+            if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+            }
             Text(title)
                 .font(.system(size: 17, weight: .bold, design: .rounded))
                 .foregroundStyle(Color.midnightBlue)
@@ -470,10 +472,10 @@ struct ProfileView: View {
         VStack(spacing: 4) {
             Text("RAAHA Chennai • Multimodal Urban Transit")
                 .font(.raahaCaption)
-                .foregroundStyle(Color(hex: 0x49769F).opacity(0.85))
-            Text("Version 2.2.0 (Build 50) • Native SwiftUI")
+                .foregroundStyle(Color(hex: 0x6B7280))
+            Text("Version 1.0.0 (Build 50) • Native SwiftUI")
                 .font(.raahaCaption2)
-                .foregroundStyle(Color(hex: 0x49769F).opacity(0.65))
+                .foregroundStyle(Color(hex: 0x6B7280))
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 8)

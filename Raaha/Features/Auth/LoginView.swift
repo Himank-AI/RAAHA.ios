@@ -10,6 +10,7 @@ enum AuthFlowScreen: Hashable {
 struct LoginView: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var navigationPath: [AuthFlowScreen] = []
 
     var body: some View {
@@ -53,8 +54,8 @@ struct LoginView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: geo.size.width)
-                    .saturation(0.38)
-                    .contrast(0.88)
+                    .saturation(0.58)
+                    .contrast(1)
                     .brightness(0.08)
                     .colorMultiply(Color(hex: 0xD7EEF8))
                     .mask(
@@ -82,7 +83,7 @@ struct LoginView: View {
                     Spacer(minLength: 0)
                     ZStack(alignment: .top) {
                         skyClouds(width: geo.size.width)
-                            .opacity(0.72)
+                            .opacity(0.35)
                             .offset(y: -62)
                         transitPanorama
                     }
@@ -94,14 +95,24 @@ struct LoginView: View {
                 }
             }
             .overlay(alignment: .topTrailing) {
-                Image("login_birds")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geo.size.width * 0.12)
-                    .padding(.top, geo.safeAreaInsets.top + 88)
-                    .padding(.trailing, 6)
-                    .accessibilityHidden(true)
-                    .offset(x: -40, y: 40)
+                flyingBirds(width: geo.size.width, safeTop: geo.safeAreaInsets.top)
+            }
+            .overlay(alignment: .topLeading) {
+                flyingBirds(
+                    width: geo.size.width,
+                    safeTop: geo.safeAreaInsets.top,
+                    sizeRatio: 0.08,
+                    topPadding: 76,
+                    leadingPadding: 14,
+                    baseOffset: CGSize(width: 6, height: 8),
+                    glidePeriod: 9.4,
+                    liftPeriod: 5.8,
+                    phase: 2.2,
+                    mirrored: true
+                )
+            }
+            .overlay {
+                skyVignette(size: geo.size)
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
@@ -109,19 +120,76 @@ struct LoginView: View {
         .ignoresSafeArea()
     }
 
+    /// Very light blue edge falloff. Center stays clear; corners pick up a soft sky-blue shade.
+    private func skyVignette(size: CGSize) -> some View {
+        RadialGradient(
+            stops: [
+                .init(color: .clear, location: 0.40),
+                .init(color: Color(hex: 0x8ECAF0).opacity(0.05), location: 0.60),
+                .init(color: Color(hex: 0x4A9FD0).opacity(0.12), location: 0.82),
+                .init(color: Color(hex: 0x2E82B8).opacity(0.22), location: 1.0)
+            ],
+            center: UnitPoint(x: 0.5, y: 0.38),
+            startRadius: 0,
+            endRadius: hypot(size.width, size.height) * 0.56
+        )
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
     /// Left cloud, plus the same artwork mirrored across the vertical axis for the right side.
+    /// Each cloud drifts on its own slow cycle so the pair does not move as one shape.
     private func skyClouds(width: CGFloat) -> some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            cloudImage
-                .frame(width: width * 0.34)
-                .offset(x: -8)
-            Spacer(minLength: 0)
-            cloudImage
-                .frame(width: width * 0.24)
-                .scaleEffect(x: -1.5)
-                .offset(x: 16, y: 18)
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            let left = reduceMotion ? 0 : sin(t * .pi * 2 / 10)
+            let right = reduceMotion ? 0 : sin(t * .pi * 2 / 13 + 1.7)
+
+            HStack(alignment: .bottom, spacing: 0) {
+                cloudImage
+                    .frame(width: width * 0.34)
+                    .offset(x: -8 + left * 14, y: cos(t * .pi * 2 / 10) * (reduceMotion ? 0 : 5))
+                Spacer(minLength: 0)
+                cloudImage
+                    .frame(width: width * 0.24)
+                    .scaleEffect(x: -1.5)
+                    .offset(x: 16 + right * 12, y: 18 + cos(t * .pi * 2 / 13 + 1.7) * (reduceMotion ? 0 : 4))
+            }
         }
         .accessibilityHidden(true)
+    }
+
+    /// Slow glide and a slight bank, so the flock feels like it is riding the air.
+    private func flyingBirds(
+        width: CGFloat,
+        safeTop: CGFloat,
+        sizeRatio: CGFloat = 0.12,
+        topPadding: CGFloat = 88,
+        leadingPadding: CGFloat = 0,
+        trailingPadding: CGFloat = 6,
+        baseOffset: CGSize = CGSize(width: -40, height: 40),
+        glidePeriod: Double = 7.2,
+        liftPeriod: Double = 4.4,
+        phase: Double = 0.9,
+        mirrored: Bool = false
+    ) -> some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            let glide = reduceMotion ? 0 : sin(t * .pi * 2 / glidePeriod + phase)
+            let lift = reduceMotion ? 0 : sin(t * .pi * 2 / liftPeriod + phase)
+
+            Image("login_birds")
+                .resizable()
+                .scaledToFit()
+                .frame(width: width * sizeRatio)
+                .padding(.top, safeTop + topPadding)
+                .padding(.leading, leadingPadding)
+                .padding(.trailing, trailingPadding)
+                .scaleEffect(x: mirrored ? -1 : 1, y: 1)
+                .rotationEffect(.degrees(glide * 3.2 + lift * 1.4))
+                .offset(x: baseOffset.width + glide * 16, y: baseOffset.height + lift * 7)
+                .accessibilityHidden(true)
+        }
     }
 
     private var cloudImage: some View {

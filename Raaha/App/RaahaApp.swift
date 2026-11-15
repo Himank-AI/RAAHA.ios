@@ -2,11 +2,16 @@ import SwiftUI
 
 @main
 struct RaahaApp: App {
+    init() {
+        UIScrollView.appearance().showsVerticalScrollIndicator = false
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 // Light mode by default
                 .preferredColorScheme(.light)
+                .scrollIndicators(.hidden, axes: .vertical)
         }
     }
 }
