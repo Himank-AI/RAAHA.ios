@@ -7,6 +7,38 @@ struct ProfileView: View {
     @State private var selectedInterests: Set<String> = ["Beaches", "Heritage", "Food"]
     @State private var showLogoutDialog: Bool = false
 
+    // Edit Profile state
+    @State private var userName: String = "Akshaya Kumar"
+    @State private var userEmail: String = "akshaya.kumar@gmail.com"
+    @State private var userPhone: String = "+91 98765 43210"
+    @State private var showEditSheet: Bool = false
+    @State private var editingField: EditableField = .name
+
+    enum EditableField {
+        case name, email, phone
+        var title: String {
+            switch self {
+            case .name:  return "Full Name"
+            case .email: return "Email Address"
+            case .phone: return "Phone Number"
+            }
+        }
+        var symbol: String {
+            switch self {
+            case .name:  return "person.fill"
+            case .email: return "envelope.fill"
+            case .phone: return "phone.fill"
+            }
+        }
+        var keyboardType: UIKeyboardType {
+            switch self {
+            case .name:  return .default
+            case .email: return .emailAddress
+            case .phone: return .phonePad
+            }
+        }
+    }
+
     private let commuteModes: [(name: String, symbol: String, customAsset: String?)] = [
         ("Bike", "bicycle", "icon_bike"),
         ("Auto", "car.fill", "icon_auto"),
@@ -32,6 +64,9 @@ struct ProfileView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
+                    // 0. Edit Profile Details
+                    editProfileSection
+
                     // 1. Commute Preferences Group
                     commutePreferencesSection
 
@@ -66,6 +101,17 @@ struct ProfileView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("You will need to sign in again to sync your journeys.")
+        }
+        .sheet(isPresented: $showEditSheet) {
+            EditFieldSheet(
+                field: editingField,
+                userName: $userName,
+                userEmail: $userEmail,
+                userPhone: $userPhone
+            )
+            .presentationDetents([.height(260)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(28)
         }
     }
 
@@ -108,11 +154,11 @@ struct ProfileView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Akshaya Kumar")
+                        Text(userName)
                             .font(.raahaTitle2)
                             .foregroundStyle(Color.white)
 
-                        Text("akshaya.kumar@gmail.com")
+                        Text(userEmail)
                             .font(.raahaCaption)
                             .foregroundStyle(Color(hex: 0xBDD8E9))
 
@@ -144,6 +190,66 @@ struct ProfileView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Edit Profile Section
+    private var editProfileSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle(title: "Personal Details", icon: "person.crop.circle.fill")
+
+            VStack(spacing: 0) {
+                editRow(field: .name, value: userName)
+
+                HairlineDivider(color: Color(hex: 0x49769F).opacity(0.12))
+
+                editRow(field: .email, value: userEmail)
+
+                HairlineDivider(color: Color(hex: 0x49769F).opacity(0.12))
+
+                editRow(field: .phone, value: userPhone)
+            }
+            .padding(.horizontal, 14)
+            .profileCard(radius: 24)
+        }
+    }
+
+    private func editRow(field: EditableField, value: String) -> some View {
+        Button {
+            editingField = field
+            showEditSheet = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: field.symbol)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+                    .frame(width: 32, height: 32)
+                    .background(
+                        Circle()
+                            .fill(Color(hex: 0x2A90D4).opacity(0.10))
+                            .background(.ultraThinMaterial, in: Circle())
+                    )
+                    .overlay(Circle().stroke(Color.white.opacity(0.9), lineWidth: 1))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(field.title)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color(hex: 0x49769F))
+
+                    Text(value)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.midnightBlue)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                Image(systemName: "pencil")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+            }
+            .padding(.vertical, 10)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Commute Preferences Section
@@ -480,6 +586,101 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, 8)
         .padding(.bottom, 12)
+    }
+}
+
+// MARK: - Edit Field Sheet
+struct EditFieldSheet: View {
+    let field: ProfileView.EditableField
+    @Binding var userName: String
+    @Binding var userEmail: String
+    @Binding var userPhone: String
+
+    @Environment(\.dismiss) private var dismiss
+    @FocusState private var isFocused: Bool
+
+    private var binding: Binding<String> {
+        switch field {
+        case .name:  return $userName
+        case .email: return $userEmail
+        case .phone: return $userPhone
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Handle bar
+            Capsule()
+                .fill(Color(hex: 0xC7D6E3))
+                .frame(width: 36, height: 4)
+                .padding(.top, 12)
+                .padding(.bottom, 20)
+
+            VStack(alignment: .leading, spacing: 18) {
+                // Title row
+                HStack(spacing: 10) {
+                    Image(systemName: field.symbol)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0x2A90D4))
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle()
+                                .fill(Color(hex: 0x2A90D4).opacity(0.10))
+                        )
+
+                    Text("Edit \(field.title)")
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.midnightBlue)
+
+                    Spacer()
+
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+                }
+
+                // Text field
+                HStack(spacing: 10) {
+                    TextField(field.title, text: binding)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Color.midnightBlue)
+                        .keyboardType(field.keyboardType)
+                        .autocorrectionDisabled(field == .email || field == .phone)
+                        .textInputAutocapitalization(field == .name ? .words : .never)
+                        .focused($isFocused)
+                        .submitLabel(.done)
+                        .onSubmit { dismiss() }
+
+                    if !binding.wrappedValue.isEmpty {
+                        Button {
+                            binding.wrappedValue = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(Color(hex: 0xABBDCC))
+                                .font(.system(size: 16))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 13)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color(hex: 0xEEF4F9))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(isFocused ? Color(hex: 0x2A90D4).opacity(0.6) : Color.clear, lineWidth: 1.5)
+                        )
+                )
+            }
+            .padding(.horizontal, 20)
+
+            Spacer()
+        }
+        .background(Color.white)
+        .onAppear { isFocused = true }
     }
 }
 
