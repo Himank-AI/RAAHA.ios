@@ -7,7 +7,6 @@ enum AuthFlowScreen: Hashable {
 }
 
 /// RAAHA Login / Sign Up screen.
-/// Layers the Chennai multimodal transportation hero illustration on top of the established RAAHA calm motion screen background.
 struct LoginView: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
@@ -47,336 +46,265 @@ struct LoginView: View {
     }
 
     private var landingView: some View {
-        GeometryReader { proxy in
-            ScrollView(showsIndicators: false) {
+        GeometryReader { geo in
+            ZStack(alignment: .bottom) {
+                Color.clear
+                Image("login_bottom_scene")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: geo.size.width)
+                    .saturation(0.38)
+                    .contrast(0.88)
+                    .brightness(0.08)
+                    .colorMultiply(Color(hex: 0xD7EEF8))
+                    .mask(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0.42),
+                                .init(color: .black.opacity(0.55), location: 0.58),
+                                .init(color: .black, location: 0.72)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .scaleEffect(1.2, anchor: .bottom)
+                    .accessibilityHidden(true)
+
                 VStack(spacing: 0) {
-                    // 1 & 2. Overlapping Hero Section (Illustration with Centered Branding brought down)
+                    Image("login_logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: geo.size.width * 0.42)
+                        .padding(.top, geo.safeAreaInsets.top + 36)
+                        .accessibilityLabel("RAAHA")
+                        .offset(y: 40)
+                    Spacer(minLength: 0)
                     ZStack(alignment: .top) {
-                        heroIllustration(width: proxy.size.width)
-
-                        brandingHeader
-                            .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top + 6 : 20)
+                        skyClouds(width: geo.size.width)
+                            .opacity(0.72)
+                            .offset(y: -62)
+                        transitPanorama
                     }
-
-                    // 3. Welcome Titles
-                    welcomeHeadings
-                        .padding(.top, 2)
-                        .padding(.bottom, 20)
-
-                    // 4. Action Buttons (Email, Google, Apple)
-                    actionButtons
-                        .padding(.horizontal, 24)
-
-                    // 5. "or" Divider
-                    orDivider
-                        .padding(.top, 16)
-                        .padding(.bottom, 14)
-
-                    // 6. Sign Up Option
-                    signUpPrompt
-                        .padding(.bottom, 20)
-
-                    // 7. Terms of Service & Privacy Policy
-                    termsFooter
-                        .padding(.horizontal, 28)
-                        .padding(.bottom, proxy.safeAreaInsets.bottom > 0 ? 16 : 28)
+                    .padding(.bottom, 6)
+                    welcomeCard
+                        .padding(.horizontal, 18)
+                        .padding(.bottom, max(geo.safeAreaInsets.bottom, 10) + 64)
+                        .offset(y: -42)
                 }
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: proxy.size.height)
             }
+            .overlay(alignment: .topTrailing) {
+                Image("login_birds")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: geo.size.width * 0.12)
+                    .padding(.top, geo.safeAreaInsets.top + 88)
+                    .padding(.trailing, 6)
+                    .accessibilityHidden(true)
+                    .offset(x: -40, y: 40)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
         }
-        // Exact established RAAHA Trips screen background preserved
         .raahaScreenBackground()
         .ignoresSafeArea()
     }
 
-    // MARK: - 1. Branding Header
-    private var brandingHeader: some View {
-        VStack(spacing: 6) {
-            ZStack {
-                // Soft electric blue motion swoosh trailing behind logo
-                Path { p in
-                    p.move(to: CGPoint(x: 10, y: 32))
-                    p.addQuadCurve(
-                        to: CGPoint(x: 200, y: 12),
-                        control: CGPoint(x: 115, y: 36)
-                    )
-                }
-                .stroke(
-                    LinearGradient(
-                        colors: [Color.brightBlue.opacity(0.8), Color.lightSkyBlue.opacity(0.4)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ),
-                    style: StrokeStyle(lineWidth: 3.5, lineCap: .round)
-                )
-                .frame(width: 210, height: 42)
-
-                // Center-aligned RAAHA text with pin overlaid at top-trailing
-                Text("RAAHA")
-                    .font(.system(size: 38, weight: .black, design: .rounded))
-                    .tracking(1.8)
-                    .foregroundStyle(Color.white)
-                    .shadow(color: Color.electricBlue.opacity(0.6), radius: 10, x: 0, y: 3)
-                    .overlay(alignment: .topTrailing) {
-                        RaahaLocationPin()
-                            .offset(x: 18, y: -6)
-                    }
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-
-            // Center-aligned Tagline
-            Text("Every Path Leads to You")
-                .font(.system(size: 15, weight: .medium, design: .serif).italic())
-                .foregroundStyle(Color.icyBlue)
-                .tracking(0.3)
-                .shadow(color: Color.midnightBlue.opacity(0.6), radius: 4, x: 0, y: 1)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity, alignment: .center)
+    /// Left cloud, plus the same artwork mirrored across the vertical axis for the right side.
+    private func skyClouds(width: CGFloat) -> some View {
+        HStack(alignment: .bottom, spacing: 0) {
+            cloudImage
+                .frame(width: width * 0.34)
+                .offset(x: -8)
+            Spacer(minLength: 0)
+            cloudImage
+                .frame(width: width * 0.24)
+                .scaleEffect(x: -1.5)
+                .offset(x: 16, y: 18)
         }
+        .accessibilityHidden(true)
     }
 
-    // MARK: - 2. Multimodal Hero Illustration
-    private func heroIllustration(width: CGFloat) -> some View {
-        Image("chennai_multimodal_panorama")
+    private var cloudImage: some View {
+        Image("login_cloud")
             .resizable()
-            .scaledToFill()
-            .frame(width: width, height: 360, alignment: .top)
-            .offset(y: -40)          // shift image upward inside the clipped frame
-            .clipped()
-            // Gentle gradient mask blending edges into the deep blue gradient background
+            .scaledToFit()
+    }
+
+    /// City transit band. Sits just above the welcome card, fading into the sky at the top the way the reference does.
+    private var transitPanorama: some View {
+        Image("login_transit_panorama")
+            .resizable()
+            .scaledToFit()
+            .frame(maxWidth: .infinity)
+            .saturation(0.82)
+            .contrast(0.9)
+            .brightness(0.05)
+            .colorMultiply(Color(hex: 0xE4F4FC))
             .mask(
                 LinearGradient(
                     stops: [
                         .init(color: .clear, location: 0.0),
-                        .init(color: .black.opacity(0.85), location: 0.06),
-                        .init(color: .black, location: 0.18),
-                        .init(color: .black, location: 0.86),
-                        .init(color: .black.opacity(0.4), location: 0.94),
+                        .init(color: .black.opacity(0.4), location: 0.12),
+                        .init(color: .black, location: 0.28),
+                        .init(color: .black, location: 0.58),
+                        .init(color: .black.opacity(0.65), location: 0.74),
+                        .init(color: .black.opacity(0.12), location: 0.88),
                         .init(color: .clear, location: 1.0)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
             )
-            .padding(.vertical, -4)
+            .scaleEffect(1.15, anchor: .bottom)
+            .offset(y: 20)
+            .accessibilityHidden(true)
     }
 
-    // MARK: - 3. Welcome Headings
-    private var welcomeHeadings: some View {
-        VStack(spacing: 5) {
+    private var welcomeCard: some View {
+        VStack(spacing: 14) {
             Text("Welcome to RAAHA!")
-                .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.white)
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.deepSpace)
 
-            VStack(spacing: 3) {
-                Text("Plan. Travel. Explore Chennai.")
-                    .font(.system(size: 16, weight: .medium, design: .serif).italic())
-                    .foregroundStyle(Color.white.opacity(0.92))
+            Text("Sign in to plan your next journey in Chennai")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Color.deepSpace.opacity(0.72))
+                .padding(.bottom, 2)
 
-                // Glowing electric cyan accent underline
-                Path { p in
-                    p.move(to: CGPoint(x: 0, y: 2))
-                    p.addQuadCurve(to: CGPoint(x: 100, y: 2), control: CGPoint(x: 50, y: -1))
-                }
+            signInRow("Continue with Email", action: { navigationPath.append(.emailLogin) }) {
+                Image(systemName: "envelope.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.white)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(Color(hex: 0x3B82C4)))
+            }
+
+            signInRow("Continue with Google", action: handleLoginSuccess) {
+                GoogleLogoView(size: 22)
+                    .frame(width: 34, height: 34)
+            }
+
+            signInRow("Continue with Apple", action: handleLoginSuccess) {
+                Image(systemName: "apple.logo")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(Color.black)
+                    .frame(width: 34, height: 34)
+            }
+
+            HStack(spacing: 10) {
+                Capsule()
+                    .fill(Color.deepSpace.opacity(0.18))
+                    .frame(width: 42, height: 1)
+                Text("Don't have an account?")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.deepSpace.opacity(0.8))
+                Button("Sign Up") { navigationPath.append(.signUp) }
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.neonLime)
+                Capsule()
+                    .fill(Color.deepSpace.opacity(0.18))
+                    .frame(width: 42, height: 1)
+            }
+            .padding(.top, 2)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 22)
+        .padding(.bottom, 16)
+        .background { welcomeGlass }
+        .shadow(color: Color.white.opacity(0.35), radius: 1, x: 0, y: 1)
+        .shadow(color: Color(hex: 0x4E8EA2).opacity(0.28), radius: 24, x: 0, y: 14)
+    }
+
+    private var welcomeGlass: some View {
+        let shape = RoundedRectangle(cornerRadius: 32, style: .continuous)
+        return ZStack {
+            shape.fill(.ultraThinMaterial)
+            shape.fill(
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.white.opacity(0.18), location: 0),
+                        .init(color: Color(hex: 0xEAF6FC).opacity(0.08), location: 0.45),
+                        .init(color: Color(hex: 0xC5E4F4).opacity(0.04), location: 1)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            shape.fill(
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.white.opacity(0.42), location: 0),
+                        .init(color: Color.white.opacity(0.08), location: 0.14),
+                        .init(color: Color.clear, location: 0.32)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            shape.fill(
+                RadialGradient(
+                    colors: [Color.white.opacity(0.28), Color.clear],
+                    center: .topLeading,
+                    startRadius: 0,
+                    endRadius: 240
+                )
+            )
+        }
+        .overlay {
+            shape.strokeBorder(
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.98),
+                        Color.white.opacity(0.55),
+                        Color(hex: 0x7BBDE8).opacity(0.30),
+                        Color.white.opacity(0.12)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                lineWidth: 1.4
+            )
+        }
+        .overlay {
+            shape.inset(by: 1.5)
                 .stroke(
                     LinearGradient(
-                        colors: [Color.neonLime, Color.brightBlue],
-                        startPoint: .leading,
-                        endPoint: .trailing
+                        colors: [Color.white.opacity(0.65), Color.clear],
+                        startPoint: .top,
+                        endPoint: .center
                     ),
-                    style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                    lineWidth: 1
                 )
-                .frame(width: 100, height: 4)
-            }
         }
     }
 
-    // MARK: - 4. Action Buttons (Fintech Glassmorphism Style)
-    private var actionButtons: some View {
-        VStack(spacing: 14) {
-            // Continue with Email (Electric Blue Primary Button)
-            Button {
-                navigationPath.append(.emailLogin)
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "envelope.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.white)
-                        .frame(width: 20)
-
-                    Text("Continue with Email")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.white)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .background(
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.brightBlue, Color.electricBlue],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay(
-                            Capsule()
-                                .stroke(Color.white.opacity(0.40), lineWidth: 1)
-                        )
-                        .shadow(color: Color.electricBlue.opacity(0.45), radius: 12, x: 0, y: 6)
-                )
+    private func signInRow<Icon: View>(_ title: String, action: @escaping () -> Void, @ViewBuilder icon: () -> Icon) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                icon()
+                Rectangle()
+                    .fill(Color.deepSpace.opacity(0.12))
+                    .frame(width: 1, height: 22)
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.deepSpace)
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.deepSpace.opacity(0.45))
             }
-            .buttonStyle(TactileButtonStyle())
-
-            // Continue with Google (Frosted Glass Pill)
-            Button {
-                handleLoginSuccess()
-            } label: {
-                HStack(spacing: 10) {
-                    GoogleLogoView(size: 20)
-                        .frame(width: 20)
-
-                    Text("Continue with Google")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.white)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .background(
-                    Capsule()
-                        .fill(Color.white.opacity(0.12))
-                        .background(.ultraThinMaterial, in: Capsule())
-                )
-                .overlay(
-                    Capsule()
-                        .stroke(Color.white.opacity(0.30), lineWidth: 1.2)
-                )
-                .shadow(color: Color.midnightBlue.opacity(0.25), radius: 8, x: 0, y: 4)
-            }
-            .buttonStyle(TactileButtonStyle())
-
-            // Continue with Apple (Frosted Glass Pill)
-            Button {
-                handleLoginSuccess()
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "apple.logo")
-                        .font(.system(size: 19, weight: .semibold))
-                        .foregroundStyle(Color.white)
-                        .frame(width: 20)
-
-                    Text("Continue with Apple")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.white)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .background(
-                    Capsule()
-                        .fill(Color.white.opacity(0.12))
-                        .background(.ultraThinMaterial, in: Capsule())
-                )
-                .overlay(
-                    Capsule()
-                        .stroke(Color.white.opacity(0.30), lineWidth: 1.2)
-                )
-                .shadow(color: Color.midnightBlue.opacity(0.25), radius: 8, x: 0, y: 4)
-            }
-            .buttonStyle(TactileButtonStyle())
-        }
-    }
-
-    // MARK: - 5. "or" Divider
-    private var orDivider: some View {
-        HStack(spacing: 16) {
-            LinearGradient(
-                colors: [Color.clear, Color.white.opacity(0.35)],
-                startPoint: .leading,
-                endPoint: .trailing
+            .padding(.leading, 8)
+            .padding(.trailing, 16)
+            .frame(maxWidth: .infinity, minHeight: 54)
+            .background(
+                Capsule()
+                    .fill(Color.white.opacity(0.92))
+                    .background(.ultraThinMaterial, in: Capsule())
             )
-            .frame(height: 1)
-
-            Text("or")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color.white.opacity(0.90))
-
-            LinearGradient(
-                colors: [Color.white.opacity(0.35), Color.clear],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-            .frame(height: 1)
+            .overlay(Capsule().strokeBorder(Color.white.opacity(0.9), lineWidth: 1))
+            .shadow(color: Color.deepSpace.opacity(0.06), radius: 6, x: 0, y: 3)
         }
-        .padding(.horizontal, 44)
-    }
-
-    // MARK: - 6. Sign Up Prompt
-    private var signUpPrompt: some View {
-        HStack(spacing: 6) {
-            Text("Don't have an account?")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(Color.white.opacity(0.92))
-
-            Button {
-                navigationPath.append(.signUp)
-            } label: {
-                VStack(spacing: 2) {
-                    Text("Sign Up")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(Color.neonLime)
-
-                    // Hand-drawn style neon lime curved underline
-                    Path { p in
-                        p.move(to: CGPoint(x: 0, y: 1))
-                        p.addQuadCurve(to: CGPoint(x: 56, y: 1), control: CGPoint(x: 28, y: 4.5))
-                    }
-                    .stroke(
-                        Color.neonLime,
-                        style: StrokeStyle(lineWidth: 2, lineCap: .round)
-                    )
-                    .frame(width: 56, height: 4)
-                }
-            }
-            .buttonStyle(TactileButtonStyle(scale: 0.95))
-        }
-    }
-
-    // MARK: - 7. Terms of Service & Privacy Policy
-    private var termsFooter: some View {
-        HStack(alignment: .center, spacing: 10) {
-            Image(systemName: "shield.fill")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.white.opacity(0.85))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("By continuing, you agree to our")
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundStyle(Color.white.opacity(0.85))
-
-                HStack(spacing: 3) {
-                    Button {
-                        // Terms tapped
-                    } label: {
-                        Text("Terms of Service")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(Color.white)
-                    }
-
-                    Text("and")
-                        .font(.system(size: 11, weight: .regular))
-                        .foregroundStyle(Color.white.opacity(0.85))
-
-                    Button {
-                        // Privacy tapped
-                    } label: {
-                        Text("Privacy Policy")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(Color.white)
-                    }
-                }
-            }
-        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Actions

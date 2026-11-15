@@ -128,11 +128,10 @@ enum MockData {
             return LiveContent(
                 mode: .auto,
                 title: "Auto",
-                subtitle: "Alandur → T. Nagar",
-                chips: ["₹ 85", "10 min"],
+                subtitle: "Guindy → Anna Nagar",
+                chips: ["5 min"],
                 timeline: .pickupDrop(
-                    PickupDrop(pickup: "Chennai Central", pickupTime: "9:41 AM",
-                               drop: "Alandur", dropTime: "10:00 AM")
+                    PickupDrop(pickup: "Guindy Railway Station", drop: "Phoenix mall, Velachery")
                 ),
                 showsMissedAlert: false,
                 next: NextTransfer(
@@ -144,7 +143,13 @@ enum MockData {
                         NextLine(text: "You will reach your destination by 10:45 AM")
                     ]
                 ),
-                tips: ["Confirm fare before starting", "Share location for safety", "Keep small change handy"]
+                tips: ["Confirm fare before starting", "Share location for safety", "Keep small change handy"],
+                ride: RideProgress(
+                    lines: ["Guindy Station to Phoenix Mall"],
+                    totalStops: 4,
+                    currentStopIndex: 1
+                ),
+                arrival: "1:38 PM"
             )
         case .bus:
             return LiveContent(
