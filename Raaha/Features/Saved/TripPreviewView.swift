@@ -5,163 +5,175 @@ struct TripPreviewView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 12) {
+            VStack(spacing: 14) {
+                // Hero card: image + destination banner
                 hero
 
+                // Expected Travel Time card
                 infoCard(
                     symbol: "clock",
-                    symbolTint: Color.neonLime,
-                    title: "Expected Travel Time"
+                    symbolTint: Color(hex: 0x2A90D4)
                 ) {
+                    Text("Expected Travel Time")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.midnightBlue)
+
                     Text("45–60 min")
-                        .font(.raahaTitle)
-                        .foregroundStyle(Color.neonLime)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.midnightBlue)
+
                     Text("(from your current location)")
-                        .font(.raahaFootnote)
-                        .foregroundStyle(Color.lightSkyBlue)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color(hex: 0x49769F))
                 }
 
+                // Weather Forecast card
                 infoCard(
                     symbol: "sun.max",
-                    symbolTint: Color.neonLime,
-                    title: "Weather Forecast"
+                    symbolTint: Color(hex: 0x2A90D4)
                 ) {
-                    Text("Sunny · 34°C")
-                        .font(.raahaBody)
-                        .foregroundStyle(Color.honeydew)
-                    Text("Low chance of rain")
-                        .font(.raahaSubheadline)
-                        .foregroundStyle(Color.lightSkyBlue)
-                }
+                    Text("Weather Forecast")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.midnightBlue)
 
-                infoCard(
-                    symbol: "exclamationmark.triangle",
-                    symbolTint: Color.strawberry,
-                    title: "Travel Advisory"
-                ) {
-                    Text("Higher crowd density expected during weekend mornings.")
-                        .font(.raahaSubheadline)
-                        .foregroundStyle(Color.lightSkyBlue)
+                    Text("Sunny · 34°C")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(Color.midnightBlue)
+
+                    Text("Low chance of rain")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color(hex: 0x2A90D4))
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.top, 8)
+            .padding(.top, 12)
+            .padding(.bottom, 20)
         }
         .contentMargins(.bottom, 16, for: .scrollContent)
         .safeAreaInset(edge: .bottom) {
             Button {
                 router.push(.tripSaved)
             } label: {
-                ChevronLabel(title: "Save Trip")
+                HStack {
+                    Spacer()
+                    Text("Save Trip")
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.white)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(Color.white.opacity(0.8))
+                }
+                .padding(.horizontal, 24)
+                .frame(height: 54)
+                .background(
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .fill(Color(hex: 0x1D3A5A))
+                )
             }
-            .buttonStyle(.pillDark)
+            .buttonStyle(.plain)
             .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.vertical, 10)
+            .background(Color.clear)
         }
         .raahaScreenBackground()
         .pushedChrome(leadingTitle: "Trip Preview")
     }
 
+    // MARK: - Hero Card
     private var hero: some View {
         VStack(spacing: 0) {
-            FillImage(name: "preview_beach", height: 150)
+            // Beach photo
+            FillImage(name: "preview_beach", height: 180)
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: 24,
+                        bottomLeadingRadius: 0,
+                        bottomTrailingRadius: 0,
+                        topTrailingRadius: 24,
+                        style: .continuous
+                    )
+                )
                 .accessibilityHidden(true)
 
+            // Dark navy destination banner
             HStack(spacing: 14) {
-                Image("icon_pin")
-                    .renderingMode(.template)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 22, height: 22)
-                    .foregroundStyle(Color.neonLime)
-                    .frame(width: 48, height: 48)
-                    .background(
-                        Circle()
-                            .fill(Color.white.opacity(0.12))
-                            .background(.ultraThinMaterial, in: Circle())
-                    )
-                    .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                // Pin icon circle
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(Color.white)
+                }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(router.plan.destination)
-                        .font(.raahaTitle2)
-                        .foregroundStyle(Color.honeydew)
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.white)
                     Text(router.plan.combinedText)
-                        .font(.raahaFootnote)
-                        .foregroundStyle(Color.lightSkyBlue)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color(hex: 0xBDD8E9))
                 }
                 Spacer()
             }
-            .padding(14)
-            .background(
-                LinearGradient(
-                    colors: [Color.royalBlue.opacity(0.85), Color.midnightBlue.opacity(0.95)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(Color(hex: 0x1A3250))
+            .clipShape(
+                UnevenRoundedRectangle(
+                    topLeadingRadius: 0,
+                    bottomLeadingRadius: 24,
+                    bottomTrailingRadius: 24,
+                    topTrailingRadius: 0,
+                    style: .continuous
                 )
             )
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.35), Color.white.opacity(0.08)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-        )
-        .shadow(color: Color.midnightBlue.opacity(0.35), radius: 10, x: 0, y: 5)
-        .accessibilityElement(children: .combine)
+        .shadow(color: Color.midnightBlue.opacity(0.18), radius: 12, x: 0, y: 5)
     }
 
+    // MARK: - Info Card
     private func infoCard<Body: View>(
         symbol: String,
         symbolTint: Color,
-        title: String,
         @ViewBuilder content: () -> Body
     ) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: symbol)
-                .font(.raahaTitle3)
-                .foregroundStyle(symbolTint)
-                .frame(width: 52, height: 52)
-                .background(
-                    Circle()
-                        .fill(Color.white.opacity(0.12))
-                        .background(.ultraThinMaterial, in: Circle())
-                )
-                .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+        HStack(alignment: .center, spacing: 16) {
+            // Icon circle
+            ZStack {
+                Circle()
+                    .fill(Color(hex: 0xDCEEF8))
+                    .frame(width: 50, height: 50)
+                Image(systemName: symbol)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundStyle(symbolTint)
+            }
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.raahaHeadline)
-                    .foregroundStyle(Color.honeydew)
                 content()
             }
+
             Spacer(minLength: 0)
         }
-        .padding(14)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white.opacity(0.08))
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.25), Color.white.opacity(0.06)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.white.opacity(0.72))
+                .background(
+                    .ultraThinMaterial,
+                    in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.white.opacity(0.85), lineWidth: 1)
                 )
         )
-        .shadow(color: Color.midnightBlue.opacity(0.2), radius: 8, x: 0, y: 4)
+        .shadow(color: Color(hex: 0x49769F).opacity(0.10), radius: 8, x: 0, y: 3)
         .accessibilityElement(children: .combine)
     }
 }
