@@ -46,21 +46,18 @@ struct PlaceImageView: View {
     }
 
     var body: some View {
-        ZStack {
+        Group {
             if let assetName = place.localAssetImageName {
-                // 1. High-resolution local bundled asset
                 Image(assetName)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: style.width, height: style.height)
-                    .clipped()
             } else {
-                // 2. Polished RAAHA design system placeholder
                 placeholderView
             }
         }
         .frame(width: style.width, height: style.height)
-        .clipShape(RoundedRectangle(cornerRadius: style.cornerRadius, style: .continuous))
+        .clipped()
+        .modifier(PlaceImageClipModifier(style: style))
     }
 
     // MARK: - Polished Placeholder
@@ -96,5 +93,20 @@ struct PlaceImageView: View {
             }
         }
         .frame(width: style.width, height: style.height)
+    }
+}
+
+private struct PlaceImageClipModifier: ViewModifier {
+    let style: PlaceImageStyle
+
+    func body(content: Content) -> some View {
+        switch style {
+        case .thumbnail:
+            content.clipShape(Circle())
+        case .hero:
+            content
+        case .custom(_, _, let radius):
+            content.clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        }
     }
 }

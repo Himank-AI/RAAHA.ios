@@ -22,7 +22,7 @@ enum ExploreMockData {
         reviewCount: 14850,
         openingStatus: "Open 24 hours",
         coordinate: CLLocationCoordinate2D(latitude: 13.0500, longitude: 80.2824),
-        localAssetImageName: "thumb_marina",
+        localAssetImageName: "place_marina_beach",
         tags: ["beach", "sea", "sunrise", "promenade", "mylapore", "triplicane", "attraction"]
     )
 
@@ -56,6 +56,7 @@ enum ExploreMockData {
         reviewCount: 16200,
         openingStatus: "Open · 6:00 AM – 12:30 PM, 4:00 PM – 9:00 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0334, longitude: 80.2706),
+        localAssetImageName: "place_kapaleeshwarar",
         tags: ["temple", "shiva", "heritage", "mylapore", "dravidian", "landmark"]
     )
 
@@ -72,6 +73,7 @@ enum ExploreMockData {
         reviewCount: 6850,
         openingStatus: "Open · 9:00 AM – 5:30 PM (Closed Tue)",
         coordinate: CLLocationCoordinate2D(latitude: 13.0067, longitude: 80.2026),
+        localAssetImageName: "place_guindy_park",
         tags: ["park", "nature", "wildlife", "deer", "guindy", "trees"]
     )
 
@@ -90,6 +92,7 @@ enum ExploreMockData {
         reviewCount: 7420,
         openingStatus: "Open · 6:00 AM – 9:00 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0336, longitude: 80.2783),
+        localAssetImageName: "place_san_thome",
         tags: ["church", "cathedral", "apostle", "heritage", "santhome", "mylapore"]
     )
 
@@ -106,6 +109,7 @@ enum ExploreMockData {
         reviewCount: 5120,
         openingStatus: "Open · 10:00 AM – 7:30 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0487, longitude: 80.2520),
+        localAssetImageName: "place_semmozhi_poonga",
         tags: ["park", "botanical garden", "bonsai", "plants", "teynampet"]
     )
 
@@ -122,6 +126,7 @@ enum ExploreMockData {
         reviewCount: 4180,
         openingStatus: "Open · 8:30 AM – 5:30 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0560, longitude: 80.2415),
+        localAssetImageName: "place_valluvar_kottam",
         tags: ["monument", "chariot", "thiruvalluvar", "nungambakkam", "landmark"]
     )
 
@@ -138,6 +143,7 @@ enum ExploreMockData {
         reviewCount: 9810,
         openingStatus: "Open · 9:30 AM – 5:00 PM (Closed Fri)",
         coordinate: CLLocationCoordinate2D(latitude: 13.0732, longitude: 80.2570),
+        localAssetImageName: "place_museum_egmore",
         tags: ["museum", "bronzes", "history", "art", "egmore", "attraction"]
     )
 
@@ -154,6 +160,7 @@ enum ExploreMockData {
         reviewCount: 22400,
         openingStatus: "Open · 10:00 AM – 10:00 PM",
         coordinate: CLLocationCoordinate2D(latitude: 12.9915, longitude: 80.2170),
+        localAssetImageName: "place_phoenix_marketcity",
         tags: ["mall", "shopping", "cinema", "food court", "velachery", "stores"]
     )
 
@@ -170,6 +177,7 @@ enum ExploreMockData {
         reviewCount: 19100,
         openingStatus: "Open · 9:30 AM – 9:30 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0405, longitude: 80.2310),
+        localAssetImageName: "place_ranganathan_street",
         tags: ["shopping", "textiles", "silk", "jewellery", "t nagar", "market"]
     )
 
@@ -188,6 +196,7 @@ enum ExploreMockData {
         reviewCount: 15400,
         openingStatus: "Open now · Closes 11:00 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0418, longitude: 80.2341),
+        localAssetImageName: "place_murugan_idli",
         tags: ["idli", "dosa", "chutney", "breakfast", "t nagar", "south indian", "restaurant"]
     )
 
@@ -204,6 +213,7 @@ enum ExploreMockData {
         reviewCount: 17200,
         openingStatus: "Open now · Closes 10:30 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0441, longitude: 80.2608),
+        localAssetImageName: "place_south_indian_food",
         tags: ["vegetarian", "thali", "filter coffee", "mylapore", "restaurant"]
     )
 
@@ -220,6 +230,7 @@ enum ExploreMockData {
         reviewCount: 9100,
         openingStatus: "Open now · Closes 10:00 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0565, longitude: 80.2760),
+        localAssetImageName: "place_south_indian_food",
         tags: ["sambar", "idli", "heritage", "triplicane", "breakfast", "restaurant"]
     )
 
@@ -236,6 +247,7 @@ enum ExploreMockData {
         reviewCount: 6800,
         openingStatus: "Open now · Closes 11:00 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0543, longitude: 80.2612),
+        localAssetImageName: "place_filter_coffee",
         tags: ["cafe", "coffee", "garden", "pastry", "royapettah", "brunch"]
     )
 
@@ -252,6 +264,7 @@ enum ExploreMockData {
         reviewCount: 6150,
         openingStatus: "Open now · Closes 10:30 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0505, longitude: 80.2555),
+        localAssetImageName: "place_writers_cafe",
         tags: ["cafe", "books", "coffee", "pastas", "gopalapuram", "bakery"]
     )
 
@@ -268,6 +281,7 @@ enum ExploreMockData {
         reviewCount: 9400,
         openingStatus: "Open now · Closes 11:00 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0064, longitude: 80.2568),
+        localAssetImageName: "place_south_indian_food",
         tags: ["vegetarian", "adyar", "thali", "dosa", "south indian", "restaurant"]
     )
 
@@ -284,6 +298,7 @@ enum ExploreMockData {
         reviewCount: 4620,
         openingStatus: "Open · 12 PM – 3 PM, 7 PM – 10 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0690, longitude: 80.2580),
+        localAssetImageName: "place_chennai_cafe",
         tags: ["fine dining", "vegetarian", "egmore", "buffet", "culture", "restaurant"]
     )
 

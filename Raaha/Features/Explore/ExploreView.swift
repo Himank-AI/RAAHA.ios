@@ -1,5 +1,4 @@
 import SwiftUI
-import MapKit
 
 // MARK: - Root Explore View
 
@@ -18,7 +17,7 @@ struct ExploreView: View {
         VStack(spacing: 0) {
             header
 
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: false) {
                 Group {
                     switch segment {
                     case .places:
@@ -33,8 +32,8 @@ struct ExploreView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 18)
+                .padding(.bottom, 110)
             }
-            .contentMargins(.bottom, 110, for: .scrollContent)
             .scrollDismissesKeyboard(.interactively)
             .refreshable { vm.refresh() }
         }
@@ -42,13 +41,8 @@ struct ExploreView: View {
         .navyHeaderChrome()
         .onAppear { vm.onAppear() }
         .onChange(of: vm.query) { _, newValue in vm.onQueryChange(newValue) }
-        .navigationDestination(isPresented: Binding(
-            get: { selectedPlace != nil },
-            set: { if !$0 { selectedPlace = nil } }
-        )) {
-            if let place = selectedPlace {
-                PlaceDetailView(place: place)
-            }
+        .navigationDestination(item: $selectedPlace) { place in
+            PlaceDetailView(place: place)
         }
         .sheet(isPresented: $showAllNearby) {
             AllNearbySheet(vm: vm, selectedPlace: $selectedPlace, showAllNearby: $showAllNearby)
@@ -189,69 +183,42 @@ private struct PlacesContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // ── 1. Search results (active search) ──
+            // ── Category filters ──
+            categoryFilterChips
+
+            // ── Search results (active search) ──
             if vm.isSearchActive {
                 searchResults
             } else {
-                // ── Explore options ──
-                SectionHeader(title: "Explore options", action: nil)
-                HStack(spacing: 12) {
-                    ExploreOptionCard(
-                        imageName: "explore_spots",
-                        asset: "icon_pin",
-                        title: "Spots",
-                        subtitle: "Landmarks & parks"
-                    ) {
-                        vm.setFilter(.landmarks)
-                    }
-                    ExploreOptionCard(
-                        imageName: "explore_restaurants",
-                        symbol: "fork.knife",
-                        title: "Restaurants",
-                        subtitle: "Cafes & dining"
-                    ) {
-                        vm.setFilter(.restaurants)
-                    }
-                }
-
-                // ── Category filter chips ──
-                filterChips
-
                 // ── Nearby spots ──
                 SectionHeader(title: "Nearby spots", action: "See all") {
                     showAllNearby = true
                 }
-                .padding(.top, 4)
+                .padding(.top, 2)
 
                 nearbySection
-
-                // ── Featured places ──
-                SectionHeader(title: "Featured places", action: nil)
-                    .padding(.top, 4)
-
-                featuredSection
-
-                // ── Recent searches ──
-                if !vm.recentSearches.isEmpty {
-                    recentSearchesSection
-                }
             }
         }
     }
 
-    // MARK: Filter chips
+    // MARK: Category filter chips
 
-    private var filterChips: some View {
+    private var categoryFilterChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(ExploreFilter.allCases) { filter in
-                    FilterChip(filter: filter, isSelected: vm.activeFilter == filter) {
-                        vm.setFilter(filter)
+                    CategoryFilterChip(
+                        filter: filter,
+                        isSelected: vm.activeFilter == filter
+                    ) {
+                        withAnimation(.snappy(duration: 0.22)) {
+                            vm.setFilter(filter)
+                        }
                     }
                 }
             }
             .padding(.horizontal, 2)
-            .padding(.vertical, 4)
+            .padding(.vertical, 2)
         }
     }
 
@@ -279,58 +246,13 @@ private struct PlacesContent: View {
             }
 
         case .empty:
-            ChennaiEmptyResultsView(
-                query: vm.activeFilter.title,
-                suggestions: ChennaiServiceArea.shared.emptySearchSuggestions
-            ) { suggestion in
-                vm.query = suggestion
-                vm.submitSearch(suggestion)
-            }
+            CategoryEmptyState(categoryTitle: vm.activeFilter.title)
 
         case .error(let msg):
             ErrorBannerView(message: msg) { vm.loadNearby() }
 
         case .idle:
             EmptyView()
-        }
-    }
-
-    // MARK: Featured section
-
-    @ViewBuilder
-    private var featuredSection: some View {
-        if vm.isFeaturedLoading {
-            VStack(spacing: 14) {
-                ForEach(0..<2, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(Color.frostedBlue.opacity(0.3))
-                        .frame(height: 140)
-                        .shimmer()
-                }
-            }
-        } else if vm.featuredPlaces.isEmpty {
-            // Fall back to static featured entries so the screen is never blank
-            VStack(spacing: 14) {
-                ForEach(MockData.featuredPlaces) { place in
-                    FeaturedPlaceCard(place: place) {
-                        router.planJourney(from: "Current Location", to: place.name)
-                    }
-                }
-            }
-        } else {
-            VStack(spacing: 14) {
-                ForEach(vm.featuredPlaces) { place in
-                    RealFeaturedPlaceCard(place: place) {
-                        if place.isValidChennaiLocation {
-                            selectedPlace = place
-                        } else {
-                            vm.outsideBoundaryAlertMessage = "\(place.name) is outside the Chennai service area."
-                        }
-                    } planAction: {
-                        router.planJourney(from: "Current Location", to: place.name)
-                    }
-                }
-            }
         }
     }
 
@@ -419,91 +341,8 @@ private struct PlacesContent: View {
             ErrorBannerView(message: msg) { vm.submitSearch(vm.query) }
 
         case .idle:
-            // Show recent searches while query is being typed
-            if !vm.recentSearches.isEmpty {
-                recentSearchesSection
-            }
+            EmptyView()
         }
-    }
-
-    // MARK: Recent searches
-
-    private var recentSearchesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Recent searches")
-                .font(.raahaFootnoteSemibold)
-                .foregroundStyle(Color.steelBlue)
-                .padding(.top, 4)
-            ForEach(vm.recentSearches, id: \.self) { search in
-                HStack {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.raahaCaption)
-                        .foregroundStyle(Color.steelBlue)
-                    Text(search)
-                        .font(.raahaSubheadline)
-                        .foregroundStyle(Color.deepSpace)
-                    Spacer()
-                    Button {
-                        vm.removeRecent(search)
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.raahaCaption2)
-                            .foregroundStyle(Color.steelBlue)
-                    }
-                }
-                .onTapGesture {
-                    vm.query = search
-                    vm.submitSearch(search)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .lightCard(radius: 14)
-            }
-        }
-    }
-}
-
-// MARK: - Filter Chip
-
-private struct FilterChip: View {
-    let filter: ExploreFilter
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 5) {
-                Image(systemName: filter.symbol)
-                    .font(.raahaCaption2)
-                Text(filter.title)
-                    .font(.raahaFootnoteSemibold)
-            }
-            .foregroundStyle(isSelected ? Color.white : Color.royalBlue)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(
-                        isSelected
-                        ? AnyShapeStyle(
-                            LinearGradient(
-                                colors: [Color.brightBlue, Color.electricBlue],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        : AnyShapeStyle(Color.white.opacity(0.65))
-                    )
-                    .background(.regularMaterial, in: Capsule())
-            )
-            .overlay(
-                Capsule()
-                    .stroke(isSelected ? Color.white.opacity(0.5) : Color.white.opacity(0.8), lineWidth: 1)
-            )
-            .shadow(color: isSelected ? Color.electricBlue.opacity(0.35) : Color.clear, radius: 6, x: 0, y: 2)
-        }
-        .buttonStyle(.plain)
-        .animation(.snappy(duration: 0.2), value: isSelected)
     }
 }
 
@@ -523,36 +362,36 @@ private struct RealNearbySpotRow: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(place.name)
-                        .font(.raahaSubheadlineMedium)
-                        .foregroundStyle(Color.honeydew)
+                        .font(.system(.subheadline).weight(.semibold))
+                        .foregroundStyle(Color.black)
                         .lineLimit(1)
 
                     HStack(spacing: 6) {
                         Text(place.category.title)
-                            .font(.raahaCaption)
-                            .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                            .font(.system(.caption).weight(.medium))
+                            .foregroundStyle(Color.black)
                         if let rating = place.ratingText {
                             Text("·")
-                                .foregroundStyle(Color.frostedBlue.opacity(0.5))
-                                .font(.raahaCaption)
+                                .foregroundStyle(Color.black)
+                                .font(.system(.caption).weight(.medium))
                             Text("★ \(rating)")
-                                .font(.raahaCaption)
-                                .foregroundStyle(Color.frostedBlue)
+                                .font(.system(.caption).weight(.medium))
+                                .foregroundStyle(Color.black)
                         }
                         if let dist = place.distanceText {
                             Text("·")
-                                .foregroundStyle(Color.frostedBlue.opacity(0.5))
-                                .font(.raahaCaption)
+                                .foregroundStyle(Color.black)
+                                .font(.system(.caption).weight(.medium))
                             Text(dist)
-                                .font(.raahaCaption)
-                                .foregroundStyle(Color.frostedBlue.opacity(0.85))
+                                .font(.system(.caption).weight(.medium))
+                                .foregroundStyle(Color.black)
                         }
                     }
 
                     if !place.address.isEmpty {
                         Text(place.address)
-                            .font(.raahaCaption2)
-                            .foregroundStyle(Color.frostedBlue.opacity(0.65))
+                            .font(.system(.caption2).weight(.regular))
+                            .foregroundStyle(Color.black)
                             .lineLimit(1)
                     }
                 }
@@ -583,184 +422,80 @@ private struct RealNearbySpotRow: View {
     }
 }
 
-// MARK: - Real Featured Place Card (MapKit-backed)
+// MARK: - Category Filter Chip
 
-private struct RealFeaturedPlaceCard: View {
-    let place: ExplorePlace
+private struct CategoryFilterChip: View {
+    let filter: ExploreFilter
+    let isSelected: Bool
     let action: () -> Void
-    let planAction: () -> Void
-    @State private var liked = false
 
     var body: some View {
         Button(action: action) {
-            ZStack(alignment: .bottom) {
-                // Hero: Place image with loading shimmer & graceful fallback
-                PlaceImageView(place: place, style: .hero(height: 160))
-                    .frame(height: 160)
-
-                // Text overlay
-                LinearGradient(
-                    colors: [Color.deepSpace.opacity(0.55), Color.clear],
-                    startPoint: .bottom,
-                    endPoint: .center
-                )
-
-                // Top text
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(place.name)
-                        .font(.raahaTitle2)
-                        .foregroundStyle(Color.white)
-                        .lineLimit(1)
-                    HStack(spacing: 6) {
-                        Text(place.category.title)
-                            .font(.raahaFootnote)
-                            .foregroundStyle(Color(hex: 0xBDD8E9))
-                        if let rating = place.ratingText {
-                            Text("· ★ \(rating)")
-                                .font(.raahaFootnote)
-                                .foregroundStyle(Color(hex: 0xBDD8E9))
-                        }
-                        if let dist = place.distanceText {
-                            Text("· \(dist)")
-                                .font(.raahaFootnote)
-                                .foregroundStyle(Color(hex: 0xBDD8E9).opacity(0.85))
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(16)
-                .frame(maxHeight: 160, alignment: .topLeading)
-
-                // Bottom action row
-                HStack(spacing: 10) {
-                    Button("View details", action: action)
-                        .buttonStyle(CompactPillStyle())
-
-                    Button {
-                        withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
-                            liked.toggle()
-                        }
-                    } label: {
-                        Image(systemName: liked ? "heart.fill" : "heart")
-                            .font(.raahaTitle3)
-                            .foregroundStyle(liked ? Color.strawberry : Color.deepSpace)
-                            .scaleEffect(liked ? 1.18 : 1.0)
-                            .frame(width: 44, height: 44)
-                            .background(Circle().fill(Color.honeydew))
-                    }
-                    .buttonStyle(.plain)
-                    .sensoryFeedback(.impact(weight: .medium), trigger: liked)
-                    .accessibilityLabel(liked ? "Remove from favourites" : "Add to favourites")
-                }
-                .padding(.horizontal, 14)
-                .padding(.bottom, 12)
+            HStack(spacing: 5) {
+                Image(systemName: filter.symbol)
+                    .font(.raahaCaption2)
+                Text(filter.title)
+                    .font(.raahaFootnoteSemibold)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .shadow(color: Color.deepSpace.opacity(0.15), radius: 10, x: 0, y: 5)
+            .foregroundStyle(isSelected ? Color.white : Color.midnightBlue)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(
+                        isSelected
+                        ? AnyShapeStyle(
+                            LinearGradient(
+                                colors: [Color.brightBlue, Color.electricBlue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        : AnyShapeStyle(Color.white.opacity(0.72))
+                    )
+                    .background(.regularMaterial, in: Capsule())
+            )
+            .overlay(
+                Capsule()
+                    .stroke(
+                        isSelected ? Color.white.opacity(0.55) : Color.white.opacity(0.85),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(
+                color: isSelected ? Color.electricBlue.opacity(0.35) : Color.clear,
+                radius: 6, x: 0, y: 2
+            )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(filter.title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
-// MARK: - Legacy FeaturedPlaceCard (static fallback)
+// MARK: - Category Empty State
 
-private struct FeaturedPlaceCard: View {
-    let place: Place
-    let action: () -> Void
-    @State private var liked = false
+private struct CategoryEmptyState: View {
+    let categoryTitle: String
 
     var body: some View {
-        FillImage(name: place.imageName, height: 140)
-            .overlay {
-                LinearGradient(
-                    colors: [Color.deepSpace.opacity(0.55), Color.clear],
-                    startPoint: .top,
-                    endPoint: .center
-                )
-            }
-            .overlay(alignment: .topLeading) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(place.name).font(.raahaTitle2).foregroundStyle(Color.white)
-                    Text(place.subtitle).font(.raahaFootnote).foregroundStyle(Color(hex: 0xBDD8E9))
-                }
-                .padding(16)
-            }
-            .overlay(alignment: .bottom) {
-                HStack(spacing: 10) {
-                    Button("View route", action: action).buttonStyle(CompactPillStyle())
-                    Button {
-                        withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
-                            liked.toggle()
-                        }
-                    } label: {
-                        Image(systemName: liked ? "heart.fill" : "heart")
-                            .font(.raahaTitle3)
-                            .foregroundStyle(liked ? Color.strawberry : Color.deepSpace)
-                            .scaleEffect(liked ? 1.18 : 1.0)
-                            .frame(width: 44, height: 44)
-                            .background(Circle().fill(Color.honeydew))
-                    }
-                    .sensoryFeedback(.impact(weight: .medium), trigger: liked)
-                    .accessibilityLabel(liked ? "Remove from favourites" : "Add to favourites")
-                }
-                .padding(.horizontal, 14)
-                .padding(.bottom, 12)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .shadow(color: Color.deepSpace.opacity(0.15), radius: 10, x: 0, y: 5)
-    }
-}
-
-// MARK: - Explore Option Card (with action)
-
-private struct ExploreOptionCard: View {
-    let imageName: String
-    var symbol: String? = nil
-    var asset: String? = nil
-    let title: String
-    let subtitle: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            FillImage(name: imageName, height: 118)
-                .overlay(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: 6) {
-                            if let asset {
-                                Image(asset)
-                                    .renderingMode(.template)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 14, height: 14)
-                            } else if let symbol {
-                                Image(systemName: symbol)
-                            }
-                            Text(title)
-                        }
-                        .font(.raahaHeadline)
-                        .foregroundStyle(Color.white)
-
-                        Text(subtitle)
-                            .font(.raahaCaption)
-                            .foregroundStyle(Color(hex: 0xBDD8E9))
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        LinearGradient(
-                            colors: [Color.royalBlue.opacity(0.85), Color.midnightBlue.opacity(0.92)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .shadow(color: Color.deepSpace.opacity(0.15), radius: 8, x: 0, y: 4)
+        VStack(spacing: 8) {
+            Image(systemName: "mappin.slash")
+                .font(.system(size: 22, weight: .medium))
+                .foregroundStyle(Color.royalBlue.opacity(0.75))
+            Text("No places found in this category.")
+                .font(.system(.subheadline).weight(.semibold))
+                .foregroundStyle(Color.black)
+                .multilineTextAlignment(.center)
+            Text(categoryTitle == "All" ? "Try refreshing nearby spots." : "Nothing nearby for \(categoryTitle) yet.")
+                .font(.system(.caption).weight(.medium))
+                .foregroundStyle(Color.black.opacity(0.65))
+                .multilineTextAlignment(.center)
         }
-        .buttonStyle(TactileButtonStyle())
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 22)
+        .padding(.horizontal, 16)
+        .navyCard(radius: 18)
     }
 }
 
@@ -781,7 +516,8 @@ private struct AllNearbySheet: View {
                     List(places) { place in
                         RealNearbySpotRow(place: place) {
                             dismiss()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            Task { @MainActor in
+                                try? await Task.sleep(for: .milliseconds(300))
                                 selectedPlace = place
                             }
                         } planAction: {
@@ -1175,7 +911,17 @@ private struct CompactPillStyle: ButtonStyle {
     }
 }
 
-// MARK: - Plan Ahead (unchanged)
+// MARK: - Plan Ahead
+
+private enum PlanAheadPalette {
+    static let navy = Color(red: 0.08, green: 0.18, blue: 0.30)
+    static let label = Color(red: 0.08, green: 0.18, blue: 0.30)
+    static let value = Color.black
+    static let supporting = Color(red: 0.27, green: 0.42, blue: 0.55) // steel-blue grey
+    static let placeholder = Color(red: 0.45, green: 0.50, blue: 0.55)
+    static let icon = Color(red: 0.08, green: 0.18, blue: 0.30)
+    static let border = Color(red: 0.45, green: 0.55, blue: 0.65)
+}
 
 private struct PlanAheadCard: View {
     @Environment(AppRouter.self) private var router
@@ -1188,10 +934,10 @@ private struct PlanAheadCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Plan Ahead")
                     .font(.raahaTitle2)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(PlanAheadPalette.navy)
                 Text("Check travel conditions for your future trip.")
                     .font(.raahaSubheadline)
-                    .foregroundStyle(Color.frostedBlue)
+                    .foregroundStyle(PlanAheadPalette.supporting)
             }
 
             PlanFieldRow(asset: "icon_pin", label: "Destination") {
@@ -1227,6 +973,8 @@ private struct PlanAheadCard: View {
                 DatePicker("Date", selection: $router.plan.date, displayedComponents: .date)
                     .datePickerStyle(.graphical)
                     .labelsHidden()
+                    .tint(PlanAheadPalette.navy)
+                    .foregroundStyle(PlanAheadPalette.navy)
             }
         }
         .sheet(isPresented: $showTimeSheet) {
@@ -1234,6 +982,8 @@ private struct PlanAheadCard: View {
                 DatePicker("Time", selection: $router.plan.date, displayedComponents: .hourAndMinute)
                     .datePickerStyle(.wheel)
                     .labelsHidden()
+                    .tint(PlanAheadPalette.navy)
+                    .foregroundStyle(PlanAheadPalette.navy)
             }
         }
     }
@@ -1259,20 +1009,20 @@ private struct PlanFieldRow<Field: View>: View {
                         .font(.raahaSubheadlineMedium)
                 }
             }
-            .foregroundStyle(Color.neonLime)
+            .foregroundStyle(PlanAheadPalette.icon)
             .frame(width: 34, height: 34)
             .background(
                 Circle()
-                    .fill(Color.white.opacity(0.12))
+                    .fill(Color.white.opacity(0.72))
                     .background(.ultraThinMaterial, in: Circle())
             )
-            .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+            .overlay(Circle().stroke(PlanAheadPalette.border.opacity(0.45), lineWidth: 1))
             .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(label)
                     .font(.raahaSubheadlineMedium)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(PlanAheadPalette.label)
                 field
             }
         }
@@ -1280,12 +1030,12 @@ private struct PlanFieldRow<Field: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white.opacity(0.08))
+                .fill(Color.white.opacity(0.55))
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                .stroke(PlanAheadPalette.border.opacity(0.40), lineWidth: 1)
         )
     }
 }
@@ -1294,15 +1044,24 @@ private struct PlanFieldValue: View {
     let text: String
     var body: some View {
         HStack {
-            Text(text).font(.raahaSubheadline).foregroundStyle(Color.honeydew)
+            Text(text)
+                .font(.raahaSubheadline)
+                .foregroundStyle(PlanAheadPalette.value)
             Spacer()
             Image(systemName: "chevron.right")
-                .font(.raahaSubheadlineMedium).foregroundStyle(Color.frostedBlue)
+                .font(.raahaSubheadlineMedium)
+                .foregroundStyle(PlanAheadPalette.icon)
         }
         .padding(.horizontal, 12)
         .frame(minHeight: 44)
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .stroke(Color.frostedBlue.opacity(0.7), lineWidth: 1))
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.white.opacity(0.45))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(PlanAheadPalette.border.opacity(0.55), lineWidth: 1)
+        )
         .contentShape(Rectangle())
     }
 }
@@ -1325,9 +1084,10 @@ private struct PickerSheet<Content: View>: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
+                        .foregroundStyle(PlanAheadPalette.navy)
                 }
             }
-            .tint(Color.steelBlue)
+            .tint(PlanAheadPalette.navy)
         }
         .presentationDetents([.medium])
     }

@@ -49,7 +49,11 @@ struct ExploreMockDataTestsApp {
         print("\n--- TEST GROUP 3: Category Filtering ---")
         let restaurants = ExploreMockData.filter(filter: .restaurants)
         runner.assert(!restaurants.isEmpty, "Restaurant filter returns places")
-        runner.assert(restaurants.allSatisfy { $0.category == .restaurant || $0.category == .cafe }, "Restaurant filter returns only restaurants and cafes")
+        runner.assert(restaurants.allSatisfy { $0.category == .restaurant }, "Restaurant filter returns only restaurants")
+
+        let cafes = ExploreMockData.filter(filter: .cafes)
+        runner.assert(!cafes.isEmpty, "Cafe filter returns places")
+        runner.assert(cafes.allSatisfy { $0.category == .cafe }, "Cafe filter returns only cafes")
 
         let beaches = ExploreMockData.filter(filter: .beaches)
         runner.assert(!beaches.isEmpty, "Beach filter returns places")
@@ -59,9 +63,16 @@ struct ExploreMockDataTestsApp {
         runner.assert(!parks.isEmpty, "Park filter returns places")
         runner.assert(parks.allSatisfy { $0.category == .park }, "Park filter returns only parks")
 
-        let landmarks = ExploreMockData.filter(filter: .landmarks)
-        runner.assert(!landmarks.isEmpty, "Landmark filter returns places")
-        runner.assert(landmarks.allSatisfy { $0.category == .landmark || $0.category == .attraction }, "Landmark filter returns only landmarks and attractions")
+        let touristSpots = ExploreMockData.filter(filter: .touristSpots)
+        runner.assert(!touristSpots.isEmpty, "Tourist Spots filter returns places")
+        runner.assert(touristSpots.allSatisfy { $0.category == .landmark || $0.category == .attraction }, "Tourist Spots filter returns only landmarks and attractions")
+
+        let shopping = ExploreMockData.filter(filter: .shopping)
+        runner.assert(!shopping.isEmpty, "Shopping filter returns places")
+        runner.assert(shopping.allSatisfy { $0.category == .shopping }, "Shopping filter returns only shopping")
+
+        let combined = ExploreMockData.filter(query: "idli", filter: .restaurants)
+        runner.assert(combined.contains { $0.name.contains("Murugan Idli") }, "Search + restaurant filter returns Murugan Idli Shop")
 
         print("\n--- TEST GROUP 4: Locality Filtering ---")
         let mylaporePlaces = ExploreMockData.filter(locality: "Mylapore")
@@ -94,7 +105,7 @@ struct ExploreMockDataTestsApp {
         let marina = ExploreMockData.marinaBeach
         runner.assert(marina.distanceText != nil, "Marina Beach has distance text ('\(marina.distanceText ?? "")')")
         runner.assert(marina.ratingText == "4.6", "Marina Beach has rating 4.6")
-        runner.assert(marina.localAssetImageName == "thumb_marina", "Marina Beach has bundled image asset 'thumb_marina'")
+        runner.assert(marina.localAssetImageName == "place_marina_beach", "Marina Beach has bundled image asset 'place_marina_beach'")
         runner.assert(marina.openingStatus != nil, "Marina Beach has opening status")
 
         runner.report()

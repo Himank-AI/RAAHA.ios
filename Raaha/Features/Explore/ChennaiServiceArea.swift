@@ -207,9 +207,9 @@ public struct ChennaiServiceArea: Sendable {
         contains(coordinate: coordinate)
     }
 
-    /// Validates an MKMapItem by its placemark coordinate.
+    /// Validates an MKMapItem by its coordinate (modern location API on iOS 26+).
     public func validate(mapItem: MKMapItem) -> Bool {
-        validate(coordinate: mapItem.placemark.coordinate)
+        validate(coordinate: mapItem.raahaCoordinate)
     }
 
     /// Checks if a user's current location is inside Chennai.

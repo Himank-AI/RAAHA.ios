@@ -13,16 +13,8 @@ final class ExploreViewModel {
 
     private(set) var nearbyState: PlacesLoadState = .idle
     private(set) var searchState: PlacesLoadState = .idle
-    private(set) var featuredPlaces: [ExplorePlace] = []
-    private(set) var isFeaturedLoading = false
     var activeFilter: ExploreFilter = .all
     var query: String = ""
-    var recentSearches: [String] = [
-        "Marina Beach",
-        "Murugan Idli Shop",
-        "Besant Nagar",
-        "Kapaleeshwarar Temple"
-    ]
 
     // Chennai locality selection & overrides
     var selectedLocality: ChennaiLocality? = nil
@@ -38,7 +30,6 @@ final class ExploreViewModel {
     }
 
     func loadData() {
-        loadFeatured()
         loadNearby()
     }
 
@@ -52,6 +43,9 @@ final class ExploreViewModel {
         guard activeFilter != filter else { return }
         activeFilter = filter
         loadNearby()
+        if isSearchActive {
+            performSearch(query: query.trimmingCharacters(in: .whitespaces))
+        }
     }
 
     func selectLocality(_ locality: ChennaiLocality?) {
@@ -69,11 +63,6 @@ final class ExploreViewModel {
             locality: selectedLocality?.name
         )
         nearbyState = results.isEmpty ? .empty : .loaded(results)
-    }
-
-    private func loadFeatured() {
-        featuredPlaces = ExploreMockData.featuredPlaces
-        isFeaturedLoading = false
     }
 
     // MARK: - Search Actions
@@ -96,15 +85,17 @@ final class ExploreViewModel {
     func submitSearch(_ q: String) {
         let trimmed = q.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        addToRecent(trimmed)
         performSearch(query: trimmed)
     }
 
     func selectSuggestion(_ suggestion: String, onResolved: @escaping (ExplorePlace) -> Void) {
-        addToRecent(suggestion)
         query = suggestion
 
-        let matches = ExploreMockData.filter(query: suggestion)
+        let matches = ExploreMockData.filter(
+            query: suggestion,
+            filter: activeFilter,
+            locality: selectedLocality?.name
+        )
         if let first = matches.first {
             searchState = .loaded(matches)
             onResolved(first)
@@ -119,10 +110,6 @@ final class ExploreViewModel {
         autocompleteSuggestions = []
     }
 
-    func removeRecent(_ search: String) {
-        recentSearches.removeAll { $0 == search }
-    }
-
     // MARK: - Private Search Helper
 
     private func performSearch(query: String) {
@@ -132,11 +119,5 @@ final class ExploreViewModel {
             locality: selectedLocality?.name
         )
         searchState = results.isEmpty ? .empty : .loaded(results)
-    }
-
-    private func addToRecent(_ search: String) {
-        recentSearches.removeAll { $0 == search }
-        recentSearches.insert(search, at: 0)
-        if recentSearches.count > 8 { recentSearches = Array(recentSearches.prefix(8)) }
     }
 }

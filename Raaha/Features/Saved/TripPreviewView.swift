@@ -10,15 +10,16 @@ struct TripPreviewView: View {
 
                 infoCard(
                     symbol: "clock",
-                    symbolTint: Color.neonLime,
-                    title: "Expected Travel Time"
+                    symbolTint: Color.steelBlue,
+                    title: "Expected Travel Time",
+                    titleColor: Color(red: 0.08, green: 0.18, blue: 0.30)
                 ) {
                     Text("45–60 min")
                         .font(.raahaTitle)
-                        .foregroundStyle(Color.neonLime)
+                        .foregroundStyle(Color(red: 0.08, green: 0.18, blue: 0.30))
                     Text("(from your current location)")
                         .font(.raahaFootnote)
-                        .foregroundStyle(Color.lightSkyBlue)
+                        .foregroundStyle(Color.steelBlue)
                 }
 
                 infoCard(
@@ -121,6 +122,7 @@ struct TripPreviewView: View {
         symbol: String,
         symbolTint: Color,
         title: String,
+        titleColor: Color = Color.honeydew,
         @ViewBuilder content: () -> Body
     ) -> some View {
         HStack(alignment: .top, spacing: 14) {
@@ -138,7 +140,7 @@ struct TripPreviewView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.raahaHeadline)
-                    .foregroundStyle(Color.honeydew)
+                    .foregroundStyle(titleColor)
                 content()
             }
             Spacer(minLength: 0)
