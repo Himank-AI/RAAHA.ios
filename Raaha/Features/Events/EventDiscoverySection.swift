@@ -10,7 +10,6 @@ struct EventDiscoverySection: View {
     @State private var category: EventCategory = .all
     @State private var timeFilter: EventTimeFilter = .today
     @State private var appeared = false
-    @State private var disclosure: EventModel?
 
     private var service: EventService { .current }
 
@@ -30,8 +29,7 @@ struct EventDiscoverySection: View {
                         FeaturedEventCard(
                             event: featured,
                             reduceMotion: reduceMotion,
-                            onOpen: { open(featured, placementID: "explore.events.featured") },
-                            onDisclosure: { disclosure = featured }
+                            onOpen: { open(featured, placementID: "explore.events.featured") }
                         )
                         .modifier(EventImpressionMarker(event: featured, placementID: "explore.events.featured"))
                     }
@@ -58,48 +56,20 @@ struct EventDiscoverySection: View {
             }
             .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.84), value: category)
             .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.84), value: timeFilter)
-            .sheet(item: $disclosure) { event in
-                EventPlacementSheet(event: event)
-                    .presentationDetents([.medium])
-                    .presentationDragIndicator(.visible)
-                    .presentationCornerRadius(28)
-            }
         }
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Discover More")
-                    .font(.raahaHeadline)
-                    .foregroundStyle(EventInk.navy)
-                Text("Find exciting events and experiences around Chennai.")
-                    .font(.raahaCaption)
-                    .foregroundStyle(EventInk.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-                if service.matching(.all).allSatisfy(\.isSample) {
-                    Text("Development samples. These are not real events or paid campaigns.")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(EventInk.muted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            Spacer(minLength: 8)
-            Button {
-                withAnimation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.82)) {
-                    category = .all
-                }
-            } label: {
-                HStack(spacing: 2) {
-                    Text("Explore All")
-                    Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
-                }
-                .font(.raahaSubheadline)
-                .foregroundStyle(Color.royalBlue)
-            }
-            .buttonStyle(.plain)
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Discover More")
+                .font(.raahaHeadline)
+                .foregroundStyle(EventInk.navy)
+            Text("Find exciting events and experiences around Chennai.")
+                .font(.raahaCaption)
+                .foregroundStyle(EventInk.muted)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var categoryFilters: some View {
@@ -216,76 +186,90 @@ private struct FeaturedEventCard: View {
     let event: EventModel
     let reduceMotion: Bool
     let onOpen: () -> Void
-    let onDisclosure: () -> Void
     @Environment(\.eventCardPressed) private var pressed
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button(action: onOpen) {
-                VStack(alignment: .leading, spacing: 0) {
-                    ZStack(alignment: .topLeading) {
-                        EventPhoto(event: event, height: 188, pressed: pressed, reduceMotion: reduceMotion)
-                        LinearGradient(
-                            colors: [Color.black.opacity(0.05), Color.black.opacity(0.38)],
-                            startPoint: .center,
-                            endPoint: .bottom
-                        )
-                        .allowsHitTesting(false)
-                        VStack(alignment: .leading, spacing: 6) {
-                            EventStatusChips(event: event, showsFeatured: true)
-                            Spacer()
-                            Text(event.category.title)
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(Color.white)
-                        }
-                        .padding(12)
-                    }
-                    .frame(height: 188)
-                    .clipped()
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(event.title)
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundStyle(EventInk.navy)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(event.summary)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(EventInk.muted)
-                            .fixedSize(horizontal: false, vertical: true)
-                        eventFacts(event)
-                        HStack(spacing: 6) {
-                            Text("Discover Event")
-                                .font(.system(size: 14, weight: .bold))
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 12, weight: .bold))
-                        }
-                        .foregroundStyle(EventInk.deep)
-                        .padding(.top, 4)
-                    }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+        Button(action: onOpen) {
+            VStack(alignment: .leading, spacing: 0) {
+                ZStack(alignment: .bottomLeading) {
+                    EventPhoto(event: event, height: 188, pressed: pressed, reduceMotion: reduceMotion)
+                    LinearGradient(
+                        colors: [Color.clear, Color.black.opacity(0.42)],
+                        startPoint: .center,
+                        endPoint: .bottom
+                    )
+                    .allowsHitTesting(false)
+                    Text(event.category.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(EventInk.deep.opacity(0.9)))
+                        .padding(14)
                 }
-            }
-            .buttonStyle(EventCardButtonStyle())
+                .frame(height: 188)
+                .clipped()
 
-            Button(action: onDisclosure) {
-                Text("About this placement")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(EventInk.muted)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 14)
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(event.title)
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(EventInk.navy)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        featuredFact(symbol: "calendar", title: "Date and time", value: event.scheduleText)
+                        featuredFact(symbol: "mappin.and.ellipse", title: "Venue", value: event.venue.name)
+                        featuredFact(
+                            symbol: "location",
+                            title: "Address",
+                            value: "\(event.venue.address), \(event.venue.locality)"
+                        )
+                    }
+
+                    HStack(spacing: 6) {
+                        Text("Discover Event")
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(EventInk.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Capsule().fill(EventInk.deep))
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .buttonStyle(.plain)
         }
+        .buttonStyle(EventCardButtonStyle())
         .background(EventInk.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.9), lineWidth: 1)
+                .stroke(EventInk.ice, lineWidth: 1)
         )
-        .shadow(color: EventInk.navy.opacity(0.1), radius: 14, y: 7)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(event.title), \(event.category.title), \(event.scheduleText), sample sponsored event")
+        .shadow(color: EventInk.navy.opacity(0.08), radius: 12, y: 6)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(event.title), \(event.scheduleText), \(event.venue.name), \(event.venue.address)")
+        .accessibilityHint("Opens the event")
+    }
+
+    private func featuredFact(symbol: String, title: String, value: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(EventInk.deep)
+                .frame(width: 22)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(EventInk.muted)
+                Text(value)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(EventInk.navy)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }
 
@@ -453,30 +437,6 @@ struct EventStatusChips: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 4)
             .background(fill, in: Capsule())
-    }
-}
-
-private func eventFacts(_ event: EventModel) -> some View {
-    VStack(alignment: .leading, spacing: 3) {
-        Label(event.scheduleText, systemImage: "calendar")
-        Label(event.venue.name, systemImage: "mappin.and.ellipse")
-        Label(event.venue.locality, systemImage: "location")
-        Label(event.ticketLine, systemImage: "ticket")
-    }
-    .font(.system(size: 13, weight: .medium))
-    .foregroundStyle(EventInk.navy)
-    .labelStyle(EventFactLabelStyle())
-}
-
-private struct EventFactLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            configuration.icon
-                .foregroundStyle(EventInk.deep)
-                .frame(width: 16)
-            configuration.title
-                .fixedSize(horizontal: false, vertical: true)
-        }
     }
 }
 
