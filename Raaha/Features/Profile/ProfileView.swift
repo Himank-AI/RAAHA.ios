@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileView: View {
     // MARK: - State
     @Environment(AppRouter.self) private var router
+    @Environment(AdImpressionTracker.self) private var ads
     @State private var selectedCommuteModes: Set<String> = ["Bus"]
     @State private var selectedInterests: Set<String> = ["Beaches", "Heritage", "Food"]
     @State private var showLogoutDialog: Bool = false
@@ -76,7 +77,10 @@ struct ProfileView: View {
                     // 3. Discovery Interests Group
                     travelInterestsSection
 
-                    // 4. Transit & Support Group
+                    // 4. Sponsored discovery preference
+                    sponsoredDiscoverySection
+
+                    // 5. Transit & Support Group
                     transitSupportSection
 
                     // Version Footer
@@ -481,6 +485,31 @@ struct ProfileView: View {
         .sensoryFeedback(.selection, trigger: isSelected)
     }
 
+    // MARK: - Sponsored discovery
+    private var sponsoredDiscoverySection: some View {
+        @Bindable var tracker = ads
+        return VStack(alignment: .leading, spacing: 10) {
+            sectionTitle(title: "Sponsored discovery", icon: "sparkle")
+
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle(isOn: $tracker.sponsoredDiscoveryEnabled) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Show sponsored places")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Color.midnightBlue)
+                        Text("Sample placements stay labelled. Hiding one placement keeps it hidden on this device.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Color(hex: 0x49769F))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .tint(Color(hex: 0x176487))
+            }
+            .padding(14)
+            .profileCard(radius: 24)
+        }
+    }
+
     // MARK: - Transit & Support Section
     private var transitSupportSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -707,4 +736,5 @@ private extension View {
 #Preview {
     ProfileView()
         .environment(AppRouter())
+        .environment(AdImpressionTracker.shared)
 }

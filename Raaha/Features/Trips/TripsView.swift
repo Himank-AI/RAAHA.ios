@@ -71,18 +71,22 @@ struct TripsView: View {
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
+                    SponsoredDiscoverySection(
+                        savedJourneyTexts: bookmarkedJourneys.map { "\($0.name) · \($0.route)" }
+                    )
+
                     CoastalPlannerCard {
                         router.planJourney(from: "Current Location", to: "Marina Beach")
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 8)
+                .padding(.top, 18)
                 .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.86), value: activeFilter)
             }
             .contentMargins(.bottom, 156, for: .scrollContent)
         }
         .raahaScreenBackground()
-        .lightHeaderChrome()
+        .navyHeaderChrome()
         .onAppear {
             if reduceMotion {
                 entered = true
@@ -200,26 +204,26 @@ struct TripsHeader: View {
     let savedCount: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("My Journeys")
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundStyle(Coastal.navy)
-                    .accessibilityAddTraits(.isHeader)
-                Text("Your travel plans, all in one place.")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(Coastal.muted)
-            }
+        NavyHeader {
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Trips")
+                        .font(.raahaTitle)
+                        .foregroundStyle(Color.white)
+                        .accessibilityAddTraits(.isHeader)
 
-            HStack(spacing: 8) {
-                summaryPill(count: upcomingCount, label: "Upcoming")
-                summaryPill(count: savedCount, label: "Saved")
+                    Text("Your upcoming journeys, bookmarked routes, and travel history across Chennai.")
+                        .font(.raahaCaption)
+                        .foregroundStyle(Color(hex: 0xBDD8E9))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                HStack(spacing: 8) {
+                    summaryPill(count: upcomingCount, label: "Upcoming")
+                    summaryPill(count: savedCount, label: "Saved")
+                }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 6)
     }
 
     private func summaryPill(count: Int, label: String) -> some View {
@@ -469,63 +473,90 @@ struct SavedJourneyCard: View {
     let action: () -> Void
     let onToggleBookmark: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.savedCardPressed) private var pressed
+    @State private var appeared = false
+
+    private let cardWidth: CGFloat = 228
+    private let photoHeight: CGFloat = 152
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .topTrailing) {
-                Image(journey.imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 176, height: 112)
-                    .clipped()
-                    .overlay(alignment: .bottom) {
-                        LinearGradient(
-                            colors: [Color.clear, Coastal.navy.opacity(0.28)],
-                            startPoint: .center,
-                            endPoint: .bottom
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 0) {
+                ZStack(alignment: .topTrailing) {
+                    Image(journey.imageName)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: cardWidth, height: photoHeight)
+                        .scaleEffect(pressed && !reduceMotion ? 1.05 : 1)
+                        .frame(width: cardWidth, height: photoHeight)
+                        .clipped()
+                        .clipShape(
+                            UnevenRoundedRectangle(
+                                topLeadingRadius: 22,
+                                bottomLeadingRadius: 0,
+                                bottomTrailingRadius: 0,
+                                topTrailingRadius: 22,
+                                style: .continuous
+                            )
                         )
+
+                    Button(action: onToggleBookmark) {
+                        Image(systemName: journey.isBookmarked ? "bookmark.fill" : "bookmark")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Coastal.deep)
+                            .contentTransition(.symbolEffect(.replace))
+                            .symbolEffect(.bounce, value: journey.isBookmarked)
+                            .frame(width: 32, height: 32)
+                            .background {
+                                Circle().fill(.ultraThinMaterial)
+                                Circle().fill(Color.white.opacity(0.78))
+                            }
+                            .overlay(Circle().stroke(Color.white.opacity(0.92), lineWidth: 0.8))
                     }
-
-                Button(action: onToggleBookmark) {
-                    Image(systemName: journey.isBookmarked ? "bookmark.fill" : "bookmark")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(journey.isBookmarked ? Coastal.deep : Coastal.white)
-                        .frame(width: 30, height: 30)
-                        .background {
-                            Circle().fill(.ultraThinMaterial)
-                            Circle().fill(Color.white.opacity(journey.isBookmarked ? 0.82 : 0.22))
-                        }
-                        .overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 0.8))
-                        .contentTransition(.symbolEffect(.replace))
+                    .buttonStyle(.plain)
+                    .padding(8)
+                    .sensoryFeedback(.impact(weight: .light), trigger: journey.isBookmarked)
+                    .accessibilityLabel(journey.isBookmarked ? "Remove bookmark" : "Save journey")
                 }
-                .buttonStyle(.plain)
-                .padding(8)
-                .sensoryFeedback(.impact(weight: .light), trigger: journey.isBookmarked)
-                .accessibilityLabel(journey.isBookmarked ? "Remove bookmark" : "Save journey")
-            }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(journey.name)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Coastal.navy)
-                    .lineLimit(1)
-                Text(journey.route)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Coastal.muted)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(journey.name)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Coastal.navy)
+                        .lineLimit(1)
+                    Text(journey.route)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Coastal.muted)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 12)
+                .padding(.bottom, 14)
+                .frame(width: cardWidth, alignment: .leading)
             }
-            .padding(12)
-            .frame(width: 176, alignment: .leading)
+            .frame(width: cardWidth)
+            .background(Coastal.white)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(Color.white, lineWidth: 1)
+            }
+            .shadow(color: Coastal.navy.opacity(0.12), radius: 12, y: 6)
         }
-        .frame(width: 176)
-        .background(Coastal.white)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.white.opacity(0.9), lineWidth: 1)
+        .buttonStyle(SavedCardButtonStyle())
+        .opacity(appeared ? 1 : 0)
+        .scaleEffect(appeared || reduceMotion ? 1 : 0.96)
+        .onAppear {
+            if reduceMotion {
+                appeared = true
+            } else {
+                withAnimation(.spring(response: 0.48, dampingFraction: 0.84)) {
+                    appeared = true
+                }
+            }
         }
-        .shadow(color: Coastal.navy.opacity(0.10), radius: 10, y: 5)
-        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .onTapGesture(perform: action)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(journey.name), \(journey.route)")
     }
@@ -688,6 +719,28 @@ private struct CoastalPlannerCard: View {
     }
 }
 
+private struct SavedCardPressedKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+private extension EnvironmentValues {
+    var savedCardPressed: Bool {
+        get { self[SavedCardPressedKey.self] }
+        set { self[SavedCardPressedKey.self] = newValue }
+    }
+}
+
+private struct SavedCardButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .environment(\.savedCardPressed, configuration.isPressed)
+            .scaleEffect(!reduceMotion && configuration.isPressed ? 0.97 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.72), value: configuration.isPressed)
+    }
+}
+
 private struct SavedCardScrollEffect: ViewModifier {
     var enabled: Bool
 
@@ -730,4 +783,5 @@ private func frostedCard(radius: CGFloat) -> some View {
 #Preview {
     TripsView()
         .environment(AppRouter())
+        .environment(AdImpressionTracker.shared)
 }

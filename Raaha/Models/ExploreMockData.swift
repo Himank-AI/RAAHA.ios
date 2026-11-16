@@ -39,7 +39,7 @@ enum ExploreMockData {
         reviewCount: 9640,
         openingStatus: "Open 24 hours · Cafes till 11 PM",
         coordinate: CLLocationCoordinate2D(latitude: 13.0001, longitude: 80.2667),
-        localAssetImageName: "thumb_besant",
+        localAssetImageName: "saved_besant_nagar",
         tags: ["beach", "elliots", "promenade", "cafes", "sunset", "besant nagar"]
     )
 

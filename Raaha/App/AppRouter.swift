@@ -66,6 +66,16 @@ final class AppRouter {
     /// Shared state for the Plan Ahead → Trip Preview → Trip Saved flow.
     var plan = TripPlan()
 
+    /// Opens an existing Explore category, and optionally a place detail.
+    var exploreRequest: ExploreRequest?
+    /// The category the user last chose in Explore. Nil means no category preference.
+    var lastExploreFilter: ExploreFilter?
+
+    func openExplore(filter: ExploreFilter, placeID: String?) {
+        exploreRequest = ExploreRequest(placeID: placeID, filter: filter, token: UUID())
+        tab = .explore
+    }
+
     /// The floating tab bar is only shown on a tab's root screen.
     var isTabBarVisible: Bool {
         switch tab {

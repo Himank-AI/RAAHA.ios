@@ -388,9 +388,9 @@ enum MockData {
 
     static let savedJourneys: [SavedJourney] = [
         SavedJourney(name: "Marina Beach", route: "Chennai Central → Marina Beach",
-                     imageName: "trip_marina", isBookmarked: true),
+                     imageName: "saved_marina_beach", isBookmarked: true),
         SavedJourney(name: "Besant Nagar Beach", route: "T. Nagar → Elliot's Beach",
-                     imageName: "thumb_besant", isBookmarked: true),
+                     imageName: "saved_besant_nagar", isBookmarked: true),
         SavedJourney(name: "Phoenix Marketcity", route: "Guindy → Phoenix Mall",
                      imageName: "trip_mahabali", isBookmarked: false)
     ]

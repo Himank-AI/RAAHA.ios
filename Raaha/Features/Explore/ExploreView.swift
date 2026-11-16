@@ -41,6 +41,14 @@ struct ExploreView: View {
         .navyHeaderChrome()
         .onAppear { vm.onAppear() }
         .onChange(of: vm.query) { _, newValue in vm.onQueryChange(newValue) }
+        .onChange(of: vm.activeFilter) { _, filter in
+            router.lastExploreFilter = filter == .all ? nil : filter
+        }
+        .task(id: router.exploreRequest?.token) {
+            guard router.exploreRequest != nil else { return }
+            try? await Task.sleep(nanoseconds: 80_000_000)
+            openPendingExplorePlace()
+        }
         .navigationDestination(item: $selectedPlace) { place in
             PlaceDetailView(place: place)
         }
@@ -60,6 +68,19 @@ struct ExploreView: View {
                 Text(msg)
             }
         }
+    }
+
+    private func openPendingExplorePlace() {
+        guard let request = router.exploreRequest else { return }
+        router.exploreRequest = nil
+        segment = .places
+        if vm.activeFilter != request.filter {
+            vm.setFilter(request.filter)
+        }
+        guard let placeID = request.placeID,
+              let place = ExploreMockData.allPlaces.first(where: { $0.id == placeID })
+        else { return }
+        selectedPlace = place
     }
 
     // MARK: Header

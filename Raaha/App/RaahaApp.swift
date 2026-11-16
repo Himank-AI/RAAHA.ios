@@ -19,6 +19,7 @@ struct RaahaApp: App {
 struct RootView: View {
     @State private var router = AppRouter()
     @State private var launch = LaunchTransitionManager()
+    @State private var ads = AdImpressionTracker.shared
 
     var body: some View {
         @Bindable var router = router
@@ -43,6 +44,7 @@ struct RootView: View {
         }
         .environment(router)
         .environment(launch)
+        .environment(ads)
         .onChange(of: launch.handoffStarted) { _, started in
             guard started, router.showLogin else { return }
             var transaction = Transaction()
