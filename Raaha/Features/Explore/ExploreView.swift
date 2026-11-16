@@ -217,7 +217,7 @@ private struct PlacesContent: View {
                 searchResults
             } else {
                 // ── Nearby spots ──
-                SectionHeader(title: "Nearby spots", action: "See all") {
+                SectionHeader(title: vm.activeFilter.nearbySectionTitle, action: "See all") {
                     showAllNearby = true
                 }
                 .padding(.top, 2)
@@ -555,7 +555,7 @@ private struct AllNearbySheet: View {
                     }
                 }
             }
-            .navigationTitle("Nearby Spots")
+            .navigationTitle(vm.activeFilter.nearbySectionTitle)
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

@@ -287,6 +287,20 @@ enum ExploreFilter: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    /// Section heading for the nearby list. All stays "Nearby spots"; every other filter uses its category name.
+    var nearbySectionTitle: String {
+        switch self {
+        case .all:            return "Nearby spots"
+        case .restaurants:    return "Nearby restaurants"
+        case .cafes:          return "Nearby cafes"
+        case .parks:          return "Nearby parks"
+        case .beaches:        return "Nearby beaches"
+        case .touristSpots:   return "Nearby tourist spots"
+        case .shopping:       return "Nearby shopping"
+        case .entertainment:  return "Nearby entertainment"
+        }
+    }
+
     var symbol: String {
         switch self {
         case .all:            return "square.grid.2x2"
