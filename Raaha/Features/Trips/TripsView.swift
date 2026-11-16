@@ -82,7 +82,7 @@ struct TripsView: View {
                 .padding(.top, 18)
                 .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.86), value: activeFilter)
             }
-            .contentMargins(.bottom, 156, for: .scrollContent)
+            .contentMargins(.bottom, 24, for: .scrollContent)
         }
         .raahaScreenBackground()
         .navyHeaderChrome()

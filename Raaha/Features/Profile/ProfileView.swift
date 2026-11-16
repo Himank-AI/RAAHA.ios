@@ -106,7 +106,7 @@ struct ProfileView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 24)
             }
-            .contentMargins(.bottom, 110, for: .scrollContent)
+            .contentMargins(.bottom, 20, for: .scrollContent)
         }
         .raahaScreenBackground()
         .navyHeaderChrome()

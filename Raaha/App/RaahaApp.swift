@@ -50,53 +50,73 @@ struct RootView: View {
 
 private struct MainAppView: View {
     @Bindable var router: AppRouter
-    @Environment(LaunchTransitionManager.self) private var launch
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Color(hex: 0xBDD8E9).ignoresSafeArea()
-
-            Group {
-                switch router.tab {
-                case .home:
-                    NavigationStack(path: $router.homePath) {
-                        HomeView()
-                            .navigationDestination(for: Route.self) { RouteDestination(route: $0) }
-                    }
-                case .trips:
-                    NavigationStack(path: $router.tripsPath) {
-                        TripsView()
-                            .navigationDestination(for: Route.self) { RouteDestination(route: $0) }
-                    }
-                case .explore:
-                    NavigationStack(path: $router.explorePath) {
-                        ExploreView()
-                            .navigationDestination(for: Route.self) { RouteDestination(route: $0) }
-                    }
-                case .profile:
-                    NavigationStack(path: $router.profilePath) {
-                        ProfileView()
-                            .navigationDestination(for: Route.self) { RouteDestination(route: $0) }
-                    }
-                }
-            }
-
-            if router.isTabBarVisible {
-                RaahaTabBar(selection: $router.tab)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 4)
-                    .opacity(launch.chromeReveal)
-                    .offset(y: (1 - launch.chromeReveal) * 18)
-                    .animation(reduceMotion ? nil : .interactiveSpring(response: 0.52, dampingFraction: 0.86, blendDuration: 0.12).delay(0.10), value: launch.chromeReveal)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .onAppear { launch.revealContent() }
-                    .onChange(of: launch.handoffStarted) { _, _ in
-                        launch.revealContent()
-                    }
+        Group {
+            if #available(iOS 18, *) {
+                glassTabs
+            } else {
+                legacyTabs
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: router.isTabBarVisible)
+        .tint(Color(hex: 0x173D5C))
+    }
+
+    @available(iOS 18, *)
+    private var glassTabs: some View {
+        TabView(selection: $router.tab) {
+            Tab(AppTab.home.title, systemImage: AppTab.home.symbol(selected: false), value: AppTab.home) {
+                tabStack(path: $router.homePath) { HomeView() }
+            }
+            Tab(AppTab.trips.title, systemImage: AppTab.trips.symbol(selected: false), value: AppTab.trips) {
+                tabStack(path: $router.tripsPath) { TripsView() }
+            }
+            Tab(AppTab.explore.title, systemImage: AppTab.explore.symbol(selected: false), value: AppTab.explore) {
+                tabStack(path: $router.explorePath) { ExploreView() }
+            }
+            Tab(AppTab.profile.title, systemImage: AppTab.profile.symbol(selected: false), value: AppTab.profile) {
+                tabStack(path: $router.profilePath) { ProfileView() }
+            }
+        }
+        .modifier(NativeGlassTabBar())
+    }
+
+    private var legacyTabs: some View {
+        TabView(selection: $router.tab) {
+            tabStack(path: $router.homePath) { HomeView() }
+                .tabItem { Label(AppTab.home.title, systemImage: AppTab.home.symbol(selected: false)) }
+                .tag(AppTab.home)
+            tabStack(path: $router.tripsPath) { TripsView() }
+                .tabItem { Label(AppTab.trips.title, systemImage: AppTab.trips.symbol(selected: false)) }
+                .tag(AppTab.trips)
+            tabStack(path: $router.explorePath) { ExploreView() }
+                .tabItem { Label(AppTab.explore.title, systemImage: AppTab.explore.symbol(selected: false)) }
+                .tag(AppTab.explore)
+            tabStack(path: $router.profilePath) { ProfileView() }
+                .tabItem { Label(AppTab.profile.title, systemImage: AppTab.profile.symbol(selected: false)) }
+                .tag(AppTab.profile)
+        }
+    }
+
+    private func tabStack<Root: View>(path: Binding<[Route]>, @ViewBuilder root: () -> Root) -> some View {
+        NavigationStack(path: path) {
+            root()
+                .navigationDestination(for: Route.self) { route in
+                    RouteDestination(route: route)
+                        .toolbar(.hidden, for: .tabBar)
+                }
+        }
+    }
+}
+
+/// The system tab bar adopts Liquid Glass on iOS 26. Older systems keep the standard bar.
+private struct NativeGlassTabBar: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26, *) {
+            content.tabBarMinimizeBehavior(.automatic)
+        } else {
+            content
+        }
     }
 }
 

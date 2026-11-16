@@ -76,16 +76,6 @@ final class AppRouter {
         tab = .explore
     }
 
-    /// The floating tab bar is only shown on a tab's root screen.
-    var isTabBarVisible: Bool {
-        switch tab {
-        case .home: return homePath.isEmpty
-        case .trips: return tripsPath.isEmpty
-        case .explore: return explorePath.isEmpty
-        case .profile: return profilePath.isEmpty
-        }
-    }
-
     func push(_ route: Route) {
         switch tab {
         case .home: homePath.append(route)

@@ -36,7 +36,7 @@ struct HomeView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 20)
             }
-            .contentMargins(.bottom, 110, for: .scrollContent)
+            .contentMargins(.bottom, 20, for: .scrollContent)
             .scrollDismissesKeyboard(.interactively)
         }
         .raahaScreenBackground()

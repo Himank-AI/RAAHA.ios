@@ -34,7 +34,7 @@ struct ExploreView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 18)
-                .padding(.bottom, 150)
+                .padding(.bottom, 24)
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable { vm.refresh() }
