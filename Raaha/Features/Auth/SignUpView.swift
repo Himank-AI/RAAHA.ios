@@ -272,17 +272,13 @@ struct SignUpView: View {
         Button {
             performSignUp()
         } label: {
-            HStack(spacing: 10) {
+            Group {
                 if isLoading {
                     ProgressView()
                         .tint(.white)
                 } else {
                     Text("Create Account")
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(Color.white)
-
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(Color.white)
                 }
             }
