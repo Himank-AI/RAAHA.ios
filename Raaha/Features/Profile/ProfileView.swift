@@ -1,3 +1,4 @@
+import MapKit
 import SwiftUI
 
 struct ProfileView: View {
@@ -14,6 +15,21 @@ struct ProfileView: View {
     @State private var userPhone: String = "+91 98765 43210"
     @State private var showEditSheet: Bool = false
     @State private var editingField: EditableField = .name
+    @State private var editingPlace: SavedPlaceKind?
+    @State private var homeLocation = FrequentLocation(
+        address: "Chennai Central, Park Town",
+        floor: "",
+        landmark: "",
+        latitude: 13.0827,
+        longitude: 80.2755
+    )
+    @State private var workLocation = FrequentLocation(
+        address: "T. Nagar Smart City Complex",
+        floor: "",
+        landmark: "",
+        latitude: 13.0418,
+        longitude: 80.2341
+    )
 
     enum EditableField {
         case name, email, phone
@@ -117,6 +133,22 @@ struct ProfileView: View {
             .presentationDragIndicator(.visible)
             .presentationCornerRadius(28)
         }
+        .sheet(item: $editingPlace) { kind in
+            FrequentLocationEditor(
+                title: kind.title,
+                place: binding(for: kind)
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(28)
+        }
+    }
+
+    private func binding(for kind: SavedPlaceKind) -> Binding<FrequentLocation> {
+        switch kind {
+        case .home: return $homeLocation
+        case .workplace: return $workLocation
+        }
     }
 
     // MARK: - Header (Top card from ExploreView / NavyHeader)
@@ -199,7 +231,7 @@ struct ProfileView: View {
     // MARK: - Edit Profile Section
     private var editProfileSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Personal Details", icon: "person.crop.circle.fill")
+            sectionTitle(title: "Personal Details")
 
             VStack(spacing: 0) {
                 editRow(field: .name, value: userName)
@@ -259,7 +291,7 @@ struct ProfileView: View {
     // MARK: - Commute Preferences Section
     private var commutePreferencesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Commute Preferences", icon: "slider.horizontal.3")
+            sectionTitle(title: "Commute Preferences")
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Select your preferred Chennai transit options:")
@@ -344,29 +376,33 @@ struct ProfileView: View {
     // MARK: - Saved Places Section
     private var savedPlacesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Frequent Locations", asset: "icon_pin")
+            sectionTitle(title: "Frequent Locations")
 
             VStack(spacing: 0) {
                 placeRow(
                     symbol: "house.fill",
                     title: "Home",
-                    detail: "Chennai Central, Park Town",
+                    detail: homeLocation.detail,
                     color: Color(hex: 0x4EA8DE)
-                )
+                ) {
+                    editingPlace = .home
+                }
                 HairlineDivider(color: Color(hex: 0x49769F).opacity(0.12))
                 placeRow(
                     symbol: "briefcase.fill",
                     title: "Workplace",
-                    detail: "T. Nagar Smart City Complex",
+                    detail: workLocation.detail,
                     color: Color(hex: 0x2A82BE)
-                )
+                ) {
+                    editingPlace = .workplace
+                }
             }
             .padding(.horizontal, 14)
             .profileCard(radius: 24)
         }
     }
 
-    private func placeRow(symbol: String, title: String, detail: String, color: Color) -> some View {
+    private func placeRow(symbol: String, title: String, detail: String, color: Color, edit: @escaping () -> Void) -> some View {
         HStack(spacing: 12) {
             Circle()
                 .fill(color)
@@ -385,12 +421,12 @@ struct ProfileView: View {
                 Text(detail)
                     .font(.system(size: 12))
                     .foregroundStyle(Color(hex: 0x49769F))
+                    .lineLimit(2)
             }
 
             Spacer()
 
-            Button {
-            } label: {
+            Button(action: edit) {
                 Text("Edit")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Color(hex: 0x2A90D4))
@@ -489,7 +525,7 @@ struct ProfileView: View {
     private var sponsoredDiscoverySection: some View {
         @Bindable var tracker = ads
         return VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Sponsored discovery", icon: "sparkle")
+            sectionTitle(title: "Sponsored discovery")
 
             VStack(alignment: .leading, spacing: 8) {
                 Toggle(isOn: $tracker.sponsoredDiscoveryEnabled) {
@@ -588,21 +624,11 @@ struct ProfileView: View {
     }
 
     // MARK: - Section Title Helper
-    private func sectionTitle(title: String, icon: String? = nil, asset: String? = nil) -> some View {
-        HStack(spacing: 8) {
-            if asset != nil {
-                IconPin(size: 15)
-                    .foregroundStyle(Color(hex: 0x2A90D4))
-            } else if let icon {
-                Image(systemName: icon)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Color(hex: 0x2A90D4))
-            }
-            Text(title)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.midnightBlue)
-        }
-        .padding(.leading, 4)
+    private func sectionTitle(title: String) -> some View {
+        Text(title)
+            .font(.system(size: 17, weight: .bold, design: .rounded))
+            .foregroundStyle(Color.midnightBlue)
+            .padding(.leading, 4)
     }
 
     // MARK: - Footer Note
@@ -713,6 +739,287 @@ struct EditFieldSheet: View {
         }
         .background(Color.white)
         .onAppear { isFocused = true }
+    }
+}
+
+// MARK: - Frequent locations
+
+private enum SavedPlaceKind: String, Identifiable {
+    case home
+    case workplace
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .home: return "Home"
+        case .workplace: return "Workplace"
+        }
+    }
+}
+
+struct FrequentLocation: Equatable {
+    var address: String
+    var floor: String
+    var landmark: String
+    var latitude: Double
+    var longitude: Double
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    var detail: String {
+        [address, floor, landmark]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+}
+
+private struct FrequentLocationEditor: View {
+    let title: String
+    @Binding var place: FrequentLocation
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
+    @State private var results: [MKMapItem] = []
+    @State private var address: String
+    @State private var floor: String
+    @State private var landmark: String
+    @State private var coordinate: CLLocationCoordinate2D
+    @State private var camera: MapCameraPosition
+    @State private var outsideMessage: String?
+    @FocusState private var focusedField: Field?
+
+    private enum Field: Hashable {
+        case search, floor, landmark
+    }
+
+    init(title: String, place: Binding<FrequentLocation>) {
+        self.title = title
+        _place = place
+        _address = State(initialValue: place.wrappedValue.address)
+        _floor = State(initialValue: place.wrappedValue.floor)
+        _landmark = State(initialValue: place.wrappedValue.landmark)
+        let coordinate = place.wrappedValue.coordinate
+        _coordinate = State(initialValue: coordinate)
+        _camera = State(initialValue: .region(MKCoordinateRegion(
+            center: coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+        )))
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    searchField
+                    if let outsideMessage {
+                        Text(outsideMessage)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Color.strawberry)
+                    }
+                    if !results.isEmpty {
+                        resultList
+                    }
+                    map
+                    labeledField("Floor", text: $floor, field: .floor, prompt: "Floor, flat, or suite")
+                    labeledField("Landmark", text: $landmark, field: .landmark, prompt: "Nearby landmark")
+                }
+                .padding(20)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .background(Color.white)
+            .navigationTitle("Edit \(title)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color(hex: 0x2A90D4))
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { save() }
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Color(hex: 0x2A90D4))
+                }
+            }
+        }
+        .task(id: query) { await search() }
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Color(hex: 0x49769F))
+            TextField("Search Chennai", text: $query)
+                .focused($focusedField, equals: .search)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+            if !query.isEmpty {
+                Button {
+                    query = ""
+                    results = []
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Color(hex: 0xABBDCC))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 13)
+        .background(fieldSurface(isFocused: focusedField == .search))
+    }
+
+    private var resultList: some View {
+        VStack(spacing: 0) {
+            let shown = Array(results.prefix(5))
+            ForEach(Array(shown.enumerated()), id: \.offset) { index, item in
+                Button {
+                    choose(item)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.name ?? "Place")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Color.midnightBlue)
+                        if let subtitle = item.placemark.title, subtitle != item.name {
+                            Text(subtitle)
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color(hex: 0x49769F))
+                                .lineLimit(1)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 10)
+                }
+                .buttonStyle(.plain)
+                if index < shown.count - 1 {
+                    Divider()
+                }
+            }
+        }
+    }
+
+    private var map: some View {
+        MapReader { proxy in
+            Map(position: $camera) {
+                Marker(title, systemImage: "mappin", coordinate: coordinate)
+                    .tint(Color(hex: 0x2A90D4))
+            }
+            .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+            .frame(height: 220)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .onTapGesture { point in
+                guard let next = proxy.convert(point, from: .local) else { return }
+                select(next, address: nil)
+            }
+        }
+        .accessibilityLabel("Map of \(title). Tap to move the pin.")
+    }
+
+    private func labeledField(_ title: String, text: Binding<String>, field: Field, prompt: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color(hex: 0x49769F))
+            TextField(prompt, text: text)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(Color.midnightBlue)
+                .focused($focusedField, equals: field)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 13)
+                .background(fieldSurface(isFocused: focusedField == field))
+        }
+    }
+
+    private func fieldSurface(isFocused: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(Color(hex: 0xEEF4F9))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(isFocused ? Color(hex: 0x2A90D4).opacity(0.6) : Color.clear, lineWidth: 1.5)
+            )
+    }
+
+    private func search() async {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2 else {
+            results = []
+            return
+        }
+        try? await Task.sleep(for: .milliseconds(280))
+        guard !Task.isCancelled else { return }
+
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = trimmed
+        request.region = ChennaiServiceArea.shared.defaultRegion
+        request.resultTypes = [.address, .pointOfInterest]
+
+        guard let response = try? await MKLocalSearch(request: request).start() else { return }
+        guard !Task.isCancelled else { return }
+        results = response.mapItems.filter {
+            ChennaiServiceArea.shared.contains(coordinate: $0.placemark.coordinate)
+        }
+        if results.isEmpty {
+            outsideMessage = "No matching places inside Chennai."
+        }
+    }
+
+    private func choose(_ item: MKMapItem) {
+        let next = item.placemark.coordinate
+        let label = item.placemark.title ?? item.name ?? address
+        select(next, address: label)
+        query = ""
+        results = []
+        focusedField = nil
+    }
+
+    private func select(_ next: CLLocationCoordinate2D, address chosen: String?) {
+        guard ChennaiServiceArea.shared.contains(coordinate: next) else {
+            outsideMessage = "Choose a place inside Chennai."
+            return
+        }
+        outsideMessage = nil
+        coordinate = next
+        if let chosen, !chosen.isEmpty {
+            address = chosen
+        }
+        withAnimation(.easeInOut(duration: 0.25)) {
+            camera = .region(MKCoordinateRegion(
+                center: next,
+                span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+            ))
+        }
+        if chosen == nil {
+            Task { await reverseGeocode(next) }
+        }
+    }
+
+    private func reverseGeocode(_ next: CLLocationCoordinate2D) async {
+        let location = CLLocation(latitude: next.latitude, longitude: next.longitude)
+        guard let placemark = try? await CLGeocoder().reverseGeocodeLocation(location).first else { return }
+        let line = [placemark.name, placemark.locality]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+        let unique = line.reduce(into: [String]()) { partial, part in
+            if !partial.contains(part) { partial.append(part) }
+        }
+        if !unique.isEmpty {
+            address = unique.joined(separator: ", ")
+        }
+    }
+
+    private func save() {
+        place = FrequentLocation(
+            address: address.trimmingCharacters(in: .whitespacesAndNewlines),
+            floor: floor.trimmingCharacters(in: .whitespacesAndNewlines),
+            landmark: landmark.trimmingCharacters(in: .whitespacesAndNewlines),
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude
+        )
+        dismiss()
     }
 }
 
