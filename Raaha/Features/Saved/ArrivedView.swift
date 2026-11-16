@@ -11,10 +11,6 @@ private enum ArrivalInk {
     static let white = Color(hex: 0xF5FAFC)
 }
 
-enum ArrivalCue: Int {
-    case idle, marker, ripple, check, route, particles, heading, card, timeline, ready
-}
-
 /// Destination reached. Stats, cost, and the transport sequence come from the
 /// route that was just completed, not from fixed sample numbers.
 struct ArrivedView: View {
@@ -27,7 +23,12 @@ struct JourneyArrivalView: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @State private var cue: ArrivalCue = .idle
+    @State private var elapsed: TimeInterval = 0
+    @State private var startedAt: Date?
+    @State private var logoShown = false
+    @State private var pinShown = false
+    @State private var logoSettled = false
+    @State private var badgeShown = false
     @State private var detailsPulse = 0
     @State private var completedAt = Date()
 
@@ -37,13 +38,24 @@ struct JourneyArrivalView: View {
         option.chain.isEmpty ? option.legs.map(\.mode) : option.chain
     }
 
+    private var playhead: TimeInterval {
+        reduceMotion ? ArrivalLogoSequence.duration : elapsed
+    }
+
     var body: some View {
         ZStack {
-            ArrivalBackdrop(animated: !reduceMotion)
+            ArrivalScreenBackground(glow: reduceMotion ? 1 : ArrivalLogoSequence.unit(0, 0.40, playhead))
             ScrollView {
                 VStack(spacing: 22) {
-                    ArrivalDestinationAnimation(cue: cue, reduceMotion: reduceMotion)
-                        .padding(.top, 8)
+                    ArrivalLogoView(
+                        circleVisible: reduceMotion || logoShown || playhead > 0,
+                        pinVisible: reduceMotion || pinShown || playhead >= 0.85,
+                        settled: reduceMotion || logoSettled || playhead >= 1.55,
+                        badgeVisible: reduceMotion || badgeShown || playhead >= 0.85,
+                        checkDraw: reduceMotion ? 1 : ArrivalLogoSequence.unit(1.20, 1.55, playhead),
+                        reduceMotion: reduceMotion
+                    )
+                    .padding(.top, 12)
 
                     arrivalCopy
                     JourneyCompletionCard(
@@ -52,12 +64,12 @@ struct JourneyArrivalView: View {
                         distance: distanceText,
                         cost: option.fareText,
                         modes: modes,
-                        revealed: cue.rawValue >= ArrivalCue.card.rawValue,
-                        timelineRevealed: cue.rawValue >= ArrivalCue.timeline.rawValue,
+                        revealed: playhead >= 2.05,
+                        timelineRevealed: playhead >= 2.20,
                         reduceMotion: reduceMotion
                     )
                     JourneyCompletionActions(
-                        revealed: cue.rawValue >= ArrivalCue.ready.rawValue,
+                        revealed: playhead >= 2.30,
                         reduceMotion: reduceMotion,
                         onDetails: openJourneyDetails,
                         onHome: { router.showHome() },
@@ -70,15 +82,37 @@ struct JourneyArrivalView: View {
             .scrollIndicators(.hidden)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .sensoryFeedback(.success, trigger: cue.rawValue >= ArrivalCue.check.rawValue)
-        .task {
-            completedAt = Date()
-            await play()
+        .sensoryFeedback(.success, trigger: badgeShown)
+        .background {
+            if !reduceMotion, let startedAt, elapsed < ArrivalLogoSequence.duration {
+                ArrivalLogoDriver(
+                    startedAt: startedAt,
+                    elapsed: $elapsed,
+                    logoShown: $logoShown,
+                    pinShown: $pinShown,
+                    logoSettled: $logoSettled,
+                    badgeShown: $badgeShown
+                )
+            }
+        }
+        .onAppear(perform: beginArrival)
+    }
+
+    private func beginArrival() {
+        guard startedAt == nil else { return }
+        completedAt = Date()
+        startedAt = Date()
+        if reduceMotion {
+            elapsed = ArrivalLogoSequence.duration
+            logoShown = true
+            pinShown = true
+            logoSettled = true
+            badgeShown = true
         }
     }
 
     private var arrivalCopy: some View {
-        let visible = cue.rawValue >= ArrivalCue.heading.rawValue || reduceMotion
+        let visible = playhead >= 1.80 || reduceMotion
         return VStack(spacing: 8) {
             Text("JOURNEY COMPLETED")
                 .font(.system(size: 12, weight: .semibold))
@@ -161,153 +195,185 @@ struct JourneyArrivalView: View {
         detailsPulse += 1
         router.push(.routeDetail(completedKind))
     }
+}
 
-    private func play() async {
-        guard !reduceMotion else {
-            cue = .ready
-            return
+// MARK: - Arrival logo
+
+private enum ArrivalLogoSequence {
+    static let duration: TimeInterval = 2.3
+
+    static func unit(_ start: TimeInterval, _ end: TimeInterval, _ elapsed: TimeInterval) -> CGFloat {
+        guard end > start else { return elapsed >= end ? 1 : 0 }
+        let raw = (elapsed - start) / (end - start)
+        let t = min(max(raw, 0), 1)
+        return t * t * (3 - 2 * t)
+    }
+}
+
+private struct ArrivalLogoDriver: View {
+    var startedAt: Date
+    @Binding var elapsed: TimeInterval
+    @Binding var logoShown: Bool
+    @Binding var pinShown: Bool
+    @Binding var logoSettled: Bool
+    @Binding var badgeShown: Bool
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+            Color.clear
+                .onAppear { tick(context.date) }
+                .onChange(of: context.date) { _, date in
+                    tick(date)
+                }
         }
-        let beats: [(ArrivalCue, UInt64)] = [
-            (.marker, 70_000_000),
-            (.ripple, 260_000_000),
-            (.check, 560_000_000),
-            (.route, 780_000_000),
-            (.particles, 980_000_000),
-            (.heading, 1_180_000_000),
-            (.card, 1_500_000_000),
-            (.timeline, 1_820_000_000),
-            (.ready, 2_080_000_000)
-        ]
-        var elapsed: UInt64 = 0
-        for (step, at) in beats {
-            try? await Task.sleep(nanoseconds: at - elapsed)
-            elapsed = at
-            guard !Task.isCancelled else { return }
-            withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
-                cue = step
+    }
+
+    private func tick(_ date: Date) {
+        let time = min(max(date.timeIntervalSince(startedAt), 0), ArrivalLogoSequence.duration)
+        guard time > elapsed else { return }
+        elapsed = time
+        if !logoShown {
+            withAnimation(.easeOut(duration: 0.30)) {
+                logoShown = true
+            }
+        }
+        if time >= 0.30, !pinShown {
+            withAnimation(.spring(response: 0.48, dampingFraction: 0.78)) {
+                pinShown = true
+            }
+        }
+        if time >= 0.85, !badgeShown {
+            withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) {
+                badgeShown = true
+            }
+        }
+        if time >= 1.55, !logoSettled {
+            withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
+                logoSettled = true
             }
         }
     }
 }
 
-// MARK: - Destination animation
-
-struct ArrivalDestinationAnimation: View {
-    var cue: ArrivalCue
+struct ArrivalLogoView: View {
+    var circleVisible: Bool
+    var pinVisible: Bool
+    var settled: Bool
+    var badgeVisible: Bool
+    var checkDraw: CGFloat
     var reduceMotion: Bool
 
-    private var shown: Bool { reduceMotion || cue.rawValue >= ArrivalCue.marker.rawValue }
-    private var rippled: Bool { reduceMotion || cue.rawValue >= ArrivalCue.ripple.rawValue }
-    private var checked: Bool { reduceMotion || cue.rawValue >= ArrivalCue.check.rawValue }
-    private var routed: Bool { reduceMotion || cue.rawValue >= ArrivalCue.route.rawValue }
-    private var burst: Bool { reduceMotion || cue.rawValue >= ArrivalCue.particles.rawValue }
+    private let pinColor = Color(hex: 0x087797)
+    private let symbolName = UIImage(systemName: "mappin.and.ellipse") != nil ? "mappin.and.ellipse" : "mappin"
 
     var body: some View {
         ZStack {
-            ArrivalRippleEffect(expanded: rippled)
-            ArrivalParticles(burst: burst, reduceMotion: reduceMotion)
-            ArrivalRouteLine(progress: routed ? 1 : 0)
-                .offset(x: -78, y: 18)
-            marker
-            check
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [Color.white.opacity(0.85), Color(hex: 0xD8F3F8).opacity(0)],
+                        center: .center,
+                        startRadius: 12,
+                        endRadius: 110
+                    )
+                )
+                .frame(width: 210, height: 210)
+                .opacity(circleVisible ? 1 : 0)
+
+            Circle()
+                .fill(Color(hex: 0xE7F6FA).opacity(0.94))
+                .overlay {
+                    Circle().stroke(Color(hex: 0x75BBD0), lineWidth: 1.25)
+                }
+                .frame(width: 158, height: 158)
+                .shadow(color: pinColor.opacity(0.16), radius: 16, y: 8)
+                .opacity(circleVisible ? 1 : 0)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.30), value: circleVisible)
+
+            Image(systemName: symbolName)
+                .font(.system(size: 58, weight: .semibold))
+                .symbolRenderingMode(.monochrome)
+                .foregroundStyle(pinColor)
+                .frame(width: 72, height: 72)
+                .scaleEffect(settled ? 1 : (pinVisible ? 1 : 0.65))
+                .opacity(pinVisible ? 1 : 0)
+                .animation(reduceMotion ? nil : .spring(response: 0.48, dampingFraction: 0.78), value: pinVisible)
+                .animation(reduceMotion ? nil : .spring(response: 0.36, dampingFraction: 0.86), value: settled)
+
+            ArrivalCheckBadge(shown: badgeVisible, draw: checkDraw, reduceMotion: reduceMotion)
+                .offset(x: 54, y: -54)
         }
-        .frame(height: 168)
+        .frame(maxWidth: .infinity)
+        .frame(height: 196)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Destination reached")
     }
-
-    private var marker: some View {
-        ZStack {
-            Circle()
-                .fill(ArrivalInk.white)
-                .frame(width: 76, height: 76)
-                .shadow(color: ArrivalInk.deep.opacity(0.16), radius: 14, y: 8)
-            Circle()
-                .stroke(ArrivalInk.soft.opacity(0.9), lineWidth: 1.2)
-                .frame(width: 76, height: 76)
-            Image(systemName: "mappin")
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundStyle(ArrivalInk.deep)
-                .offset(y: -2)
-        }
-        .scaleEffect(shown ? 1 : 0.72)
-        .opacity(shown ? 1 : 0)
-        .animation(reduceMotion ? nil : .spring(response: 0.48, dampingFraction: 0.72), value: shown)
-    }
-
-    private var check: some View {
-        Image(systemName: "checkmark")
-            .font(.system(size: 13, weight: .bold))
-            .foregroundStyle(ArrivalInk.white)
-            .frame(width: 28, height: 28)
-            .background(Circle().fill(ArrivalInk.deep))
-            .overlay(Circle().stroke(ArrivalInk.white, lineWidth: 2))
-            .shadow(color: ArrivalInk.deep.opacity(0.25), radius: 6, y: 3)
-            .offset(x: 30, y: 26)
-            .scaleEffect(checked ? 1 : 0.2)
-            .opacity(checked ? 1 : 0)
-            .animation(reduceMotion ? nil : .spring(response: 0.42, dampingFraction: 0.62), value: checked)
-    }
 }
 
-struct ArrivalRippleEffect: View {
-    var expanded: Bool
-
-    var body: some View {
-        ZStack {
-            ripple(scale: 1.85, opacity: 0.55, delay: 0)
-            ripple(scale: 1.45, opacity: 0.35, delay: 0.16)
-        }
-    }
-
-    private func ripple(scale: CGFloat, opacity: Double, delay: Double) -> some View {
-        Circle()
-            .stroke(ArrivalInk.soft.opacity(opacity), lineWidth: 1.4)
-            .frame(width: 92, height: 92)
-            .scaleEffect(expanded ? scale : 0.55)
-            .opacity(expanded ? 0 : 1)
-            .animation(.easeOut(duration: 1.05).delay(delay), value: expanded)
-    }
-}
-
-struct ArrivalRouteLine: View {
-    var progress: CGFloat
-
-    var body: some View {
-        Path { path in
-            path.move(to: CGPoint(x: 0, y: 26))
-            path.addQuadCurve(to: CGPoint(x: 74, y: 4), control: CGPoint(x: 36, y: 30))
-        }
-        .trim(from: 0, to: progress)
-        .stroke(
-            ArrivalInk.deep.opacity(0.75),
-            style: StrokeStyle(lineWidth: 2.2, lineCap: .round)
-        )
-        .frame(width: 76, height: 32)
-        .animation(.easeOut(duration: 0.55), value: progress)
-    }
-}
-
-struct ArrivalParticles: View {
-    var burst: Bool
+private struct ArrivalCheckBadge: View {
+    var shown: Bool
+    var draw: CGFloat
     var reduceMotion: Bool
 
     var body: some View {
         ZStack {
-            ForEach(0..<6, id: \.self) { index in
-                let angle = (Double(index) / 6) * .pi * 2 - .pi / 2
-                Circle()
-                    .fill(index.isMultiple(of: 2) ? ArrivalInk.soft : ArrivalInk.deep.opacity(0.7))
-                    .frame(width: 5, height: 5)
-                    .offset(
-                        x: burst ? CGFloat(cos(angle)) * 58 : 0,
-                        y: burst ? CGFloat(sin(angle)) * 46 : 0
-                    )
-                    .opacity(burst ? 0 : 0.95)
-            }
+            Circle()
+                .fill(Color(hex: 0x087797))
+                .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                .shadow(color: Color(hex: 0x087797).opacity(0.24), radius: 6, y: 2)
+            ArrivalCheckStroke()
+                .trim(from: 0, to: draw)
+                .stroke(
+                    Color.white,
+                    style: StrokeStyle(lineWidth: 2.1, lineCap: .round, lineJoin: .round)
+                )
+                .padding(8)
         }
-        .opacity(burst && !reduceMotion ? 1 : 0)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.95), value: burst)
+        .frame(width: 40, height: 40)
+        .scaleEffect(shown ? 1 : 0.35)
+        .opacity(shown ? 1 : 0)
+        .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.72), value: shown)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct ArrivalCheckStroke: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.width * 0.22, y: rect.height * 0.52))
+        path.addLine(to: CGPoint(x: rect.width * 0.42, y: rect.height * 0.72))
+        path.addLine(to: CGPoint(x: rect.width * 0.78, y: rect.height * 0.30))
+        return path
+    }
+}
+
+private struct ArrivalScreenBackground: View {
+    var glow: CGFloat
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    ArrivalInk.white,
+                    ArrivalInk.ice,
+                    Color(hex: 0xB7DCE8),
+                    Color(hex: 0x7BBDE8).opacity(0.45)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            RadialGradient(
+                colors: [Color.white.opacity(0.85), Color(hex: 0xD8F3F8).opacity(0.28), Color.clear],
+                center: .center,
+                startRadius: 10,
+                endRadius: 150
+            )
+            .frame(width: 300, height: 300)
+            .offset(y: -210)
+            .opacity(0.25 + 0.75 * glow)
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 }
@@ -478,45 +544,6 @@ struct JourneyCompletionActions: View {
         .opacity(revealed || reduceMotion ? 1 : 0)
         .offset(y: revealed || reduceMotion ? 0 : 12)
         .animation(reduceMotion ? nil : .interactiveSpring(response: 0.45, dampingFraction: 0.86), value: revealed)
-    }
-}
-
-// MARK: - Backdrop
-
-private struct ArrivalBackdrop: View {
-    var animated: Bool
-
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    ArrivalInk.white,
-                    ArrivalInk.ice,
-                    Color(hex: 0xB7DCE8),
-                    Color(hex: 0x7BBDE8).opacity(0.45)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            if animated {
-                TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { context in
-                    let time = context.date.timeIntervalSinceReferenceDate
-                    Canvas { canvas, size in
-                        for index in 0..<6 {
-                            let seed = Double(index)
-                            let x = size.width * (0.12 + 0.14 * seed + 0.03 * sin(time * 0.18 + seed))
-                            let y = size.height * (0.08 + 0.12 * seed + 0.02 * cos(time * 0.15 + seed * 1.3))
-                            let rect = CGRect(x: x, y: y, width: 6, height: 6)
-                            canvas.fill(
-                                Path(ellipseIn: rect),
-                                with: .color(Color.white.opacity(0.55))
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        .ignoresSafeArea()
     }
 }
 

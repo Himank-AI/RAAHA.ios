@@ -361,6 +361,17 @@ enum MockData {
 
     // MARK: Trips
 
+    static let frequentJourney = FrequentJourney(
+        id: "commute.home-work",
+        homeName: "Home",
+        workName: "Work",
+        origin: "Chennai Central",
+        destination: "T. Nagar",
+        modes: [.metro, .walk],
+        minutes: 22,
+        badge: "Fastest"
+    )
+
     // MARK: - Trips Hierarchy (Upcoming, Saved, Recent)
 
     static let upcomingTrips: [PlannedTrip] = [

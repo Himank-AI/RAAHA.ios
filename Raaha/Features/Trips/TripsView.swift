@@ -46,8 +46,13 @@ struct TripsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    FeaturedJourneyCard(appeared: entered, reduceMotion: reduceMotion) {
-                        router.planJourney(from: "Chennai Central", to: "T. Nagar")
+                    FeaturedJourneyCard(
+                        journey: MockData.frequentJourney,
+                        appeared: entered,
+                        reduceMotion: reduceMotion
+                    ) {
+                        let commute = MockData.frequentJourney
+                        router.planJourney(from: commute.origin, to: commute.destination)
                     }
 
                     TripsSegmentedControl(
@@ -110,10 +115,12 @@ struct TripsView: View {
                     message: "Plans you schedule will show up here."
                 )
             } else {
-                ForEach(Array(upcomingTrips.enumerated()), id: \.element.id) { index, trip in
-                    UpcomingJourneyCard(trip: trip, index: index, revealed: entered, reduceMotion: reduceMotion) {
-                        router.planJourney(from: trip.origin, to: trip.destination)
-                    }
+                UpcomingTripsCarousel(
+                    trips: upcomingTrips,
+                    revealed: entered,
+                    reduceMotion: reduceMotion
+                ) { trip in
+                    router.planJourney(from: trip.origin, to: trip.destination)
                 }
             }
         }
@@ -245,61 +252,177 @@ struct TripsHeader: View {
 // MARK: - Featured journey
 
 struct FeaturedJourneyCard: View {
+    let journey: FrequentJourney
     var appeared: Bool
     var reduceMotion: Bool
     let action: () -> Void
 
+    @State private var tapPulse = 0
+    @State private var sheen = false
+
     var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    HStack(spacing: -6) {
-                        ModeBadge(mode: .metro, size: 32)
-                        ModeBadge(mode: .walk, size: 32)
-                    }
-                    Spacer()
-                    JourneyStatusBadge(text: "Fastest")
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Home → Work")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Coastal.navy)
-                    HStack(spacing: 6) {
-                        Text("Chennai Central")
-                        Image(systemName: "arrow.right")
-                            .font(.system(size: 11, weight: .bold))
-                        Text("T. Nagar")
-                    }
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Coastal.muted)
-                    .lineLimit(1)
-                }
-
-                HStack {
-                    Text("22 min · Metro + Walk")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Coastal.deep)
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(Coastal.deep)
-                        .frame(width: 32, height: 32)
-                        .background(Circle().fill(Color.white.opacity(0.7)))
-                }
-            }
-            .padding(16)
-            .background { featuredFill }
-            .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color.white.opacity(0.75), lineWidth: 1)
-            }
-            .shadow(color: Coastal.deep.opacity(0.12), radius: 14, y: 8)
+        Button {
+            tapPulse += 1
+            action()
+        } label: {
+            FeaturedJourneySurface(journey: journey, sheen: sheen, reduceMotion: reduceMotion)
         }
-        .buttonStyle(TactileButtonStyle(scale: 0.98))
+        .buttonStyle(FeaturedCardButtonStyle())
+        .sensoryFeedback(.impact(weight: .light), trigger: tapPulse)
         .opacity(appeared ? 1 : 0)
-        .offset(y: appeared || reduceMotion ? 0 : 16)
-        .accessibilityLabel("Home to Work, Chennai Central to T. Nagar, via Metro and Walk, 22 minutes. Fastest route.")
+        .scaleEffect(appeared || reduceMotion ? 1 : 0.98)
+        .offset(y: appeared || reduceMotion ? 0 : 14)
+        .animation(reduceMotion ? nil : .spring(response: 0.52, dampingFraction: 0.84), value: appeared)
+        .onAppear {
+            guard appeared, !reduceMotion, !sheen else { return }
+            withAnimation(.easeOut(duration: 0.85).delay(0.15)) {
+                sheen = true
+            }
+        }
+        .onChange(of: appeared) { _, isVisible in
+            guard isVisible, !reduceMotion else { return }
+            withAnimation(.easeOut(duration: 0.85).delay(0.15)) {
+                sheen = true
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(journey.homeName), \(journey.origin), to \(journey.workName), \(journey.destination). \(journey.modeSummary). \(journey.durationText). \(journey.badge). View route.")
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
+private struct FeaturedJourneySurface: View {
+    let journey: FrequentJourney
+    var sheen: Bool
+    var reduceMotion: Bool
+    @Environment(\.featuredCardPressed) private var pressed
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 8) {
+                Text("FREQUENT JOURNEY")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(1.15)
+                    .foregroundStyle(Coastal.deep)
+                Spacer(minLength: 8)
+                JourneyStatusBadge(text: journey.badge)
+            }
+
+            HStack(alignment: .center, spacing: 8) {
+                locationColumn(
+                    symbol: "house.fill",
+                    role: journey.homeName,
+                    place: journey.origin,
+                    alignment: .leading
+                )
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Coastal.soft)
+                    .accessibilityHidden(true)
+                locationColumn(
+                    symbol: "briefcase.fill",
+                    role: journey.workName,
+                    place: journey.destination,
+                    alignment: .trailing
+                )
+            }
+
+            ViewThatFits(in: .horizontal) {
+                detailRow(showsTitle: true)
+                detailRow(showsTitle: false)
+            }
+        }
+        .padding(14)
+        .background { featuredFill }
+        .overlay { featuredHighlight }
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.white.opacity(0.85), lineWidth: 1)
+        }
+        .shadow(
+            color: Coastal.deep.opacity(pressed ? 0.18 : 0.12),
+            radius: pressed ? 16 : 12,
+            y: pressed ? 10 : 6
+        )
+    }
+
+    private func detailRow(showsTitle: Bool) -> some View {
+        HStack(spacing: 8) {
+            HStack(spacing: -6) {
+                ForEach(Array(journey.modes.enumerated()), id: \.offset) { _, mode in
+                    ModeBadge(mode: mode, size: 28)
+                }
+            }
+            Text(journey.modeSummary)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Coastal.deep)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+            Spacer(minLength: 6)
+            Text(journey.durationText)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Coastal.navy)
+            viewRouteArrow(showsTitle: showsTitle)
+        }
+    }
+
+    private func locationColumn(
+        symbol: String,
+        role: String,
+        place: String,
+        alignment: HorizontalAlignment
+    ) -> some View {
+        HStack(spacing: 8) {
+            if alignment == .trailing {
+                placeText(role: role, place: place, alignment: .trailing)
+                locationIcon(symbol)
+            } else {
+                locationIcon(symbol)
+                placeText(role: role, place: place, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: alignment == .trailing ? .trailing : .leading)
+    }
+
+    private func locationIcon(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(Coastal.deep)
+            .frame(width: 28, height: 28)
+            .background(Circle().fill(Color.white.opacity(0.78)))
+            .accessibilityHidden(true)
+    }
+
+    private func placeText(role: String, place: String, alignment: HorizontalAlignment) -> some View {
+        VStack(alignment: alignment, spacing: 1) {
+            Text(role)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Coastal.muted)
+            Text(place)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Coastal.navy)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+    }
+
+    private func viewRouteArrow(showsTitle: Bool) -> some View {
+        HStack(spacing: 4) {
+            if showsTitle {
+                Text("View Route")
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+            }
+            Image(systemName: "arrow.right")
+                .font(.system(size: 11, weight: .bold))
+                .offset(x: pressed && !reduceMotion ? 4 : 0)
+                .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.7), value: pressed)
+        }
+        .foregroundStyle(Coastal.deep)
+        .padding(.horizontal, showsTitle ? 10 : 8)
+        .padding(.vertical, 6)
+        .background(Capsule().fill(Color.white.opacity(0.72)))
+        .accessibilityHidden(true)
     }
 
     @ViewBuilder
@@ -308,18 +431,62 @@ struct FeaturedJourneyCard: View {
         ZStack {
             shape.fill(
                 LinearGradient(
-                    colors: [Coastal.white, Coastal.ice, Coastal.soft.opacity(0.45)],
+                    colors: [Coastal.white, Coastal.ice, Coastal.soft.opacity(0.38)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
             if #available(iOS 26, *) {
                 shape.fill(Color.clear)
-                    .glassEffect(.regular.tint(Coastal.ice.opacity(0.35)), in: shape)
+                    .glassEffect(.regular.tint(Color.white.opacity(0.42)), in: shape)
             } else {
                 shape.fill(.ultraThinMaterial)
             }
         }
+    }
+
+    private var featuredHighlight: some View {
+        GeometryReader { geo in
+            LinearGradient(
+                colors: [Color.clear, Color.white.opacity(0.7), Color.clear],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(width: geo.size.width * 0.42)
+            .offset(x: sheen ? geo.size.width : -geo.size.width * 0.5)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .mask(
+                LinearGradient(
+                    colors: [Color.white, Color.white.opacity(0.15), Color.clear],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct FeaturedCardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .offset(y: configuration.isPressed ? -3 : 0)
+            .animation(.spring(response: 0.32, dampingFraction: 0.74), value: configuration.isPressed)
+            .environment(\.featuredCardPressed, configuration.isPressed)
+    }
+}
+
+private struct FeaturedPressKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    fileprivate var featuredCardPressed: Bool {
+        get { self[FeaturedPressKey.self] }
+        set { self[FeaturedPressKey.self] = newValue }
     }
 }
 
@@ -373,11 +540,73 @@ struct TripsSegmentedControl: View {
 
 // MARK: - Upcoming card
 
+private struct UpcomingTripsCarousel: View {
+    let trips: [PlannedTrip]
+    var revealed: Bool
+    var reduceMotion: Bool
+    let onPlan: (PlannedTrip) -> Void
+
+    @State private var selection: PlannedTrip.ID?
+
+    private var activeID: PlannedTrip.ID? {
+        selection ?? trips.first?.id
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ScrollView(.horizontal) {
+                LazyHStack(alignment: .top, spacing: 15) {
+                    ForEach(Array(trips.enumerated()), id: \.element.id) { index, trip in
+                        UpcomingJourneyCard(
+                            trip: trip,
+                            index: index,
+                            revealed: revealed,
+                            reduceMotion: reduceMotion,
+                            isSelected: activeID == trip.id
+                        ) {
+                            onPlan(trip)
+                        }
+                        .containerRelativeFrame(.horizontal) { width, _ in
+                            width * 0.84
+                        }
+                    }
+                }
+                .scrollTargetLayout()
+                .padding(.vertical, 6)
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: $selection)
+            .scrollIndicators(.hidden)
+            .scrollClipDisabled()
+
+            if trips.count > 1 {
+                HStack(spacing: 6) {
+                    ForEach(trips) { trip in
+                        let active = trip.id == activeID
+                        Capsule()
+                            .fill(active ? Coastal.deep : Coastal.soft.opacity(0.55))
+                            .frame(width: active ? 16 : 6, height: 6)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.82), value: activeID)
+                .accessibilityHidden(true)
+            }
+        }
+        .onAppear {
+            if selection == nil {
+                selection = trips.first?.id
+            }
+        }
+    }
+}
+
 struct UpcomingJourneyCard: View {
     let trip: PlannedTrip
     var index: Int
     var revealed: Bool
     var reduceMotion: Bool
+    var isSelected: Bool = false
     let onPlan: () -> Void
 
     @State private var livePulse = 0
@@ -402,10 +631,15 @@ struct UpcomingJourneyCard: View {
                             .font(.system(size: 17, weight: .bold))
                             .foregroundStyle(Coastal.navy)
                             .multilineTextAlignment(.leading)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                         Text("\(trip.origin) → \(trip.destination)")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(Coastal.muted)
-                            .lineLimit(1)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, minHeight: 36, alignment: .topLeading)
                         Text(trip.primaryMode.title)
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(Coastal.deep)
@@ -432,6 +666,8 @@ struct UpcomingJourneyCard: View {
                     Text("Start Live Trip")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Coastal.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
                         .background(
@@ -457,10 +693,12 @@ struct UpcomingJourneyCard: View {
         .shadow(color: Coastal.navy.opacity(0.08), radius: 12, y: 6)
         .opacity(revealed || reduceMotion ? 1 : 0)
         .offset(y: revealed || reduceMotion ? 0 : 18)
+        .scaleEffect(reduceMotion || isSelected ? 1 : 0.975)
         .animation(
             reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.84).delay(Double(index) * 0.06),
             value: revealed
         )
+        .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.78), value: isSelected)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(trip.title), \(trip.origin) to \(trip.destination), \(trip.scheduledDate)")
     }

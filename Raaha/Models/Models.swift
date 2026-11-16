@@ -320,6 +320,26 @@ struct PlannedTrip: Identifiable {
     let estimatedFare: String
 }
 
+/// The regular commute shown above the Trips filters.
+struct FrequentJourney: Identifiable {
+    let id: String
+    let homeName: String
+    let workName: String
+    let origin: String
+    let destination: String
+    let modes: [TransportMode]
+    let minutes: Int
+    let badge: String
+
+    var durationText: String { "\(minutes) min" }
+
+    var modeSummary: String {
+        modes.map { mode in
+            mode == .walk ? "Walking" : mode.title
+        }.joined(separator: " + ")
+    }
+}
+
 struct TripPlan {
     var destination: String = "Chennai Beach"
     var date: Date = TripPlan.nextSaturdayAtTen()
