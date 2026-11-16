@@ -344,7 +344,7 @@ struct ProfileView: View {
     // MARK: - Saved Places Section
     private var savedPlacesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionTitle(title: "Frequent Locations", icon: "mappin.fill")
+            sectionTitle(title: "Frequent Locations", asset: "icon_pin")
 
             VStack(spacing: 0) {
                 placeRow(
@@ -588,9 +588,12 @@ struct ProfileView: View {
     }
 
     // MARK: - Section Title Helper
-    private func sectionTitle(title: String, icon: String? = nil) -> some View {
+    private func sectionTitle(title: String, icon: String? = nil, asset: String? = nil) -> some View {
         HStack(spacing: 8) {
-            if let icon {
+            if asset != nil {
+                IconPin(size: 15)
+                    .foregroundStyle(Color(hex: 0x2A90D4))
+            } else if let icon {
                 Image(systemName: icon)
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(Color(hex: 0x2A90D4))

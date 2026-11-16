@@ -35,7 +35,7 @@ struct InteractiveMapContainer: View {
                 CurrentLocationMarker()
             }
 
-            Marker(destinationTitle, image: "icon_pin", coordinate: MockData.destination)
+            Marker(destinationTitle, systemImage: "mappin", coordinate: MockData.destination)
                 .tint(segments.last?.mode.color ?? Color.steelBlue)
         }
         .mapStyle(.standard(elevation: .flat))

@@ -301,7 +301,7 @@ private struct PlacesContent: View {
                         }
                     } label: {
                         HStack(spacing: 10) {
-                            Image(systemName: "mappin.circle.fill")
+                            IconPin(size: 18)
                                 .foregroundStyle(Color.steelBlue)
                             Text(suggestion)
                                 .font(.raahaSubheadlineMedium)
@@ -493,8 +493,7 @@ private struct CategoryEmptyState: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Image(systemName: "mappin.slash")
-                .font(.system(size: 22, weight: .medium))
+            IconPin(size: 22)
                 .foregroundStyle(Color.royalBlue.opacity(0.75))
             Text("No places found in this category.")
                 .font(.system(.subheadline).weight(.semibold))
@@ -669,8 +668,7 @@ private struct ChennaiLocalitySelector: View {
                         onSelect(nil)
                     } label: {
                         HStack(spacing: 4) {
-                            Image(systemName: "mappin.and.ellipse")
-                                .font(.raahaCaption2)
+                            IconPin(size: 12)
                             Text("All Chennai")
                                 .font(.raahaFootnoteSemibold)
                         }
@@ -754,8 +752,7 @@ private struct ChennaiEmptyResultsView: View {
     var body: some View {
         VStack(spacing: 16) {
             VStack(spacing: 8) {
-                Image(systemName: "mappin.slash.circle")
-                    .font(.system(size: 44, weight: .thin))
+                IconPin(size: 44)
                     .foregroundStyle(Color.strawberry)
 
                 Text("No places found in Chennai")

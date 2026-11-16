@@ -23,7 +23,7 @@ struct JourneyMapView: View {
                 .stroke(indicatorColor, lineWidth: 5)
             Marker("Current Location", systemImage: "location.fill", coordinate: MockData.origin)
                 .tint(Color.steelBlue)
-            Marker("Phoenix Mall", image: "icon_pin", coordinate: MockData.destination)
+            Marker("Phoenix Mall", systemImage: "mappin", coordinate: MockData.destination)
                 .tint(indicatorColor)
         }
         .mapStyle(.standard(elevation: .flat))

@@ -264,7 +264,6 @@ struct ArrivalLogoView: View {
     var reduceMotion: Bool
 
     private let pinColor = Color(hex: 0x087797)
-    private let symbolName = UIImage(systemName: "mappin.and.ellipse") != nil ? "mappin.and.ellipse" : "mappin"
 
     var body: some View {
         ZStack {
@@ -290,9 +289,7 @@ struct ArrivalLogoView: View {
                 .opacity(circleVisible ? 1 : 0)
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.30), value: circleVisible)
 
-            Image(systemName: symbolName)
-                .font(.system(size: 58, weight: .semibold))
-                .symbolRenderingMode(.monochrome)
+            IconPin(size: 58)
                 .foregroundStyle(pinColor)
                 .frame(width: 72, height: 72)
                 .scaleEffect(settled ? 1 : (pinVisible ? 1 : 0.65))

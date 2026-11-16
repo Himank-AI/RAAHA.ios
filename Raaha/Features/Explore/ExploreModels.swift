@@ -231,7 +231,7 @@ enum PlaceCategory: String, CaseIterable, Hashable {
         case .shopping:       return "bag.fill"
         case .attraction:     return "star.fill"
         case .entertainment:  return "theatermasks.fill"
-        case .other:          return "mappin.and.ellipse"
+        case .other:          return "icon_pin"
         }
     }
 }

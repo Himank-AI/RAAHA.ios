@@ -60,6 +60,16 @@ struct PlaceImageView: View {
         .modifier(PlaceImageClipModifier(style: style))
     }
 
+    @ViewBuilder
+    private func categoryGlyph(size: CGFloat, weight: Font.Weight) -> some View {
+        if place.symbolName == "icon_pin" {
+            IconPin(size: size)
+        } else {
+            Image(systemName: place.symbolName)
+                .font(.system(size: size, weight: weight))
+        }
+    }
+
     // MARK: - Polished Placeholder
 
     private var placeholderView: some View {
@@ -69,8 +79,7 @@ struct PlaceImageView: View {
                 Circle()
                     .fill(Color.steelBlue)
                     .overlay {
-                        Image(systemName: place.symbolName)
-                            .font(.system(size: 22, weight: .medium))
+                        categoryGlyph(size: 22, weight: .medium)
                             .foregroundStyle(Color.honeydew)
                     }
 
@@ -78,8 +87,7 @@ struct PlaceImageView: View {
                 LinearGradient.raahaHero
                     .overlay {
                         VStack(spacing: 8) {
-                            Image(systemName: place.symbolName)
-                                .font(.system(size: 52, weight: .light))
+                            categoryGlyph(size: 52, weight: .light)
                                 .foregroundStyle(Color.frostedBlue.opacity(0.6))
 
                             Text(place.name)

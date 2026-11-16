@@ -25,7 +25,7 @@ struct RootView: View {
         @Bindable var router = router
         ZStack {
             Group {
-                if router.showLogin && !launch.isPresenting {
+                if router.showLogin {
                     LoginView()
                         .transition(.opacity)
                 } else {
@@ -45,14 +45,6 @@ struct RootView: View {
         .environment(router)
         .environment(launch)
         .environment(ads)
-        .onChange(of: launch.handoffStarted) { _, started in
-            guard started, router.showLogin else { return }
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                router.showLogin = false
-            }
-        }
     }
 }
 

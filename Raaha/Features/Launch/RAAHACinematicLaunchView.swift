@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// One-time opening. Plays over the real Home screen, then lets that screen through.
+/// One-time opening. Plays over the login screen, then lets that screen through.
 struct RAAHACinematicLaunchView: View {
     var manager: LaunchTransitionManager
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

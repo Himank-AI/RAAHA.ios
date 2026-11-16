@@ -67,7 +67,15 @@ struct PlaceDetailView: View {
             .allowsHitTesting(false)
 
             VStack(alignment: .leading, spacing: 8) {
-                Label(place.category.title, systemImage: place.symbolName)
+                Label {
+                    Text(place.category.title)
+                } icon: {
+                    if place.symbolName == "icon_pin" {
+                        IconPin(size: 13)
+                    } else {
+                        Image(systemName: place.symbolName)
+                    }
+                }
                     .font(.raahaFootnoteSemibold)
                     .foregroundStyle(Color.white)
                     .lineLimit(1)
@@ -86,7 +94,11 @@ struct PlaceDetailView: View {
                     .accessibilityAddTraits(.isHeader)
 
                 if !place.locality.isEmpty {
-                    Label(place.locality, systemImage: "mappin.and.ellipse")
+                    Label {
+                        Text(place.locality)
+                    } icon: {
+                        IconPin(size: 14)
+                    }
                         .font(.raahaSubheadlineMedium)
                         .foregroundStyle(Color.white.opacity(0.92))
                         .lineLimit(1)
@@ -160,7 +172,7 @@ struct PlaceDetailView: View {
                 .foregroundStyle(Color.deepSpace)
 
             if let opening = place.openingStatus, !opening.isEmpty {
-                detailRow(
+                DetailFactRow(
                     symbol: "clock.fill",
                     title: hoursHeadline,
                     value: opening,
@@ -169,17 +181,18 @@ struct PlaceDetailView: View {
             }
 
             if !place.displayAddress.isEmpty {
-                detailRow(
-                    symbol: "mappin.and.ellipse",
+                DetailFactRow(
+                    symbol: "icon_pin",
                     title: "Address",
                     value: place.displayAddress,
-                    tint: Color.oceanic4E8EA2
+                    tint: Color.oceanic4E8EA2,
+                    usesAsset: true
                 )
             }
 
             if place.shouldDisplayPhoneSection, let phone = place.phoneNumber {
                 Button(action: dialPhone) {
-                    detailRow(
+                    DetailFactRow(
                         symbol: "phone.fill",
                         title: "Call",
                         value: phone,
@@ -293,16 +306,37 @@ struct PlaceDetailView: View {
         .map { $0 }
     }
 
-    private func detailRow(
-        symbol: String,
-        title: String,
-        value: String,
-        tint: Color,
-        showsChevron: Bool = false
-    ) -> some View {
+    private func dialPhone() {
+        guard let dialable = place.dialablePhoneNumber,
+              let url = URL(string: "tel:\(dialable)") else { return }
+        openURL(url)
+    }
+}
+
+// MARK: - Fact row
+
+struct DetailFactRow: View {
+    let symbol: String
+    let title: String
+    let value: String
+    let tint: Color
+    var showsChevron: Bool = false
+    var usesAsset: Bool = false
+
+    var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
+            Group {
+                if usesAsset {
+                    Image(symbol)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16, height: 16)
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: 14, weight: .semibold))
+                }
+            }
                 .foregroundStyle(tint)
                 .frame(width: 34, height: 34)
                 .background(Circle().fill(tint.opacity(0.14)))
@@ -334,17 +368,11 @@ struct PlaceDetailView: View {
         }
         .accessibilityElement(children: .combine)
     }
-
-    private func dialPhone() {
-        guard let dialable = place.dialablePhoneNumber,
-              let url = URL(string: "tel:\(dialable)") else { return }
-        openURL(url)
-    }
 }
 
 // MARK: - Stat tile
 
-private struct PlaceStat: Identifiable {
+struct PlaceStat: Identifiable {
     let id: String
     let symbol: String
     let value: String
@@ -352,7 +380,7 @@ private struct PlaceStat: Identifiable {
     let tint: Color
 }
 
-private struct StatTile: View {
+struct StatTile: View {
     let stat: PlaceStat
 
     var body: some View {
@@ -381,7 +409,7 @@ private struct StatTile: View {
 
 // MARK: - Glass
 
-private extension View {
+extension View {
     func glassPanel(radius: CGFloat = 24) -> some View {
         background(
             RoundedRectangle(cornerRadius: radius, style: .continuous)
@@ -408,7 +436,7 @@ private extension View {
 
 // MARK: - Wrapping chips
 
-private struct ChipFlow: Layout {
+struct ChipFlow: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -453,7 +481,7 @@ private struct ChipFlow: Layout {
 
 // MARK: - Place Map Pin
 
-private struct PlaceMapPin: View {
+struct PlaceMapPin: View {
     var body: some View {
         ZStack {
             Circle()
@@ -468,11 +496,8 @@ private struct PlaceMapPin: View {
                     )
                 )
                 .frame(width: 32, height: 32)
-            Image("icon_pin")
-                .renderingMode(.template)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 14, height: 14)
+            Image(systemName: "mappin")
+                .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(Color.white)
         }
         .shadow(color: Color.oceanic001D39.opacity(0.28), radius: 8, y: 4)

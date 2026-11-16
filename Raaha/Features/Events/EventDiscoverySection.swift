@@ -218,7 +218,7 @@ private struct FeaturedEventCard: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         featuredFact(symbol: "calendar", title: "Date and time", value: event.scheduleText)
-                        featuredFact(symbol: "mappin.and.ellipse", title: "Venue", value: event.venue.name)
+                        featuredFact(symbol: "icon_pin", title: "Venue", value: event.venue.name, usesAsset: true)
                         featuredFact(
                             symbol: "location",
                             title: "Address",
@@ -254,10 +254,16 @@ private struct FeaturedEventCard: View {
         .accessibilityHint("Opens the event")
     }
 
-    private func featuredFact(symbol: String, title: String, value: String) -> some View {
+    private func featuredFact(symbol: String, title: String, value: String, usesAsset: Bool = false) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
+            Group {
+                if usesAsset {
+                    IconPin(size: 16)
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: 14, weight: .semibold))
+                }
+            }
                 .foregroundStyle(EventInk.deep)
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 2) {

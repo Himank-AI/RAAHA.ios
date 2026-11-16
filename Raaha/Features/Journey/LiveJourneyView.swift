@@ -1050,8 +1050,7 @@ private struct WalkTimelineCard: View {
     @ViewBuilder
     private func node(isDestination: Bool) -> some View {
         if isDestination {
-            Image(systemName: "mappin.circle.fill")
-                .font(.system(size: 22, weight: .semibold))
+            IconPin(size: 20)
                 .foregroundStyle(Color.transportWalk)
                 .background(Circle().fill(Color.white).padding(2))
                 .shadow(color: Color.transportWalk.opacity(0.3), radius: 4, x: 0, y: 2)

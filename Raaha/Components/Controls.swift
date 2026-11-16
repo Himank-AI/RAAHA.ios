@@ -1,5 +1,17 @@
 import SwiftUI
 
+struct IconPin: View {
+    var size: CGFloat = 16
+
+    var body: some View {
+        Image("icon_pin")
+            .renderingMode(.template)
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
+    }
+}
+
 // MARK: - Buttons
 
 struct PillButtonStyle: ButtonStyle {

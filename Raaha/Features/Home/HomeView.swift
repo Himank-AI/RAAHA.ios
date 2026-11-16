@@ -412,7 +412,7 @@ struct LocationPickerSheet: View {
                         commit(place)
                     } label: {
                         HStack(spacing: 12) {
-                            Image(systemName: "mappin.circle.fill")
+                            IconPin(size: 18)
                                 .foregroundStyle(Color.lightSkyBlue)
                             Text(place)
                                 .font(.raahaSubheadlineMedium)
