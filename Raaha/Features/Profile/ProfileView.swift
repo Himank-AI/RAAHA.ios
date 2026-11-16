@@ -494,10 +494,10 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Toggle(isOn: $tracker.sponsoredDiscoveryEnabled) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Show sponsored places")
+                        Text("Show sponsored discovery")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(Color.midnightBlue)
-                        Text("Sample placements stay labelled. Hiding one placement keeps it hidden on this device.")
+                        Text("Turns sponsored events and place placements on or off. Samples stay labelled, and hiding one placement keeps it hidden on this device.")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(Color(hex: 0x49769F))
                             .fixedSize(horizontal: false, vertical: true)

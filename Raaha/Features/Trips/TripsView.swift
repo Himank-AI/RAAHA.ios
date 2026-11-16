@@ -76,13 +76,7 @@ struct TripsView: View {
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
-                    SponsoredDiscoverySection(
-                        savedJourneyTexts: bookmarkedJourneys.map { "\($0.name) · \($0.route)" }
-                    )
-
-                    CoastalPlannerCard {
-                        router.planJourney(from: "Current Location", to: "Marina Beach")
-                    }
+                    SmartRoutePlannerCard()
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 18)
@@ -909,51 +903,6 @@ private struct RecentTripRow: View {
         }
         .buttonStyle(TactileButtonStyle(scale: 0.985))
         .accessibilityLabel("Trip \(trip.route) via \(trip.mode) on \(trip.day). Repeat this journey.")
-    }
-}
-
-// MARK: - Shared surfaces
-
-private struct CoastalPlannerCard: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Not sure where to go?")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(Coastal.navy)
-                    Text("Try our Smart Route Planner")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Coastal.muted)
-                }
-                Spacer(minLength: 8)
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Coastal.white)
-                    .frame(width: 40, height: 40)
-                    .background(
-                        Circle().fill(
-                            LinearGradient(
-                                colors: [Coastal.soft, Coastal.deep],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    )
-            }
-            .padding(16)
-            .background { frostedCard(radius: 22) }
-            .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color.white.opacity(0.8), lineWidth: 1)
-            }
-            .shadow(color: Coastal.navy.opacity(0.08), radius: 12, y: 6)
-        }
-        .buttonStyle(TactileButtonStyle())
-        .accessibilityLabel("Not sure where to go? Try our Smart Route Planner")
-        .accessibilityHint("Plans a route from Current Location to Marina Beach")
     }
 }
 

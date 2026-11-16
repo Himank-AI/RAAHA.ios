@@ -10,6 +10,7 @@ struct ExploreView: View {
 
     @State private var segment: Segment = .places
     @State private var selectedPlace: ExplorePlace?
+    @State private var selectedEvent: EventModel?
     @State private var showAllNearby = false
 
     var body: some View {
@@ -24,6 +25,7 @@ struct ExploreView: View {
                         PlacesContent(
                             vm: vm,
                             selectedPlace: $selectedPlace,
+                            selectedEvent: $selectedEvent,
                             showAllNearby: $showAllNearby
                         )
                     case .planAhead:
@@ -32,7 +34,7 @@ struct ExploreView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 18)
-                .padding(.bottom, 110)
+                .padding(.bottom, 150)
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable { vm.refresh() }
@@ -51,6 +53,9 @@ struct ExploreView: View {
         }
         .navigationDestination(item: $selectedPlace) { place in
             PlaceDetailView(place: place)
+        }
+        .navigationDestination(item: $selectedEvent) { event in
+            EventDetailView(event: event)
         }
         .sheet(isPresented: $showAllNearby) {
             AllNearbySheet(vm: vm, selectedPlace: $selectedPlace, showAllNearby: $showAllNearby)
@@ -199,6 +204,7 @@ struct ExploreView: View {
 private struct PlacesContent: View {
     let vm: ExploreViewModel
     @Binding var selectedPlace: ExplorePlace?
+    @Binding var selectedEvent: EventModel?
     @Binding var showAllNearby: Bool
     @Environment(AppRouter.self) private var router
 
@@ -219,6 +225,9 @@ private struct PlacesContent: View {
 
                 nearbySection
             }
+
+            EventDiscoverySection(selectedEvent: $selectedEvent)
+                .padding(.top, 8)
         }
     }
 
