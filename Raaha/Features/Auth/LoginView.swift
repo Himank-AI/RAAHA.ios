@@ -259,20 +259,16 @@ struct LoginView: View {
                     .frame(width: 34, height: 34)
             }
 
-            HStack(spacing: 10) {
-                Capsule()
-                    .fill(Color.deepSpace.opacity(0.18))
-                    .frame(width: 42, height: 1)
+            VStack(spacing: 4) {
                 Text("Don't have an account?")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Color.deepSpace.opacity(0.8))
                 Button("Sign Up") { navigationPath.append(.signUp) }
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(Color.neonLime)
-                Capsule()
-                    .fill(Color.deepSpace.opacity(0.18))
-                    .frame(width: 42, height: 1)
             }
+            .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
             .padding(.top, 2)
         }
         .padding(.horizontal, 16)
@@ -348,21 +344,23 @@ struct LoginView: View {
 
     private func signInRow<Icon: View>(_ title: String, action: @escaping () -> Void, @ViewBuilder icon: () -> Icon) -> some View {
         Button(action: action) {
-            HStack(spacing: 12) {
-                icon()
-                Rectangle()
-                    .fill(Color.deepSpace.opacity(0.12))
-                    .frame(width: 1, height: 22)
+            ZStack {
                 Text(title)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Color.deepSpace)
-                Spacer(minLength: 4)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.deepSpace.opacity(0.45))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+
+                HStack(spacing: 12) {
+                    icon()
+                    Rectangle()
+                        .fill(Color.deepSpace.opacity(0.12))
+                        .frame(width: 1, height: 22)
+                    Spacer(minLength: 0)
+                }
             }
             .padding(.leading, 8)
-            .padding(.trailing, 16)
+            .padding(.trailing, 8)
             .frame(maxWidth: .infinity, minHeight: 54)
             .background(
                 Capsule()
